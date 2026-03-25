@@ -47,7 +47,7 @@ public class HomeUI : MonoBehaviour
         tapText = MakeText(cGo.transform, "TAP TO START", 40,
             Color.white, new Vector2(0.5f, 0.42f), new Vector2(500f, 60f));
 
-        // 全画面透明ボタン（先に追加して背面に置く）
+        // 全画面透明ボタン（先に追加して最背面に置く）
         var btn = new GameObject("StartBtn");
         btn.transform.SetParent(cGo.transform, false);
         btn.AddComponent<Image>().color = Color.clear;
@@ -57,7 +57,27 @@ public class HomeUI : MonoBehaviour
         rt.offsetMin = rt.offsetMax = Vector2.zero;
         b.onClick.AddListener(() => SceneManager.LoadScene("StageSelectScene"));
 
-        // COLLECTION ボタン（StartBtn の後に追加して前面に配置）
+        // GACHA ボタン（StartBtn の後→前面）
+        var gachaBtn = new GameObject("GachaBtn");
+        gachaBtn.transform.SetParent(cGo.transform, false);
+        gachaBtn.AddComponent<Image>().color = new Color(0.5f, 0.1f, 0.75f, 0.9f);
+        var gachaB = gachaBtn.AddComponent<Button>();
+        var gachaRT = gachaBtn.GetComponent<RectTransform>();
+        gachaRT.anchorMin = gachaRT.anchorMax = new Vector2(0.5f, 0.34f);
+        gachaRT.anchoredPosition = Vector2.zero;
+        gachaRT.sizeDelta = new Vector2(420f, 75f);
+        gachaB.onClick.AddListener(() => SceneManager.LoadScene("GachaScene"));
+        var gachaTxtGo = new GameObject("Txt");
+        gachaTxtGo.transform.SetParent(gachaBtn.transform, false);
+        var gachaT = gachaTxtGo.AddComponent<Text>();
+        gachaT.text = "GACHA"; gachaT.fontSize = 32; gachaT.color = Color.white;
+        gachaT.alignment = TextAnchor.MiddleCenter;
+        gachaT.font = Font.CreateDynamicFontFromOSFont("Arial", 32);
+        var gachaTrt = gachaTxtGo.GetComponent<RectTransform>();
+        gachaTrt.anchorMin = Vector2.zero; gachaTrt.anchorMax = Vector2.one;
+        gachaTrt.offsetMin = gachaTrt.offsetMax = Vector2.zero;
+
+        // COLLECTION ボタン（GACHA の後→最前面）
         var colBtn = new GameObject("CollectionBtn");
         colBtn.transform.SetParent(cGo.transform, false);
         colBtn.AddComponent<Image>().color = new Color(0.2f, 0.2f, 0.3f, 0.9f);

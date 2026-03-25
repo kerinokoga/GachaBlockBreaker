@@ -25,6 +25,8 @@ public static class ProgressManager
     /// </summary>
     public static void SaveClear(int stage, float rate)
     {
+        bool wasAlreadyCleared = IsCleared(stage); // SetInt より前に判定
+
         PlayerPrefs.SetInt(KeyCleared(stage), 1);
 
         float prev = GetBestRate(stage);
@@ -33,6 +35,10 @@ public static class ProgressManager
         int maxUnlocked = GetMaxUnlocked();
         if (stage + 1 > maxUnlocked && stage < TotalStages)
             PlayerPrefs.SetInt(KeyMaxUnlocked, stage + 1);
+
+        // 初回クリアのみオーブ付与
+        if (!wasAlreadyCleared)
+            OrbManager.AddOrbs(OrbManager.StageClearReward);
 
         PlayerPrefs.Save();
     }
