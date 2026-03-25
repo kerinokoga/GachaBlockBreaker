@@ -55,7 +55,7 @@ public class HomeUI : MonoBehaviour
         var rt = btn.GetComponent<RectTransform>();
         rt.anchorMin = Vector2.zero; rt.anchorMax = Vector2.one;
         rt.offsetMin = rt.offsetMax = Vector2.zero;
-        b.onClick.AddListener(() => SceneManager.LoadScene("GameScene"));
+        b.onClick.AddListener(() => SceneManager.LoadScene("CharaSelectScene"));
     }
 
     Text MakeText(Transform parent, string txt, int size, Color col, Vector2 anchor, Vector2 sizeDelta)

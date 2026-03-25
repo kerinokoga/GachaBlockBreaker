@@ -13,6 +13,10 @@ public class GameUI : MonoBehaviour
     private Text destroyRateText;
     private GameObject pauseMenuPanel;
 
+    // Phase 2: 奥義ゲージUI
+    private Slider[] ultGaugeSliders = new Slider[3];
+    private GameObject[] ultButtons   = new GameObject[3];
+
     private Color activeColor   = new Color(1f, 0.9f, 0.2f);
     private Color inactiveColor = new Color(0.4f, 0.4f, 0.4f, 0.6f);
 
@@ -26,6 +30,13 @@ public class GameUI : MonoBehaviour
             GameManager.Instance.OnDestroyRateChanged += UpdateDestroyRate;
             UpdateStockDisplay(GameManager.Instance.MaxStock);
             UpdateDestroyRate(0f);
+        }
+
+        // Phase 2: 奥義ゲージイベント購読
+        if (CharacterManager.Instance != null)
+        {
+            CharacterManager.Instance.OnGaugeChanged += UpdateUltGauge;
+            CharacterManager.Instance.OnUltReady     += ShowUltButton;
         }
     }
 
@@ -148,6 +159,85 @@ public class GameUI : MonoBehaviour
             .onClick.AddListener(() => helpPanel.SetActive(true));
 
         pauseMenuPanel.SetActive(false);
+
+        // ---- 奥義ゲージ（左下：スロット0〜2 縦並び）----
+        BuildUltGaugeUI(root);
+    }
+
+    void BuildUltGaugeUI(Transform root)
+    {
+        Color[] slotColors = {
+            new Color(0.4f, 0.7f, 1f),   // スロット0 青
+            new Color(1f, 0.6f, 0.3f),    // スロット1 橙
+            new Color(0.5f, 1f, 0.5f),    // スロット2 緑
+        };
+
+        for (int i = 0; i < 3; i++)
+        {
+            int idx = i; // クロージャ用
+
+            // キャラ名ラベル
+            string charName = (idx < ResultData.SelectedCharacterNames.Length)
+                ? ResultData.SelectedCharacterNames[idx] : "?";
+            if (string.IsNullOrEmpty(charName)) charName = "?";
+
+            MakeText(root, charName, 22, slotColors[i],
+                new Vector2(0f, 0f),
+                new Vector2(60f, 88f - i * 56f),
+                new Vector2(100f, 34f),
+                new Vector2(0f, 0f));
+
+            // ゲージバー
+            var slGo = new GameObject($"UltGauge{i}");
+            slGo.transform.SetParent(root, false);
+            var sl = slGo.AddComponent<Slider>();
+            SetRect(slGo.GetComponent<RectTransform>(),
+                new Vector2(0f, 0f), new Vector2(170f, 86f - i * 56f),
+                new Vector2(160f, 22f), new Vector2(0f, 0f));
+            BuildUltSlider(sl, slGo.transform, slotColors[i]);
+            sl.value = 0f;
+            ultGaugeSliders[i] = sl;
+
+            // 奥義ボタン（初期は非表示）
+            var btn = MakeButton(root, "奥義!", 22, slotColors[i],
+                new Vector2(0f, 0f),
+                new Vector2(346f, 86f - i * 56f),
+                new Vector2(80f, 44f),
+                new Vector2(0f, 0f));
+            btn.GetComponent<Button>().onClick.AddListener(() =>
+            {
+                CharacterManager.Instance?.TriggerUltimate(idx);
+                if (ultButtons[idx] != null) ultButtons[idx].SetActive(false);
+            });
+            btn.SetActive(false);
+            ultButtons[i] = btn;
+        }
+    }
+
+    void BuildUltSlider(Slider slider, Transform parent, Color fillColor)
+    {
+        slider.minValue = 0f; slider.maxValue = 1f; slider.value = 0f;
+
+        var bg = new GameObject("BG"); bg.transform.SetParent(parent, false);
+        var bgImg = bg.AddComponent<Image>(); bgImg.color = new Color(0.15f, 0.15f, 0.15f, 0.8f);
+        var bgRT = bg.GetComponent<RectTransform>();
+        bgRT.anchorMin = Vector2.zero; bgRT.anchorMax = Vector2.one;
+        bgRT.offsetMin = bgRT.offsetMax = Vector2.zero;
+
+        var fa = new GameObject("FillArea"); fa.transform.SetParent(parent, false);
+        var faRT = fa.AddComponent<RectTransform>();
+        faRT.anchorMin = Vector2.zero; faRT.anchorMax = Vector2.one;
+        faRT.offsetMin = faRT.offsetMax = Vector2.zero;
+
+        var fill = new GameObject("Fill"); fill.transform.SetParent(fa.transform, false);
+        var fillImg = fill.AddComponent<Image>(); fillImg.color = fillColor;
+        var fillRT = fill.GetComponent<RectTransform>();
+        fillRT.anchorMin = Vector2.zero; fillRT.anchorMax = Vector2.one;
+        fillRT.offsetMin = fillRT.offsetMax = Vector2.zero;
+
+        slider.fillRect = fillRT;
+        slider.targetGraphic = bgImg;
+        slider.direction = Slider.Direction.LeftToRight;
     }
 
     // ---- UI イベント ----
@@ -182,12 +272,31 @@ public class GameUI : MonoBehaviour
         if (destroyRateText   != null) destroyRateText.text = $"{Mathf.FloorToInt(rate * 100)}%";
     }
 
+    void UpdateUltGauge(int slot, float ratio)
+    {
+        if (slot < 0 || slot >= 3) return;
+        if (ultGaugeSliders[slot] != null)
+            ultGaugeSliders[slot].value = ratio;
+    }
+
+    void ShowUltButton(int slot)
+    {
+        if (slot < 0 || slot >= 3) return;
+        if (ultButtons[slot] != null)
+            ultButtons[slot].SetActive(true);
+    }
+
     void OnDestroy()
     {
         if (GameManager.Instance != null)
         {
             GameManager.Instance.OnStockChanged      -= UpdateStockDisplay;
             GameManager.Instance.OnDestroyRateChanged -= UpdateDestroyRate;
+        }
+        if (CharacterManager.Instance != null)
+        {
+            CharacterManager.Instance.OnGaugeChanged -= UpdateUltGauge;
+            CharacterManager.Instance.OnUltReady     -= ShowUltButton;
         }
     }
 

@@ -7,4 +7,7 @@ public static class ResultData
     public static float DestroyRate;
     public static int RemainingStock;
     public static int StageNumber;
+
+    // Phase 2: キャラ選択データの受け渡し（名前文字列で保持）
+    public static string[] SelectedCharacterNames = new string[3];
 }

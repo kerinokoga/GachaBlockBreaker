@@ -8,7 +8,7 @@ using UnityEngine;
 public class BallController : MonoBehaviour
 {
     [Header("ボール設定")]
-    [SerializeField] private float speed = 12f;          // ボール速度
+    [SerializeField] public float speed = 12f;            // ボール速度（CharacterManager から変更可）
     [SerializeField] private float minAngleDeg = 20f;    // 水平に近すぎる角度を防ぐ最小角度(度)
 
     private Rigidbody2D rb;

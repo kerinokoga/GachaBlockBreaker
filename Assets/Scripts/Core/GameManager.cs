@@ -64,6 +64,9 @@ public class GameManager : MonoBehaviour
         if (stageManager != null)
             stageManager.BuildTestStage();
 
+        // Phase 2: キャラクターマネージャー初期化（パッシブ適用）
+        CharacterManager.Instance?.Initialize(ball, this);
+
         OnStockChanged?.Invoke(currentStock);
     }
 
@@ -113,6 +116,17 @@ public class GameManager : MonoBehaviour
     {
         CurrentState = GameState.Miss;
         paddle?.SetActive(false);
+
+        // Phase 2: BarrierShot 奥義がアクティブならミスをキャンセル
+        if (CharacterManager.Instance != null && CharacterManager.Instance.ConsumeBarrier())
+        {
+            yield return new WaitForSeconds(0.3f);
+            ball?.ResetBall();
+            ball?.SetPaddle(paddle.transform);
+            paddle?.SetActive(true);
+            CurrentState = GameState.Ready;
+            yield break;
+        }
 
         currentStock--;
         OnStockChanged?.Invoke(currentStock);
@@ -167,12 +181,24 @@ public class GameManager : MonoBehaviour
 
     // ---- 破壊率チェック ----
 
+    /// <summary>
+    /// ストックを加算する（ExtraStock パッシブ・StockRecover 奥義から呼ばれる）
+    /// </summary>
+    public void AddStock(int amount)
+    {
+        currentStock = Mathf.Min(currentStock + amount, maxStock);
+        OnStockChanged?.Invoke(currentStock);
+    }
+
     private void CheckDestroyRate()
     {
         if (stageManager == null) return;
 
         float rate = stageManager.GetDestroyRate();
         OnDestroyRateChanged?.Invoke(rate);
+
+        // Phase 2: 奥義ゲージ更新
+        CharacterManager.Instance?.OnBlockDestroyed();
 
         if (!triggered30 && rate >= 0.3f)
         {

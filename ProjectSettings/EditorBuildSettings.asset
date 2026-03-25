@@ -9,6 +9,9 @@ EditorBuildSettings:
     path: Assets/Scenes/HomeScene.unity
     guid: 13c199dd9fb26c54f9a55c04444e8800
   - enabled: 1
+    path: Assets/Scenes/CharaSelectScene.unity
+    guid: 3c6ac1d46acaef247a6d6f04c782cab6
+  - enabled: 1
     path: Assets/Scenes/GameScene.unity
     guid: bd077128545a3ad4b84c90aab7fc6c9b
   - enabled: 1
