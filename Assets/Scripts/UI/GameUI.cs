@@ -183,7 +183,7 @@ public class GameUI : MonoBehaviour
 
             MakeText(root, charName, 22, slotColors[i],
                 new Vector2(0f, 0f),
-                new Vector2(60f, 88f - i * 56f),
+                new Vector2(60f, 30f + i * 58f),
                 new Vector2(100f, 34f),
                 new Vector2(0f, 0f));
 
@@ -192,16 +192,16 @@ public class GameUI : MonoBehaviour
             slGo.transform.SetParent(root, false);
             var sl = slGo.AddComponent<Slider>();
             SetRect(slGo.GetComponent<RectTransform>(),
-                new Vector2(0f, 0f), new Vector2(170f, 86f - i * 56f),
+                new Vector2(0f, 0f), new Vector2(170f, 28f + i * 58f),
                 new Vector2(160f, 22f), new Vector2(0f, 0f));
             BuildUltSlider(sl, slGo.transform, slotColors[i]);
             sl.value = 0f;
             ultGaugeSliders[i] = sl;
 
             // 奥義ボタン（初期は非表示）
-            var btn = MakeButton(root, "奥義!", 22, slotColors[i],
+            var btn = MakeButton(root, "ULT!", 22, slotColors[i],
                 new Vector2(0f, 0f),
-                new Vector2(346f, 86f - i * 56f),
+                new Vector2(346f, 26f + i * 58f),
                 new Vector2(80f, 44f),
                 new Vector2(0f, 0f));
             btn.GetComponent<Button>().onClick.AddListener(() =>
