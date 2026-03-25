@@ -32,7 +32,13 @@ public class StageData : ScriptableObject
     public List<BlockPlacementData> blocks = new List<BlockPlacementData>();
 
     [Header("グリッド設定")]
-    public float cellWidth = 1.0f;   // 1セルの横幅
-    public float cellHeight = 0.5f;  // 1セルの縦幅
-    public Vector2 originOffset = new Vector2(-4.5f, 5f); // グリッド左上の起点
+    public float cellWidth = 1.0f;
+    public float cellHeight = 0.5f;
+    public Vector2 originOffset = new Vector2(-4.5f, 5f);
+
+    [Header("美少女解放（仮カラー）")]
+    public string characterName = "";
+    public Color illustColor30   = new Color(0.3f, 0.3f, 0.45f);
+    public Color illustColor60   = new Color(0.5f, 0.3f, 0.55f);
+    public Color illustColorFull = new Color(0.8f, 0.6f, 0.9f);
 }

@@ -45,9 +45,9 @@ public class HomeUI : MonoBehaviour
 
         // タップテキスト（点滅）
         tapText = MakeText(cGo.transform, "TAP TO START", 40,
-            Color.white, new Vector2(0.5f, 0.38f), new Vector2(500f, 60f));
+            Color.white, new Vector2(0.5f, 0.42f), new Vector2(500f, 60f));
 
-        // 全画面透明ボタン
+        // 全画面透明ボタン（先に追加して背面に置く）
         var btn = new GameObject("StartBtn");
         btn.transform.SetParent(cGo.transform, false);
         btn.AddComponent<Image>().color = Color.clear;
@@ -55,7 +55,27 @@ public class HomeUI : MonoBehaviour
         var rt = btn.GetComponent<RectTransform>();
         rt.anchorMin = Vector2.zero; rt.anchorMax = Vector2.one;
         rt.offsetMin = rt.offsetMax = Vector2.zero;
-        b.onClick.AddListener(() => SceneManager.LoadScene("CharaSelectScene"));
+        b.onClick.AddListener(() => SceneManager.LoadScene("StageSelectScene"));
+
+        // COLLECTION ボタン（StartBtn の後に追加して前面に配置）
+        var colBtn = new GameObject("CollectionBtn");
+        colBtn.transform.SetParent(cGo.transform, false);
+        colBtn.AddComponent<Image>().color = new Color(0.2f, 0.2f, 0.3f, 0.9f);
+        var colB = colBtn.AddComponent<Button>();
+        var colRT = colBtn.GetComponent<RectTransform>();
+        colRT.anchorMin = colRT.anchorMax = new Vector2(0.5f, 0.26f);
+        colRT.anchoredPosition = Vector2.zero;
+        colRT.sizeDelta = new Vector2(420f, 75f);
+        colB.onClick.AddListener(() => SceneManager.LoadScene("CollectionScene"));
+        var colTxtGo = new GameObject("Txt");
+        colTxtGo.transform.SetParent(colBtn.transform, false);
+        var colT = colTxtGo.AddComponent<Text>();
+        colT.text = "COLLECTION"; colT.fontSize = 32; colT.color = Color.white;
+        colT.alignment = TextAnchor.MiddleCenter;
+        colT.font = Font.CreateDynamicFontFromOSFont("Arial", 32);
+        var colTrt = colTxtGo.GetComponent<RectTransform>();
+        colTrt.anchorMin = Vector2.zero; colTrt.anchorMax = Vector2.one;
+        colTrt.offsetMin = colTrt.offsetMax = Vector2.zero;
     }
 
     Text MakeText(Transform parent, string txt, int size, Color col, Vector2 anchor, Vector2 sizeDelta)

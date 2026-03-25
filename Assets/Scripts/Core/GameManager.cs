@@ -28,6 +28,9 @@ public class GameManager : MonoBehaviour
     private bool triggered30 = false;
     private bool triggered60 = false;
 
+    // ---- Phase 3: 美少女解放 ----
+    private RevealUI revealUI;
+
     // ---- 外部公開 ----
     public int CurrentStock => currentStock;
     public int MaxStock => maxStock;
@@ -60,9 +63,29 @@ public class GameManager : MonoBehaviour
             ball.SetPaddle(paddle.transform);
         }
 
-        // テストステージを自動生成（StageData 未設定時）
+        // Phase 3: RevealUI を取得
+        revealUI = FindObjectOfType<RevealUI>();
+
+        // StageData を Resources からロード（なければテストステージ）
+        if (ResultData.StageNumber <= 0) ResultData.StageNumber = 1; // 直接起動時のフォールバック
         if (stageManager != null)
-            stageManager.BuildTestStage();
+        {
+            var allStages = Resources.LoadAll<StageData>("Stages");
+            StageData stageData = null;
+            foreach (var s in allStages)
+                if (s.stageNumber == ResultData.StageNumber) { stageData = s; break; }
+
+            if (stageData != null)
+            {
+                stageManager.BuildStage(stageData);
+                revealUI?.SetStageData(stageData.illustColor30, stageData.illustColor60,
+                                       stageData.illustColorFull, stageData.characterName);
+            }
+            else
+            {
+                stageManager.BuildTestStage();
+            }
+        }
 
         // Phase 2: キャラクターマネージャー初期化（パッシブ適用）
         CharacterManager.Instance?.Initialize(ball, this);
@@ -154,7 +177,7 @@ public class GameManager : MonoBehaviour
         ResultData.IsClear = false;
         ResultData.DestroyRate = stageManager != null ? stageManager.GetDestroyRate() : 0f;
         ResultData.RemainingStock = 0;
-        ResultData.StageNumber = 1;
+        // StageNumber はそのまま保持
 
         StartCoroutine(LoadResultAfterDelay(1.5f));
     }
@@ -164,12 +187,18 @@ public class GameManager : MonoBehaviour
         CurrentState = GameState.Clear;
         paddle?.SetActive(false);
 
+        // Phase 3: フル解放演出
+        revealUI?.AdvanceToState(3);
+
         ResultData.IsClear = true;
         ResultData.DestroyRate = 1f;
         ResultData.RemainingStock = currentStock;
-        ResultData.StageNumber = 1;
+        // StageNumber はそのまま保持（変更しない）
 
-        StartCoroutine(LoadResultAfterDelay(1.5f));
+        // Phase 3: 進行保存
+        ProgressManager.SaveClear(ResultData.StageNumber, 1f);
+
+        StartCoroutine(LoadResultAfterDelay(2.0f));
     }
 
     private IEnumerator LoadResultAfterDelay(float delay)
@@ -216,15 +245,16 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    // Phase 3 で美少女イラスト演出を追加する拡張ポイント
     private void OnTrigger30Percent()
     {
         Debug.Log("破壊率 30% 達成");
+        revealUI?.AdvanceToState(1);
     }
 
     private void OnTrigger60Percent()
     {
         Debug.Log("破壊率 60% 達成");
+        revealUI?.AdvanceToState(2);
     }
 
     // ---- リタイヤ（PauseMenu から呼ばれる） ----
