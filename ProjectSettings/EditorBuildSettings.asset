@@ -23,4 +23,10 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/CollectionScene.unity
     guid: f3d68ba39dcb0ad4bbd8b0e015b87338
+  - enabled: 1
+    path: Assets/Scenes/GachaScene.unity
+    guid: 497ddb9d1bba2cd4f8ba70990038128f
+  - enabled: 1
+    path: Assets/Scenes/CharaManageScene.unity
+    guid: 0d3cfeea2e48aa74e9cd534db2abd225
   m_configObjects: {}

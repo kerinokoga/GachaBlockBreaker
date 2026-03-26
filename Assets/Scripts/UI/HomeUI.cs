@@ -45,7 +45,7 @@ public class HomeUI : MonoBehaviour
 
         // タップテキスト（点滅）
         tapText = MakeText(cGo.transform, "TAP TO START", 40,
-            Color.white, new Vector2(0.5f, 0.42f), new Vector2(500f, 60f));
+            Color.white, new Vector2(0.5f, 0.50f), new Vector2(500f, 60f));
 
         // 全画面透明ボタン（先に追加して最背面に置く）
         var btn = new GameObject("StartBtn");
@@ -63,7 +63,7 @@ public class HomeUI : MonoBehaviour
         gachaBtn.AddComponent<Image>().color = new Color(0.5f, 0.1f, 0.75f, 0.9f);
         var gachaB = gachaBtn.AddComponent<Button>();
         var gachaRT = gachaBtn.GetComponent<RectTransform>();
-        gachaRT.anchorMin = gachaRT.anchorMax = new Vector2(0.5f, 0.34f);
+        gachaRT.anchorMin = gachaRT.anchorMax = new Vector2(0.5f, 0.42f);
         gachaRT.anchoredPosition = Vector2.zero;
         gachaRT.sizeDelta = new Vector2(420f, 75f);
         gachaB.onClick.AddListener(() => SceneManager.LoadScene("GachaScene"));
@@ -77,7 +77,27 @@ public class HomeUI : MonoBehaviour
         gachaTrt.anchorMin = Vector2.zero; gachaTrt.anchorMax = Vector2.one;
         gachaTrt.offsetMin = gachaTrt.offsetMax = Vector2.zero;
 
-        // COLLECTION ボタン（GACHA の後→最前面）
+        // MANAGE ボタン
+        var manageBtn = new GameObject("ManageBtn");
+        manageBtn.transform.SetParent(cGo.transform, false);
+        manageBtn.AddComponent<Image>().color = new Color(0.1f, 0.4f, 0.3f, 0.9f);
+        var manageB = manageBtn.AddComponent<Button>();
+        var manageRT = manageBtn.GetComponent<RectTransform>();
+        manageRT.anchorMin = manageRT.anchorMax = new Vector2(0.5f, 0.34f);
+        manageRT.anchoredPosition = Vector2.zero;
+        manageRT.sizeDelta = new Vector2(420f, 75f);
+        manageB.onClick.AddListener(() => SceneManager.LoadScene("CharaManageScene"));
+        var manageTxtGo = new GameObject("Txt");
+        manageTxtGo.transform.SetParent(manageBtn.transform, false);
+        var manageT = manageTxtGo.AddComponent<Text>();
+        manageT.text = "MANAGE"; manageT.fontSize = 32; manageT.color = Color.white;
+        manageT.alignment = TextAnchor.MiddleCenter;
+        manageT.font = Font.CreateDynamicFontFromOSFont("Arial", 32);
+        var manageTrt = manageTxtGo.GetComponent<RectTransform>();
+        manageTrt.anchorMin = Vector2.zero; manageTrt.anchorMax = Vector2.one;
+        manageTrt.offsetMin = manageTrt.offsetMax = Vector2.zero;
+
+        // COLLECTION ボタン（MANAGE の後→最前面）
         var colBtn = new GameObject("CollectionBtn");
         colBtn.transform.SetParent(cGo.transform, false);
         colBtn.AddComponent<Image>().color = new Color(0.2f, 0.2f, 0.3f, 0.9f);

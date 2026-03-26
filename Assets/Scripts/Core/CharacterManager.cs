@@ -18,6 +18,9 @@ public class CharacterManager : MonoBehaviour
     // ExtraDamage パッシブ用：BlockBase から参照される
     public int BonusDamage { get; private set; } = 0;
 
+    // 合成強化倍率：BlockBase から参照される（1.0 = 等倍）
+    public float DamageMultiplier { get; private set; } = 1f;
+
     // UI が購読するイベント
     public System.Action<int, float> OnGaugeChanged; // slotIndex, 0.0〜1.0
     public System.Action<int>        OnUltReady;     // slotIndex（ゲージ満タン通知）
@@ -72,7 +75,14 @@ public class CharacterManager : MonoBehaviour
             }
         }
 
-        Debug.Log($"[CharacterManager] Init完了 BonusDamage={BonusDamage}");
+        // 強化倍率計算（3キャラの平均強化レベルを反映）
+        float levelSum = 0f;
+        for (int i = 0; i < 3; i++)
+            if (selectedChars[i] != null)
+                levelSum += OrbManager.GetEnhanceLevel(selectedChars[i].characterName);
+        DamageMultiplier = 1.0f + 0.1f * (levelSum / 3.0f);
+
+        Debug.Log($"[CharacterManager] Init完了 BonusDamage={BonusDamage} DamageMultiplier={DamageMultiplier:F2}");
     }
 
     /// <summary>

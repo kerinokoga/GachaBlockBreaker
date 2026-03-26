@@ -35,8 +35,9 @@ public static class GachaEngine
         else
             OrbManager.IncrementPity();
 
-        // 所持フラグ登録
+        // 所持フラグ登録 & 枚数加算
         OrbManager.SetOwned(chara.characterName);
+        OrbManager.AddCharCount(chara.characterName);
 
         return new GachaResult(chara, isNew);
     }
@@ -62,6 +63,7 @@ public static class GachaEngine
             CharacterData srChara = PickSROrAbove(allChars);
             bool isNew = !OrbManager.IsOwned(srChara.characterName);
             OrbManager.SetOwned(srChara.characterName);
+            OrbManager.AddCharCount(srChara.characterName);
 
             // 差し替えた分の天井カウントを1つ戻し（DrawSingleで加算済みのため補正）
             // SSRでなければ +1 してしまっているので ResetPity ではなく元の値に戻す

@@ -85,6 +85,60 @@ public static class OrbManager
         PlayerPrefs.Save();
     }
 
+    // ---- 所持枚数（重複含む。合成素材） ----
+
+    private static string KeyCount(string n) => $"GachaBlock_Count_{n}";
+    private static string KeyLevel(string n) => $"GachaBlock_Level_{n}";
+
+    public static int GetCharCount(string charName) =>
+        PlayerPrefs.GetInt(KeyCount(charName), 0);
+
+    public static void AddCharCount(string charName)
+    {
+        PlayerPrefs.SetInt(KeyCount(charName), GetCharCount(charName) + 1);
+        PlayerPrefs.Save();
+    }
+
+    // ---- 所持上限チェック（ユニーク数 50体まで） ----
+
+    public static int GetOwnedCount()
+    {
+        var all = Resources.LoadAll<CharacterData>("Characters");
+        int count = 0;
+        foreach (var c in all)
+            if (IsOwned(c.characterName)) count++;
+        return count;
+    }
+
+    public static bool CanDrawSingle() => GetOwnedCount() < 50;
+    public static bool CanDrawTen()    => GetOwnedCount() <= 48;
+
+    // ---- キャラ削除 ----
+
+    public static void RemoveOwned(string charName)
+    {
+        PlayerPrefs.SetInt(KeyOwned(charName), 0);
+        PlayerPrefs.SetInt(KeyCount(charName), 0);
+        PlayerPrefs.SetInt(KeyLevel(charName), 0);
+        PlayerPrefs.Save();
+    }
+
+    // ---- 合成強化（同キャラ Count-1 → Level+1、最大10） ----
+
+    public static int GetEnhanceLevel(string charName) =>
+        PlayerPrefs.GetInt(KeyLevel(charName), 0);
+
+    public static bool TryEnhance(string charName)
+    {
+        int count = GetCharCount(charName);
+        int level = GetEnhanceLevel(charName);
+        if (count < 2 || level >= 10) return false;
+        PlayerPrefs.SetInt(KeyCount(charName), count - 1);
+        PlayerPrefs.SetInt(KeyLevel(charName), level + 1);
+        PlayerPrefs.Save();
+        return true;
+    }
+
     // ---- デバッグ ----
 
     public static void ResetAll()

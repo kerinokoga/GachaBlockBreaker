@@ -54,8 +54,12 @@ public abstract class BlockBase : MonoBehaviour
 
     void OnCollisionEnter2D(Collision2D col)
     {
-        // ボールに当たったらダメージ（ExtraDamage パッシブ分を加算）
+        // ボールに当たったらダメージ（ExtraDamage パッシブ + 合成強化倍率を適用）
         if (col.gameObject.CompareTag("Ball"))
-            TakeDamage(1 + (CharacterManager.Instance?.BonusDamage ?? 0));
+        {
+            int baseDmg = 1 + (CharacterManager.Instance?.BonusDamage ?? 0);
+            float mul   = CharacterManager.Instance?.DamageMultiplier ?? 1f;
+            TakeDamage((int)System.Math.Ceiling(baseDmg * mul));
+        }
     }
 }

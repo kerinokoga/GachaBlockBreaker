@@ -17,6 +17,8 @@ public class GachaUI : MonoBehaviour
     Transform canvasRoot;
     Text orbText;
     Text pityText;
+    Text ownedText;
+    Text capacityText;
     GameObject resultPanel;
     Button btnSingle;
     Button btnTen;
@@ -64,7 +66,15 @@ public class GachaUI : MonoBehaviour
 
         // 天井カウンター
         pityText = MakeText(canvasRoot, $"天井まで: {OrbManager.PityLimit - OrbManager.GetPityCount()}", 26,
-            new Color(0.6f, 0.6f, 0.6f), new Vector2(0.5f, 0.81f), new Vector2(400f, 38f));
+            new Color(0.6f, 0.6f, 0.6f), new Vector2(0.5f, 0.82f), new Vector2(400f, 38f));
+
+        // 所持数表示
+        ownedText = MakeText(canvasRoot, $"所持: {OrbManager.GetOwnedCount()} / 50", 26,
+            new Color(0.7f, 0.7f, 0.85f), new Vector2(0.5f, 0.78f), new Vector2(400f, 38f));
+
+        // 所持上限警告テキスト（必要時のみ表示）
+        capacityText = MakeText(canvasRoot, "", 24,
+            new Color(1f, 0.4f, 0.4f), new Vector2(0.5f, 0.74f), new Vector2(700f, 36f));
 
         // 結果パネル（初期非表示）
         var rpGo = new GameObject("ResultPanel");
@@ -262,21 +272,36 @@ public class GachaUI : MonoBehaviour
 
     void RefreshOrbDisplay()
     {
-        if (orbText)  orbText.text  = $"Orb: {OrbManager.GetOrbs()}";
-        if (pityText) pityText.text = $"天井まで: {OrbManager.PityLimit - OrbManager.GetPityCount()}";
+        if (orbText)   orbText.text   = $"Orb: {OrbManager.GetOrbs()}";
+        if (pityText)  pityText.text  = $"天井まで: {OrbManager.PityLimit - OrbManager.GetPityCount()}";
+        if (ownedText) ownedText.text = $"所持: {OrbManager.GetOwnedCount()} / 50";
         RefreshButtons();
     }
 
     void RefreshButtons()
     {
-        if (btnSingle) btnSingle.interactable = OrbManager.CanAfford(OrbManager.CostSingle);
-        if (btnTen)    btnTen.interactable    = OrbManager.CanAfford(OrbManager.CostTen);
+        bool canSingle = OrbManager.CanAfford(OrbManager.CostSingle) && OrbManager.CanDrawSingle();
+        bool canTen    = OrbManager.CanAfford(OrbManager.CostTen)    && OrbManager.CanDrawTen();
+        if (btnSingle) btnSingle.interactable = canSingle;
+        if (btnTen)    btnTen.interactable    = canTen;
+
+        // 所持上限メッセージ
+        if (capacityText != null)
+        {
+            int owned = OrbManager.GetOwnedCount();
+            if (owned >= 50)
+                capacityText.text = "所持上限(50体)です。MANAGEでキャラを削除してください";
+            else if (owned == 49)
+                capacityText.text = "所持49体：1連のみ引けます";
+            else
+                capacityText.text = "";
+        }
     }
 
     void SetButtonsInteractable(bool value)
     {
-        if (btnSingle) btnSingle.interactable = value && OrbManager.CanAfford(OrbManager.CostSingle);
-        if (btnTen)    btnTen.interactable    = value && OrbManager.CanAfford(OrbManager.CostTen);
+        if (btnSingle) btnSingle.interactable = value && OrbManager.CanAfford(OrbManager.CostSingle) && OrbManager.CanDrawSingle();
+        if (btnTen)    btnTen.interactable    = value && OrbManager.CanAfford(OrbManager.CostTen)    && OrbManager.CanDrawTen();
     }
 
     // ---- レアリティカラー ----
