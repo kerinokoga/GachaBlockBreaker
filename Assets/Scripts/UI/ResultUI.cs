@@ -12,6 +12,14 @@ public class ResultUI : MonoBehaviour
         float rate = ResultData.DestroyRate;
         int stage = ResultData.StageNumber;
 
+        // クリア時にランキング送信
+        if (isClear)
+        {
+            string playerName = AuthManager.GetName();
+            if (!string.IsNullOrEmpty(playerName))
+                RankingManager.SubmitScore(stage, playerName, rate);
+        }
+
         var cGo = new GameObject("ResultCanvas");
         Canvas c = cGo.AddComponent<Canvas>();
         c.renderMode = RenderMode.ScreenSpaceOverlay;
