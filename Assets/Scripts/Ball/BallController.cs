@@ -64,6 +64,8 @@ public class BallController : MonoBehaviour
         if (isLaunched) return;
         isLaunched = true;
 
+        AudioManager.Instance?.PlaySE(AudioManager.Instance.seBallLaunch);
+
         // 斜め上に発射（少しランダムに）
         float angle = Random.Range(60f, 120f); // 60〜120度（上方向）
         float rad = angle * Mathf.Deg2Rad;

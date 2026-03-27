@@ -48,6 +48,7 @@ public abstract class BlockBase : MonoBehaviour
     /// </summary>
     protected void NotifyAndDestroy()
     {
+        AudioManager.Instance?.PlaySE(AudioManager.Instance.seBlockBreak);
         OnBlockDestroyed?.Invoke(this);
         Destroy(gameObject);
     }

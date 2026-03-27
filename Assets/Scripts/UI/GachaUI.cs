@@ -116,6 +116,7 @@ public class GachaUI : MonoBehaviour
             StartCoroutine(ShowInsufficientOrbs());
             return;
         }
+        AudioManager.Instance?.PlayGachaSE();
         RefreshOrbDisplay();
 
         if (pool == null || allChars == null || allChars.Length == 0)
@@ -136,6 +137,7 @@ public class GachaUI : MonoBehaviour
             StartCoroutine(ShowInsufficientOrbs());
             return;
         }
+        AudioManager.Instance?.PlayGachaSE();
 
         if (pool == null || allChars == null || allChars.Length == 0)
         {

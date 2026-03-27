@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using System.Collections;
 
@@ -91,6 +92,9 @@ public class GameManager : MonoBehaviour
         CharacterManager.Instance?.Initialize(ball, this);
 
         OnStockChanged?.Invoke(currentStock);
+
+        // Phase 6: ゲーム BGM 再生
+        AudioManager.Instance?.PlayBGMForScene("GameScene");
     }
 
     // ---- 入力 ----
@@ -151,6 +155,10 @@ public class GameManager : MonoBehaviour
             yield break;
         }
 
+        // Phase 6: ミス SE + 赤フラッシュ
+        AudioManager.Instance?.PlaySE(AudioManager.Instance.seMiss);
+        StartCoroutine(ScreenFlash(new Color(1f, 0.1f, 0.1f, 0.5f), 0.4f));
+
         currentStock--;
         OnStockChanged?.Invoke(currentStock);
 
@@ -174,6 +182,10 @@ public class GameManager : MonoBehaviour
     {
         CurrentState = GameState.GameOver;
 
+        // Phase 6: ゲームオーバー SE + BGM 停止
+        AudioManager.Instance?.PlaySE(AudioManager.Instance.seGameOver);
+        AudioManager.Instance?.StopBGM();
+
         ResultData.IsClear = false;
         ResultData.DestroyRate = stageManager != null ? stageManager.GetDestroyRate() : 0f;
         ResultData.RemainingStock = 0;
@@ -189,6 +201,11 @@ public class GameManager : MonoBehaviour
 
         // Phase 3: フル解放演出
         revealUI?.AdvanceToState(3);
+
+        // Phase 6: クリア SE + 白フラッシュ + BGM 停止
+        AudioManager.Instance?.PlaySE(AudioManager.Instance.seClear);
+        AudioManager.Instance?.StopBGM();
+        StartCoroutine(ScreenFlash(new Color(1f, 1f, 0.8f, 0.7f), 0.8f));
 
         ResultData.IsClear = true;
         ResultData.DestroyRate = 1f;
@@ -263,5 +280,28 @@ public class GameManager : MonoBehaviour
     {
         Time.timeScale = 1f;
         SceneManager.LoadScene("HomeScene");
+    }
+
+    // ---- Phase 6: 画面フラッシュ ----
+
+    private IEnumerator ScreenFlash(Color flashColor, float duration)
+    {
+        var go = new GameObject("ScreenFlash");
+        var canvas = go.AddComponent<Canvas>();
+        canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+        canvas.sortingOrder = 200;
+        var img = go.AddComponent<Image>();
+        img.color = flashColor;
+        img.raycastTarget = false;
+
+        float elapsed = 0f;
+        Color endColor = new Color(flashColor.r, flashColor.g, flashColor.b, 0f);
+        while (elapsed < duration)
+        {
+            elapsed += Time.unscaledDeltaTime;
+            img.color = Color.Lerp(flashColor, endColor, elapsed / duration);
+            yield return null;
+        }
+        Destroy(go);
     }
 }
