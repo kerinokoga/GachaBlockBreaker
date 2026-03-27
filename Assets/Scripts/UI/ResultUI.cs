@@ -52,12 +52,21 @@ public class ResultUI : MonoBehaviour
         MakeText(cGo.transform, $"DESTROY: {Mathf.FloorToInt(rate * 100)}%",
             44, Color.white, new Vector2(0.5f, 0.52f), new Vector2(500f, 65f));
 
+        // 初回クリア報酬
+        if (isClear && ResultData.IsFirstClear)
+        {
+            MakeText(cGo.transform,
+                $"★ {OrbManager.StageClearReward} オーブ GET!",
+                42, new Color(1f, 0.85f, 0.1f),
+                new Vector2(0.5f, 0.44f), new Vector2(600f, 60f));
+        }
+
         // NEXT STAGE ボタン（クリア時のみ）
         int nextStage = stage + 1;
         if (isClear && nextStage <= ProgressManager.TotalStages)
         {
             MakeButton(cGo.transform, "NEXT STAGE", new Color(0.15f, 0.7f, 0.3f),
-                new Vector2(0.5f, 0.50f), new Vector2(400f, 90f),
+                new Vector2(0.5f, 0.36f), new Vector2(400f, 90f),
                 () => {
                     ResultData.StageNumber = nextStage;
                     SceneManager.LoadScene("StageSelectScene");
@@ -66,17 +75,17 @@ public class ResultUI : MonoBehaviour
         else if (isClear)
         {
             MakeText(cGo.transform, "ALL STAGES CLEAR!", 36,
-                new Color(1f, 0.9f, 0.2f), new Vector2(0.5f, 0.50f), new Vector2(600f, 55f));
+                new Color(1f, 0.9f, 0.2f), new Vector2(0.5f, 0.36f), new Vector2(600f, 55f));
         }
 
         // RETRY ボタン
         MakeButton(cGo.transform, "RETRY", new Color(0.2f, 0.5f, 1f),
-            new Vector2(0.5f, 0.36f), new Vector2(360f, 90f),
+            new Vector2(0.5f, 0.24f), new Vector2(360f, 90f),
             () => SceneManager.LoadScene("GameScene"));
 
         // HOME ボタン
         MakeButton(cGo.transform, "HOME", new Color(0.3f, 0.3f, 0.35f),
-            new Vector2(0.5f, 0.22f), new Vector2(360f, 90f),
+            new Vector2(0.5f, 0.12f), new Vector2(360f, 90f),
             () => SceneManager.LoadScene("HomeScene"));
     }
 

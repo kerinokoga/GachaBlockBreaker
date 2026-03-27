@@ -139,6 +139,28 @@ public static class OrbManager
         return true;
     }
 
+    // ---- スターターキャラ保証 ----
+
+    private static readonly string[] StarterNames = { "Luna", "Aria", "Sera" };
+
+    /// <summary>
+    /// スターターキャラを必ず所持済みにする。
+    /// ファイル名で検索し、内部の characterName フィールド（日本語可）で PlayerPrefs に書き込む。
+    /// アプリ起動時に呼ぶことで Reset 後も自動復元される。
+    /// </summary>
+    public static void EnsureStarterCharacters()
+    {
+        foreach (var fileName in StarterNames)
+        {
+            var asset = Resources.Load<CharacterData>($"Characters/{fileName}");
+            if (asset == null) continue;
+            string actualName = asset.characterName;
+            if (string.IsNullOrEmpty(actualName)) continue;
+            if (!IsOwned(actualName)) SetOwned(actualName);
+            if (GetCharCount(actualName) == 0) AddCharCount(actualName);
+        }
+    }
+
     // ---- デバッグ ----
 
     public static void ResetAll()

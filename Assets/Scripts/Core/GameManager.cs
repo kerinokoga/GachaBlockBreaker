@@ -208,6 +208,7 @@ public class GameManager : MonoBehaviour
         StartCoroutine(ScreenFlash(new Color(1f, 1f, 0.8f, 0.7f), 0.8f));
 
         ResultData.IsClear = true;
+        ResultData.IsFirstClear = !ProgressManager.IsCleared(ResultData.StageNumber); // SaveClear より前に判定
         ResultData.DestroyRate = 1f;
         ResultData.RemainingStock = currentStock;
         // StageNumber はそのまま保持（変更しない）

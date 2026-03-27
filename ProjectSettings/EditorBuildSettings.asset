@@ -6,6 +6,9 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
+    path: Assets/Scenes/LoginScene.unity
+    guid: 631c14ca59ea8fe438c112bea780429d
+  - enabled: 1
     path: Assets/Scenes/HomeScene.unity
     guid: 13c199dd9fb26c54f9a55c04444e8800
   - enabled: 1
@@ -29,4 +32,10 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/CharaManageScene.unity
     guid: 0d3cfeea2e48aa74e9cd534db2abd225
+  - enabled: 1
+    path: Assets/Scenes/ShopScene.unity
+    guid: fc53b594da19c8c4097829176455b85d
+  - enabled: 1
+    path: Assets/Scenes/RankingScene.unity
+    guid: 31c9f87c5e8a6e640ba403df7fd7d1fc
   m_configObjects: {}

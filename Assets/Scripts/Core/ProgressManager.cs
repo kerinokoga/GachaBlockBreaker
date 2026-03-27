@@ -5,7 +5,7 @@ using UnityEngine;
 /// </summary>
 public static class ProgressManager
 {
-    public const int TotalStages = 5;
+    public const int TotalStages = 20;
 
     private static string KeyMaxUnlocked => "GachaBlock_MaxUnlocked";
     private static string KeyCleared(int stage) => $"GachaBlock_Cleared_{stage}";
@@ -51,6 +51,13 @@ public static class ProgressManager
             PlayerPrefs.DeleteKey(KeyRate(i));
         }
         PlayerPrefs.SetInt(KeyMaxUnlocked, 1);
+        PlayerPrefs.Save();
+    }
+
+    /// <summary>全ステージをアンロック（デバッグ用）</summary>
+    public static void UnlockAll()
+    {
+        PlayerPrefs.SetInt(KeyMaxUnlocked, TotalStages);
         PlayerPrefs.Save();
     }
 }

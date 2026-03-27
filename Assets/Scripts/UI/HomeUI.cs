@@ -6,7 +6,11 @@ public class HomeUI : MonoBehaviour
 {
     Text tapText;
 
-    void Start() => BuildUI();
+    void Start()
+    {
+        BuildUI();
+        AudioManager.Instance?.PlayBGMForScene("HomeScene");
+    }
 
     void Update()
     {

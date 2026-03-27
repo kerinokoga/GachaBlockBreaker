@@ -10,57 +10,51 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 62fe810b2a56876418f6b96dbac4259d, type: 3}
-  m_Name: Stage3
+  m_Name: Stage13
   m_EditorClassIdentifier: 
-  stageNumber: 3
+  stageNumber: 13
   blocks:
-  - blockType: 0
-    gridPosition: {x: 0, y: 0}
-    hp: 1
-  - blockType: 0
+  - blockType: 1
     gridPosition: {x: 1, y: 0}
-    hp: 1
-  - blockType: 0
+    hp: 2
+  - blockType: 1
     gridPosition: {x: 2, y: 0}
-    hp: 1
-  - blockType: 0
+    hp: 2
+  - blockType: 1
     gridPosition: {x: 3, y: 0}
-    hp: 1
-  - blockType: 0
+    hp: 2
+  - blockType: 1
     gridPosition: {x: 4, y: 0}
-    hp: 1
-  - blockType: 0
+    hp: 2
+  - blockType: 1
     gridPosition: {x: 5, y: 0}
-    hp: 1
-  - blockType: 0
+    hp: 2
+  - blockType: 1
     gridPosition: {x: 6, y: 0}
-    hp: 1
-  - blockType: 0
+    hp: 2
+  - blockType: 1
     gridPosition: {x: 7, y: 0}
-    hp: 1
-  - blockType: 0
-    gridPosition: {x: 8, y: 0}
-    hp: 1
+    hp: 2
   - blockType: 0
     gridPosition: {x: 1, y: 1}
+    hp: 1
+  - blockType: 0
+    gridPosition: {x: 2, y: 1}
     hp: 1
   - blockType: 0
     gridPosition: {x: 3, y: 1}
     hp: 1
   - blockType: 0
+    gridPosition: {x: 4, y: 1}
+    hp: 1
+  - blockType: 0
     gridPosition: {x: 5, y: 1}
     hp: 1
   - blockType: 0
-    gridPosition: {x: 7, y: 1}
-    hp: 1
-  - blockType: 2
-    gridPosition: {x: 2, y: 1}
-    hp: 1
-  - blockType: 2
     gridPosition: {x: 6, y: 1}
     hp: 1
   - blockType: 0
-    gridPosition: {x: 0, y: 2}
+    gridPosition: {x: 7, y: 1}
     hp: 1
   - blockType: 0
     gridPosition: {x: 1, y: 2}
@@ -83,22 +77,37 @@ MonoBehaviour:
   - blockType: 0
     gridPosition: {x: 7, y: 2}
     hp: 1
-  - blockType: 0
-    gridPosition: {x: 8, y: 2}
-    hp: 1
-  - blockType: 1
+  - blockType: 2
     gridPosition: {x: 2, y: 3}
-    hp: 2
-  - blockType: 1
+    hp: 1
+  - blockType: 2
+    gridPosition: {x: 5, y: 3}
+    hp: 1
+  - blockType: 0
+    gridPosition: {x: 1, y: 3}
+    hp: 1
+  - blockType: 0
+    gridPosition: {x: 2, y: 3}
+    hp: 1
+  - blockType: 0
+    gridPosition: {x: 3, y: 3}
+    hp: 1
+  - blockType: 0
     gridPosition: {x: 4, y: 3}
-    hp: 2
-  - blockType: 1
+    hp: 1
+  - blockType: 0
+    gridPosition: {x: 5, y: 3}
+    hp: 1
+  - blockType: 0
     gridPosition: {x: 6, y: 3}
-    hp: 2
+    hp: 1
+  - blockType: 0
+    gridPosition: {x: 7, y: 3}
+    hp: 1
   cellWidth: 1
   cellHeight: 0.5
   originOffset: {x: -4.5, y: 5}
-  characterName: Sera
-  illustColor30: {r: 0.6, g: 0.4, b: 0.2, a: 1}
-  illustColor60: {r: 0.8, g: 0.55, b: 0.25, a: 1}
-  illustColorFull: {r: 1, g: 0.75, b: 0.35, a: 1}
+  characterName: Kana
+  illustColor30: {r: 0.3, g: 0.1, b: 0.5, a: 1}
+  illustColor60: {r: 0.5, g: 0.1, b: 0.7, a: 1}
+  illustColorFull: {r: 0.8, g: 0.4, b: 1, a: 1}

@@ -10,13 +10,10 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 62fe810b2a56876418f6b96dbac4259d, type: 3}
-  m_Name: Stage5
+  m_Name: Stage11
   m_EditorClassIdentifier: 
-  stageNumber: 5
+  stageNumber: 11
   blocks:
-  - blockType: 0
-    gridPosition: {x: 0, y: 0}
-    hp: 1
   - blockType: 0
     gridPosition: {x: 1, y: 0}
     hp: 1
@@ -39,27 +36,30 @@ MonoBehaviour:
     gridPosition: {x: 7, y: 0}
     hp: 1
   - blockType: 0
-    gridPosition: {x: 8, y: 0}
+    gridPosition: {x: 1, y: 1}
     hp: 1
-  - blockType: 1
-    gridPosition: {x: 0, y: 1}
-    hp: 2
-  - blockType: 1
-    gridPosition: {x: 4, y: 1}
-    hp: 2
-  - blockType: 1
-    gridPosition: {x: 8, y: 1}
-    hp: 2
-  - blockType: 2
+  - blockType: 0
     gridPosition: {x: 2, y: 1}
     hp: 1
-  - blockType: 2
+  - blockType: 0
+    gridPosition: {x: 3, y: 1}
+    hp: 1
+  - blockType: 0
+    gridPosition: {x: 4, y: 1}
+    hp: 1
+  - blockType: 0
+    gridPosition: {x: 5, y: 1}
+    hp: 1
+  - blockType: 0
     gridPosition: {x: 6, y: 1}
     hp: 1
-  - blockType: 3
+  - blockType: 0
+    gridPosition: {x: 7, y: 1}
+    hp: 1
+  - blockType: 0
     gridPosition: {x: 1, y: 2}
     hp: 1
-  - blockType: 3
+  - blockType: 0
     gridPosition: {x: 2, y: 2}
     hp: 1
   - blockType: 0
@@ -71,43 +71,25 @@ MonoBehaviour:
   - blockType: 0
     gridPosition: {x: 5, y: 2}
     hp: 1
-  - blockType: 3
+  - blockType: 0
     gridPosition: {x: 6, y: 2}
     hp: 1
-  - blockType: 3
+  - blockType: 0
     gridPosition: {x: 7, y: 2}
     hp: 1
-  - blockType: 1
-    gridPosition: {x: 0, y: 3}
-    hp: 3
-  - blockType: 1
-    gridPosition: {x: 4, y: 3}
-    hp: 3
-  - blockType: 1
-    gridPosition: {x: 8, y: 3}
-    hp: 3
   - blockType: 2
     gridPosition: {x: 2, y: 3}
     hp: 1
   - blockType: 2
+    gridPosition: {x: 4, y: 3}
+    hp: 1
+  - blockType: 2
     gridPosition: {x: 6, y: 3}
-    hp: 1
-  - blockType: 0
-    gridPosition: {x: 1, y: 4}
-    hp: 1
-  - blockType: 0
-    gridPosition: {x: 3, y: 4}
-    hp: 1
-  - blockType: 0
-    gridPosition: {x: 5, y: 4}
-    hp: 1
-  - blockType: 0
-    gridPosition: {x: 7, y: 4}
     hp: 1
   cellWidth: 1
   cellHeight: 0.5
   originOffset: {x: -4.5, y: 5}
-  characterName: Luna
-  illustColor30: {r: 0.6, g: 0.5, b: 0.1, a: 1}
-  illustColor60: {r: 0.8, g: 0.7, b: 0.15, a: 1}
-  illustColorFull: {r: 1, g: 0.92, b: 0.3, a: 1}
+  characterName: Rin
+  illustColor30: {r: 0.1, g: 0.5, b: 0.4, a: 1}
+  illustColor60: {r: 0.2, g: 0.7, b: 0.6, a: 1}
+  illustColorFull: {r: 0.4, g: 1, b: 0.9, a: 1}

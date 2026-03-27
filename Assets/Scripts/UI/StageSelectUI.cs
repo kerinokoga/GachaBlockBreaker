@@ -3,7 +3,7 @@ using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 
 /// <summary>
-/// ステージ選択画面のランタイムUI
+/// ステージ選択画面（ScrollRect 対応・20ステージ）
 /// </summary>
 public class StageSelectUI : MonoBehaviour
 {
@@ -34,90 +34,149 @@ public class StageSelectUI : MonoBehaviour
 
         // タイトル
         MakeText(root, "STAGE SELECT", 52, new Color(1f, 0.9f, 0.2f),
-            new Vector2(0.5f, 0.92f), new Vector2(800f, 70f));
-        MakeText(root, "Select a stage", 28, new Color(0.7f, 0.7f, 0.9f),
-            new Vector2(0.5f, 0.86f), new Vector2(700f, 42f));
+            new Vector2(0.5f, 0.93f), new Vector2(800f, 70f));
 
-        // ステージデータをロード
-        var allStages = Resources.LoadAll<StageData>("Stages");
+        // BACK ボタン
+        MakeButton(root, "BACK", new Color(0.25f, 0.25f, 0.35f),
+            new Vector2(0.5f, 0.04f), new Vector2(360f, 80f),
+            () => SceneManager.LoadScene("HomeScene"));
+
+        // ScrollRect（y=0.10〜0.88）
+        BuildScrollList(root);
+    }
+
+    void BuildScrollList(Transform root)
+    {
+        // Viewport
+        var viewGo = new GameObject("Viewport");
+        viewGo.transform.SetParent(root, false);
+        viewGo.AddComponent<Image>().color = Color.white;
+        viewGo.AddComponent<Mask>().showMaskGraphic = false;
+        var viewRT = viewGo.GetComponent<RectTransform>();
+        viewRT.anchorMin = new Vector2(0.02f, 0.10f);
+        viewRT.anchorMax = new Vector2(0.98f, 0.88f);
+        viewRT.offsetMin = viewRT.offsetMax = Vector2.zero;
+
+        // Content
+        var contentGo = new GameObject("Content");
+        contentGo.transform.SetParent(viewGo.transform, false);
+        var contentRT = contentGo.AddComponent<RectTransform>();
+        contentRT.anchorMin = new Vector2(0f, 1f);
+        contentRT.anchorMax = new Vector2(1f, 1f);
+        contentRT.pivot     = new Vector2(0.5f, 1f);
+        contentRT.anchoredPosition = Vector2.zero;
+
+        // ScrollRect
+        var srGo = new GameObject("ScrollRect");
+        srGo.transform.SetParent(root, false);
+        var sr = srGo.AddComponent<ScrollRect>();
+        var srRT = srGo.GetComponent<RectTransform>();
+        srRT.anchorMin = new Vector2(0.02f, 0.10f);
+        srRT.anchorMax = new Vector2(0.98f, 0.88f);
+        srRT.offsetMin = srRT.offsetMax = Vector2.zero;
+        sr.content    = contentRT;
+        sr.viewport   = viewRT;
+        sr.horizontal = false;
+        sr.vertical   = true;
+        sr.scrollSensitivity = 30f;
+
+        var allStages  = Resources.LoadAll<StageData>("Stages");
         int maxUnlocked = ProgressManager.GetMaxUnlocked();
 
-        // 2列レイアウト
-        float[] colXs = { 0.28f, 0.72f };
-        float[] rowYs = { 0.74f, 0.55f, 0.36f };
+        int   total  = ProgressManager.TotalStages;
+        int   cols   = 2;
+        int   rows   = Mathf.CeilToInt((float)total / cols);
+        float cellW  = 460f;
+        float cellH  = 220f;
+        float padY   = 16f;
 
-        for (int i = 0; i < ProgressManager.TotalStages; i++)
+        float contentHeight = rows * (cellH + padY) + padY;
+        contentRT.sizeDelta = new Vector2(0f, contentHeight);
+
+        for (int i = 0; i < total; i++)
         {
-            int stageNum = i + 1;
-            float xPos = colXs[i % 2];
-            float yPos = rowYs[i / 2];
+            int   stageNum = i + 1;
+            int   col      = i % cols;
+            int   row      = i / cols;
+            float xAnchor  = col == 0 ? 0.27f : 0.73f;
+            float yPos     = -(padY + row * (cellH + padY) + cellH * 0.5f);
 
             StageData sd = null;
             foreach (var s in allStages)
                 if (s.stageNumber == stageNum) { sd = s; break; }
 
-            bool unlocked = stageNum <= maxUnlocked;
-            bool cleared  = ProgressManager.IsCleared(stageNum);
-            float rate    = ProgressManager.GetBestRate(stageNum);
+            bool  unlocked = stageNum <= maxUnlocked;
+            bool  cleared  = ProgressManager.IsCleared(stageNum);
+            float rate     = ProgressManager.GetBestRate(stageNum);
 
-            BuildStageCard(root, stageNum, sd, unlocked, cleared, rate, xPos, yPos);
+            BuildStageCard(contentRT, stageNum, sd, unlocked, cleared, rate,
+                           xAnchor, yPos, cellW, cellH);
         }
-
-        // BACK ボタン
-        MakeButton(root, "BACK", new Color(0.25f, 0.25f, 0.35f),
-            new Vector2(0.5f, 0.08f), new Vector2(360f, 90f),
-            () => SceneManager.LoadScene("HomeScene"));
     }
 
-    void BuildStageCard(Transform root, int stageNum, StageData sd,
+    void BuildStageCard(Transform parent, int stageNum, StageData sd,
         bool unlocked, bool cleared, float rate,
-        float anchorX, float anchorY)
+        float anchorX, float yPos, float w, float h)
     {
         int capturedNum = stageNum;
 
-        // カード背景
         Color cardCol = unlocked
             ? new Color(0.12f, 0.12f, 0.28f)
-            : new Color(0.1f, 0.1f, 0.1f);
+            : new Color(0.10f, 0.10f, 0.12f);
 
-        var card = MakeRectImage(root, cardCol,
-            new Vector2(anchorX, anchorY), Vector2.zero, new Vector2(320f, 220f));
+        var cardGo = new GameObject($"Stage{stageNum}Card");
+        cardGo.transform.SetParent(parent, false);
+        cardGo.AddComponent<Image>().color = cardCol;
+        var rt = cardGo.GetComponent<RectTransform>();
+        rt.anchorMin = rt.anchorMax = new Vector2(anchorX, 1f);
+        rt.pivot = new Vector2(0.5f, 1f);
+        rt.anchoredPosition = new Vector2(0f, yPos);
+        rt.sizeDelta = new Vector2(w, h);
 
-        // クリア済みなら上枠を色付き
+        Transform ct = cardGo.transform;
+
+        // クリア済みなら上端カラーライン
         if (cleared && sd != null)
         {
-            var border = MakeRectImage(card.transform, sd.illustColorFull,
-                new Vector2(0f, 1f), Vector2.zero, new Vector2(320f, 8f));
-            border.GetComponent<RectTransform>().pivot = new Vector2(0.5f, 1f);
+            var lineGo = new GameObject("Line");
+            lineGo.transform.SetParent(ct, false);
+            lineGo.AddComponent<Image>().color = sd.illustColorFull;
+            var lRT = lineGo.GetComponent<RectTransform>();
+            lRT.anchorMin = new Vector2(0f, 1f);
+            lRT.anchorMax = new Vector2(1f, 1f);
+            lRT.pivot = new Vector2(0.5f, 1f);
+            lRT.anchoredPosition = Vector2.zero;
+            lRT.sizeDelta = new Vector2(0f, 6f);
         }
 
         // ステージ番号
-        MakeText(card.transform, $"STAGE {stageNum}", 34,
+        MakeCellText(ct, $"STAGE {stageNum}", 32,
             unlocked ? Color.white : new Color(0.5f, 0.5f, 0.5f),
-            new Vector2(0.5f, 0.78f), new Vector2(280f, 48f));
+            new Vector2(0.5f, 0.80f), new Vector2(w - 20f, 44f));
 
         if (unlocked)
         {
-            // カラースウォッチ（解放カラーのプレビュー）
             Color swatchCol = (sd != null) ? sd.illustColorFull : new Color(0.4f, 0.4f, 0.6f);
-            MakeRectImage(card.transform, swatchCol,
-                new Vector2(0.5f, 0.52f), Vector2.zero, new Vector2(60f, 60f));
+            var swatchGo = new GameObject("Swatch");
+            swatchGo.transform.SetParent(ct, false);
+            swatchGo.AddComponent<Image>().color = swatchCol;
+            var sRT = swatchGo.GetComponent<RectTransform>();
+            sRT.anchorMin = sRT.anchorMax = new Vector2(0.22f, 0.50f);
+            sRT.sizeDelta = new Vector2(64f, 64f);
 
-            // キャラ名
             string charName = (sd != null && !string.IsNullOrEmpty(sd.characterName))
                 ? sd.characterName : "???";
-            MakeText(card.transform, charName, 26, new Color(0.85f, 0.85f, 1f),
-                new Vector2(0.5f, 0.28f), new Vector2(280f, 36f));
+            MakeCellText(ct, charName, 24, new Color(0.85f, 0.85f, 1f),
+                new Vector2(0.65f, 0.52f), new Vector2(w * 0.6f, 32f));
 
-            // クリア状態
             if (cleared)
             {
-                MakeText(card.transform, $"★ {Mathf.FloorToInt(rate * 100)}%", 22,
-                    new Color(1f, 0.9f, 0.2f), new Vector2(0.5f, 0.1f), new Vector2(280f, 30f));
+                MakeCellText(ct, $"★ {Mathf.FloorToInt(rate * 100)}%", 20,
+                    new Color(1f, 0.9f, 0.2f),
+                    new Vector2(0.65f, 0.28f), new Vector2(w * 0.5f, 28f));
             }
 
-            // タップで選択
-            var btn = card.gameObject.AddComponent<Button>();
+            var btn = cardGo.AddComponent<Button>();
             btn.transition = Selectable.Transition.ColorTint;
             btn.onClick.AddListener(() =>
             {
@@ -127,13 +186,12 @@ public class StageSelectUI : MonoBehaviour
         }
         else
         {
-            // ロック表示
-            MakeText(card.transform, "LOCKED", 30, new Color(0.4f, 0.4f, 0.4f),
-                new Vector2(0.5f, 0.5f), new Vector2(280f, 44f));
+            MakeCellText(ct, "LOCKED", 28, new Color(0.4f, 0.4f, 0.4f),
+                new Vector2(0.5f, 0.50f), new Vector2(w - 20f, 40f));
 
-            // 暗いオーバーレイ
-            var overlay = MakeRectImage(card.transform, new Color(0f, 0f, 0f, 0.55f),
-                new Vector2(0f, 0f), Vector2.zero, Vector2.zero);
+            var overlay = new GameObject("Overlay");
+            overlay.transform.SetParent(ct, false);
+            overlay.AddComponent<Image>().color = new Color(0f, 0f, 0f, 0.5f);
             var ort = overlay.GetComponent<RectTransform>();
             ort.anchorMin = Vector2.zero; ort.anchorMax = Vector2.one;
             ort.offsetMin = ort.offsetMax = Vector2.zero;
@@ -152,20 +210,22 @@ public class StageSelectUI : MonoBehaviour
         rt.offsetMin = rt.offsetMax = Vector2.zero;
     }
 
-    Image MakeRectImage(Transform parent, Color col, Vector2 anchor, Vector2 pos, Vector2 size)
+    Text MakeText(Transform parent, string txt, int size, Color col, Vector2 anchor, Vector2 sizeDelta)
     {
-        var go = new GameObject("Img");
+        var go = new GameObject("Txt");
         go.transform.SetParent(parent, false);
-        var img = go.AddComponent<Image>();
-        img.color = col;
+        var t = go.AddComponent<Text>();
+        t.text = txt; t.fontSize = size; t.color = col;
+        t.alignment = TextAnchor.MiddleCenter;
+        t.font = Font.CreateDynamicFontFromOSFont("Arial", size);
         var rt = go.GetComponent<RectTransform>();
         rt.anchorMin = rt.anchorMax = anchor;
-        rt.anchoredPosition = pos;
-        rt.sizeDelta = size;
-        return img;
+        rt.anchoredPosition = Vector2.zero;
+        rt.sizeDelta = sizeDelta;
+        return t;
     }
 
-    Text MakeText(Transform parent, string txt, int size, Color col, Vector2 anchor, Vector2 sizeDelta)
+    Text MakeCellText(Transform parent, string txt, int size, Color col, Vector2 anchor, Vector2 sizeDelta)
     {
         var go = new GameObject("Txt");
         go.transform.SetParent(parent, false);
@@ -196,9 +256,9 @@ public class StageSelectUI : MonoBehaviour
         var txtGo = new GameObject("Label");
         txtGo.transform.SetParent(go.transform, false);
         var t = txtGo.AddComponent<Text>();
-        t.text = label; t.fontSize = 38; t.color = Color.white;
+        t.text = label; t.fontSize = 36; t.color = Color.white;
         t.alignment = TextAnchor.MiddleCenter;
-        t.font = Font.CreateDynamicFontFromOSFont("Arial", 38);
+        t.font = Font.CreateDynamicFontFromOSFont("Arial", 36);
         var trt = txtGo.GetComponent<RectTransform>();
         trt.anchorMin = Vector2.zero; trt.anchorMax = Vector2.one;
         trt.offsetMin = trt.offsetMax = Vector2.zero;

@@ -13,6 +13,9 @@ public class LoginUI : MonoBehaviour
 
     void Start()
     {
+        // スターターキャラを常に保証（Reset後も自動復元）
+        OrbManager.EnsureStarterCharacters();
+
         // 既にログイン済みなら HomeScene へ
         if (AuthManager.IsLoggedIn)
         {

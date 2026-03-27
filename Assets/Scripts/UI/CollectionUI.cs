@@ -3,7 +3,7 @@ using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 
 /// <summary>
-/// コレクション画面：クリア済みステージの美少女解放状態を一覧表示
+/// コレクション画面：クリア済みステージの美少女解放状態を一覧表示（ScrollRect 対応）
 /// </summary>
 public class CollectionUI : MonoBehaviour
 {
@@ -34,78 +34,145 @@ public class CollectionUI : MonoBehaviour
 
         // タイトル
         MakeText(root, "COLLECTION", 52, new Color(1f, 0.9f, 0.2f),
-            new Vector2(0.5f, 0.93f), new Vector2(800f, 70f));
+            new Vector2(0.5f, 0.94f), new Vector2(800f, 70f));
 
-        // StageData ロード
+        // HOME ボタン
+        MakeButton(root, "HOME", new Color(0.25f, 0.25f, 0.35f),
+            new Vector2(0.5f, 0.04f), new Vector2(360f, 80f),
+            () => SceneManager.LoadScene("HomeScene"));
+
+        // ScrollRect（y=0.10〜0.88）
+        BuildScrollList(root);
+    }
+
+    void BuildScrollList(Transform root)
+    {
+        // Viewport
+        var viewGo = new GameObject("Viewport");
+        viewGo.transform.SetParent(root, false);
+        var viewImg = viewGo.AddComponent<Image>();
+        viewImg.color = Color.white;
+        viewGo.AddComponent<Mask>().showMaskGraphic = false;
+        var viewRT = viewGo.GetComponent<RectTransform>();
+        viewRT.anchorMin = new Vector2(0.02f, 0.10f);
+        viewRT.anchorMax = new Vector2(0.98f, 0.88f);
+        viewRT.offsetMin = viewRT.offsetMax = Vector2.zero;
+
+        // Content
+        var contentGo = new GameObject("Content");
+        contentGo.transform.SetParent(viewGo.transform, false);
+        var contentRT = contentGo.AddComponent<RectTransform>();
+        contentRT.anchorMin = new Vector2(0f, 1f);
+        contentRT.anchorMax = new Vector2(1f, 1f);
+        contentRT.pivot     = new Vector2(0.5f, 1f);
+        contentRT.anchoredPosition = Vector2.zero;
+
+        // ScrollRect
+        var srGo = new GameObject("ScrollRect");
+        srGo.transform.SetParent(root, false);
+        var sr = srGo.AddComponent<ScrollRect>();
+        var srRT = srGo.GetComponent<RectTransform>();
+        srRT.anchorMin = new Vector2(0.02f, 0.10f);
+        srRT.anchorMax = new Vector2(0.98f, 0.88f);
+        srRT.offsetMin = srRT.offsetMax = Vector2.zero;
+        sr.content    = contentRT;
+        sr.viewport   = viewRT;
+        sr.horizontal = false;
+        sr.vertical   = true;
+        sr.scrollSensitivity = 30f;
+
+        // ステージデータ
         var allStages = Resources.LoadAll<StageData>("Stages");
 
-        float[] colXs = { 0.27f, 0.73f };
-        float[] rowYs = { 0.82f, 0.65f, 0.48f };
+        // セル設定
+        float cellH  = 200f;
+        float cellW  = 480f;
+        float padX   = 20f;
+        float padY   = 16f;
+        int   cols   = 2;
+        int   total  = ProgressManager.TotalStages;
+        int   rows   = Mathf.CeilToInt((float)total / cols);
 
-        for (int i = 0; i < ProgressManager.TotalStages; i++)
+        float contentHeight = rows * (cellH + padY) + padY;
+        contentRT.sizeDelta = new Vector2(0f, contentHeight);
+
+        for (int i = 0; i < total; i++)
         {
             int stageNum = i + 1;
-            float xPos = colXs[i % 2];
-            float yPos = rowYs[i / 2];
+            int col = i % cols;
+            int row = i / cols;
+
+            float xAnchor = col == 0 ? 0.27f : 0.73f;
+            float yPos    = -(padY + row * (cellH + padY) + cellH * 0.5f);
 
             StageData sd = null;
             foreach (var s in allStages)
                 if (s.stageNumber == stageNum) { sd = s; break; }
 
-            bool cleared = ProgressManager.IsCleared(stageNum);
-            float rate   = ProgressManager.GetBestRate(stageNum);
+            bool  cleared = ProgressManager.IsCleared(stageNum);
+            float rate    = ProgressManager.GetBestRate(stageNum);
 
-            BuildCollectionCell(root, stageNum, sd, cleared, rate, xPos, yPos);
+            BuildCell(contentRT, stageNum, sd, cleared, rate, xAnchor, yPos, cellW, cellH);
         }
-
-        // BACK ボタン
-        MakeButton(root, "BACK", new Color(0.25f, 0.25f, 0.35f),
-            new Vector2(0.5f, 0.07f), new Vector2(360f, 90f),
-            () => SceneManager.LoadScene("HomeScene"));
     }
 
-    void BuildCollectionCell(Transform root, int stageNum, StageData sd,
-        bool cleared, float rate, float anchorX, float anchorY)
+    void BuildCell(Transform parent, int stageNum, StageData sd,
+        bool cleared, float rate, float anchorX, float yPos, float w, float h)
     {
         Color bgCol = cleared
-            ? new Color(0.12f, 0.1f, 0.2f)
-            : new Color(0.08f, 0.08f, 0.1f);
+            ? new Color(0.12f, 0.10f, 0.22f)
+            : new Color(0.08f, 0.08f, 0.12f);
 
-        var cell = MakeRectImage(root, bgCol,
-            new Vector2(anchorX, anchorY), Vector2.zero, new Vector2(460f, 200f));
+        var cellGo = new GameObject($"Stage{stageNum}Cell");
+        cellGo.transform.SetParent(parent, false);
+        cellGo.AddComponent<Image>().color = bgCol;
+        var rt = cellGo.GetComponent<RectTransform>();
+        rt.anchorMin = rt.anchorMax = new Vector2(anchorX, 1f);
+        rt.pivot = new Vector2(0.5f, 1f);
+        rt.anchoredPosition = new Vector2(0f, yPos);
+        rt.sizeDelta = new Vector2(w, h);
+
+        Transform ct = cellGo.transform;
 
         // ステージ番号
         Color titleCol = cleared ? Color.white : new Color(0.4f, 0.4f, 0.4f);
-        MakeText(cell.transform, $"STAGE {stageNum}", 32, titleCol,
-            new Vector2(0.5f, 0.82f), new Vector2(420f, 44f));
+        MakeCellText(ct, $"STAGE {stageNum}", 28, titleCol,
+            new Vector2(0.5f, 0.85f), new Vector2(w - 20f, 36f));
 
         if (cleared && sd != null)
         {
-            // カラースウォッチ（解放カラー）
-            MakeRectImage(cell.transform, sd.illustColorFull,
-                new Vector2(0.25f, 0.47f), Vector2.zero, new Vector2(90f, 90f));
+            // カラースウォッチ
+            var swatchGo = new GameObject("Swatch");
+            swatchGo.transform.SetParent(ct, false);
+            swatchGo.AddComponent<Image>().color = sd.illustColorFull;
+            var sRT = swatchGo.GetComponent<RectTransform>();
+            sRT.anchorMin = sRT.anchorMax = new Vector2(0.22f, 0.46f);
+            sRT.sizeDelta = new Vector2(80f, 80f);
 
-            // キャラ名
             string charName = !string.IsNullOrEmpty(sd.characterName) ? sd.characterName : "???";
-            MakeText(cell.transform, charName, 28, new Color(0.9f, 0.85f, 1f),
-                new Vector2(0.65f, 0.55f), new Vector2(220f, 40f));
+            MakeCellText(ct, charName, 24, new Color(0.9f, 0.85f, 1f),
+                new Vector2(0.65f, 0.56f), new Vector2(220f, 34f));
 
-            // 破壊率
-            MakeText(cell.transform, $"{Mathf.FloorToInt(rate * 100)}%", 24,
-                new Color(1f, 0.9f, 0.2f), new Vector2(0.65f, 0.25f), new Vector2(180f, 34f));
+            MakeCellText(ct, $"{Mathf.FloorToInt(rate * 100)}%", 22,
+                new Color(1f, 0.9f, 0.2f), new Vector2(0.65f, 0.26f), new Vector2(180f, 30f));
 
-            // クリアマーク上枠
-            var border = MakeRectImage(cell.transform, sd.illustColorFull,
-                new Vector2(0f, 1f), Vector2.zero, new Vector2(460f, 6f));
-            border.GetComponent<RectTransform>().pivot = new Vector2(0.5f, 1f);
+            // 上端カラーライン
+            var lineGo = new GameObject("Line");
+            lineGo.transform.SetParent(ct, false);
+            lineGo.AddComponent<Image>().color = sd.illustColorFull;
+            var lRT = lineGo.GetComponent<RectTransform>();
+            lRT.anchorMin = new Vector2(0f, 1f);
+            lRT.anchorMax = new Vector2(1f, 1f);
+            lRT.pivot = new Vector2(0.5f, 1f);
+            lRT.anchoredPosition = Vector2.zero;
+            lRT.sizeDelta = new Vector2(0f, 5f);
         }
         else
         {
-            // 未クリア
-            MakeText(cell.transform, "???", 44, new Color(0.3f, 0.3f, 0.3f),
-                new Vector2(0.5f, 0.47f), new Vector2(300f, 60f));
-            MakeText(cell.transform, "Not cleared", 22, new Color(0.35f, 0.35f, 0.35f),
-                new Vector2(0.5f, 0.2f), new Vector2(380f, 32f));
+            MakeCellText(ct, "???", 36, new Color(0.3f, 0.3f, 0.3f),
+                new Vector2(0.5f, 0.47f), new Vector2(w - 20f, 50f));
+            MakeCellText(ct, "Not cleared", 20, new Color(0.3f, 0.3f, 0.3f),
+                new Vector2(0.5f, 0.2f), new Vector2(w - 20f, 28f));
         }
     }
 
@@ -121,20 +188,22 @@ public class CollectionUI : MonoBehaviour
         rt.offsetMin = rt.offsetMax = Vector2.zero;
     }
 
-    Image MakeRectImage(Transform parent, Color col, Vector2 anchor, Vector2 pos, Vector2 size)
+    Text MakeText(Transform parent, string txt, int size, Color col, Vector2 anchor, Vector2 sizeDelta)
     {
-        var go = new GameObject("Img");
+        var go = new GameObject("Txt");
         go.transform.SetParent(parent, false);
-        var img = go.AddComponent<Image>();
-        img.color = col;
+        var t = go.AddComponent<Text>();
+        t.text = txt; t.fontSize = size; t.color = col;
+        t.alignment = TextAnchor.MiddleCenter;
+        t.font = Font.CreateDynamicFontFromOSFont("Arial", size);
         var rt = go.GetComponent<RectTransform>();
         rt.anchorMin = rt.anchorMax = anchor;
-        rt.anchoredPosition = pos;
-        rt.sizeDelta = size;
-        return img;
+        rt.anchoredPosition = Vector2.zero;
+        rt.sizeDelta = sizeDelta;
+        return t;
     }
 
-    Text MakeText(Transform parent, string txt, int size, Color col, Vector2 anchor, Vector2 sizeDelta)
+    Text MakeCellText(Transform parent, string txt, int size, Color col, Vector2 anchor, Vector2 sizeDelta)
     {
         var go = new GameObject("Txt");
         go.transform.SetParent(parent, false);
@@ -165,9 +234,9 @@ public class CollectionUI : MonoBehaviour
         var txtGo = new GameObject("Label");
         txtGo.transform.SetParent(go.transform, false);
         var t = txtGo.AddComponent<Text>();
-        t.text = label; t.fontSize = 38; t.color = Color.white;
+        t.text = label; t.fontSize = 36; t.color = Color.white;
         t.alignment = TextAnchor.MiddleCenter;
-        t.font = Font.CreateDynamicFontFromOSFont("Arial", 38);
+        t.font = Font.CreateDynamicFontFromOSFont("Arial", 36);
         var trt = txtGo.GetComponent<RectTransform>();
         trt.anchorMin = Vector2.zero; trt.anchorMax = Vector2.one;
         trt.offsetMin = trt.offsetMax = Vector2.zero;
