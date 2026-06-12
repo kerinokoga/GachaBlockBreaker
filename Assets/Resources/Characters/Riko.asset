@@ -1,0 +1,38 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5103790b115591843b21eafc2ded6d7e, type: 3}
+  m_Name: Riko
+  m_EditorClassIdentifier: 
+  characterName: "\u30EA\u30B3"
+  rarity: 1
+  rarityColor: {r: 0.3, g: 0.5, b: 1, a: 1}
+  icon: {fileID: 21300000, guid: cedbce46b0dc0e642988d86f766ea7de, type: 3}
+  passiveType: 2
+  passiveValue: 1
+  passiveType2: 0
+  passiveValue2: 0
+  ultimateType: 3
+  ultimateValue: 2
+  ultimateDuration: 0
+  ultimateGaugeCost: 10
+  voiceVolumeMultiplier: 1
+  voiceTitle: {fileID: 8300000, guid: 485d75debe594874e8945283aa103563, type: 3}
+  voiceSelect: {fileID: 8300000, guid: 9a7854094358090409037ede7eb8da3a, type: 3}
+  voiceUlt: {fileID: 8300000, guid: 354db97583b5f89469853e645e35da21, type: 3}
+  voiceVictory: {fileID: 8300000, guid: 8c2f6713965e50d49be35f5b9ab70495, type: 3}
+  voiceDefeat: {fileID: 8300000, guid: 596ce321731db9c48879622baf96e37d, type: 3}
+  voiceStageStart: {fileID: 8300000, guid: cd3f42c5fa9ccd34eacd8b572454d878, type: 3}
+  voiceDestroy30: {fileID: 8300000, guid: 0fdc38f14ab5c7a44908dc5633379313, type: 3}
+  voiceDestroy60: {fileID: 8300000, guid: 4a013dfd66237ca429cf908c0df214b1, type: 3}
+  voiceBossDamaged: {fileID: 8300000, guid: d473e5076e4948842b1d4b1fd3aa9876, type: 3}
+  voiceBossAttack: {fileID: 8300000, guid: a3d8d456c22b2e94cb958142d8102761, type: 3}
+  description: "\u708E\u306E\u5263\u3092\u632F\u308B\u3046\u8D64\u9AEA\u306E\u9A0E\u58EB\u3002\u8FFD\u52A0\u30C0\u30E1\u30FC\u30B8\uFF06\u5965\u7FA9\u3067\u30B9\u30C8\u30C3\u30AF+2\u56DE\u5FA9\uFF01"

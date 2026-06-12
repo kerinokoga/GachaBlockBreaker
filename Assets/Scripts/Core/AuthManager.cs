@@ -1,134 +1,183 @@
 using UnityEngine;
+using Firebase;
+using Firebase.Auth;
+using Firebase.Extensions;
+using System;
 
 /// <summary>
-/// モック認証マネージャー（PlayerPrefs ベース）
-/// 後から Firebase Auth に差し替え可能な構造
+/// Firebase Authentication マネージャー
+/// 匿名ログイン / メール＋パスワード認証
 /// </summary>
 public static class AuthManager
 {
-    private static string KeyUID     => "GachaBlock_AuthUID";
-    private static string KeyName    => "GachaBlock_AuthName";
-    private static string KeyPass    => "GachaBlock_AuthPass";
-    private static string KeyIsGuest => "GachaBlock_AuthIsGuest";
+    static FirebaseAuth auth;
+    static bool initialized;
 
-    // ---- 状態取得 ----
+    // PlayerPrefs キー（同期アクセス用キャッシュ）
+    static string KeyUID => "GachaBlock_AuthUID";
+    static string KeyName => "GachaBlock_AuthName";
+    static string KeyIsGuest => "GachaBlock_AuthIsGuest";
+
+    // ---- 状態取得（同期・キャッシュ） ----
 
     public static bool IsLoggedIn => !string.IsNullOrEmpty(GetUID());
-    public static string GetUID()  => PlayerPrefs.GetString(KeyUID, "");
+    public static string GetUID() => PlayerPrefs.GetString(KeyUID, "");
     public static string GetName() => PlayerPrefs.GetString(KeyName, "");
-    public static bool IsGuest()   => PlayerPrefs.GetInt(KeyIsGuest, 0) == 1;
+    public static bool IsGuest() => PlayerPrefs.GetInt(KeyIsGuest, 0) == 1;
 
-    // ---- ゲストログイン ----
+    // ---- Firebase 初期化 ----
 
-    public static string LoginAsGuest()
+    /// <summary>Firebase を初期化し、既存セッションを確認</summary>
+    public static void Initialize(Action onReady, Action<string> onFailed)
     {
-        string uid = System.Guid.NewGuid().ToString("N").Substring(0, 12);
-        string name = "Guest_" + uid.Substring(0, 6);
-        PlayerPrefs.SetString(KeyUID, uid);
-        PlayerPrefs.SetString(KeyName, name);
-        PlayerPrefs.SetInt(KeyIsGuest, 1);
-        PlayerPrefs.Save();
-        Debug.Log($"[AuthManager] ゲストログイン: {name} ({uid})");
-        return uid;
+        if (initialized)
+        {
+            if (auth.CurrentUser != null)
+                CacheUser(auth.CurrentUser);
+            else
+                ClearCache();
+            onReady?.Invoke();
+            return;
+        }
+
+        FirebaseApp.CheckAndFixDependenciesAsync().ContinueWithOnMainThread(task =>
+        {
+            if (task.Result == DependencyStatus.Available)
+            {
+                auth = FirebaseAuth.DefaultInstance;
+                initialized = true;
+
+                if (auth.CurrentUser != null)
+                    CacheUser(auth.CurrentUser);
+                else
+                    ClearCache();
+
+                onReady?.Invoke();
+            }
+            else
+            {
+                onFailed?.Invoke($"Firebase 初期化失敗: {task.Result}");
+            }
+        });
     }
 
-    // ---- ユーザー登録 ----
+    // ---- ゲストログイン（Firebase Anonymous） ----
 
-    /// <summary>
-    /// ユーザー名＋パスワードで登録。成功時 true。
-    /// モック版: PlayerPrefs に保存するだけ。
-    /// </summary>
-    public static bool Register(string username, string password, out string errorMsg)
+    public static void LoginAsGuest(Action onSuccess, Action<string> onFailed)
     {
-        errorMsg = "";
+        if (auth == null) { onFailed?.Invoke("Firebase 未初期化"); return; }
 
-        if (string.IsNullOrEmpty(username) || username.Length < 2)
+        auth.SignInAnonymouslyAsync().ContinueWithOnMainThread(task =>
         {
-            errorMsg = "名前は2文字以上で入力してください";
-            return false;
-        }
-        if (string.IsNullOrEmpty(password) || password.Length < 4)
-        {
-            errorMsg = "パスワードは4文字以上で入力してください";
-            return false;
-        }
-
-        // モック版: 同名チェック（PlayerPrefs に名前→UIDマッピング保存）
-        string existingUID = PlayerPrefs.GetString($"GachaBlock_UserMap_{username}", "");
-        if (!string.IsNullOrEmpty(existingUID))
-        {
-            errorMsg = "この名前は既に使用されています";
-            return false;
-        }
-
-        string uid = System.Guid.NewGuid().ToString("N").Substring(0, 12);
-        string passHash = ComputeSimpleHash(password);
-
-        // ユーザーデータ保存
-        PlayerPrefs.SetString($"GachaBlock_UserMap_{username}", uid);
-        PlayerPrefs.SetString($"GachaBlock_UserPass_{username}", passHash);
-
-        // ログイン状態保存
-        PlayerPrefs.SetString(KeyUID, uid);
-        PlayerPrefs.SetString(KeyName, username);
-        PlayerPrefs.SetString(KeyPass, passHash);
-        PlayerPrefs.SetInt(KeyIsGuest, 0);
-        PlayerPrefs.Save();
-
-        Debug.Log($"[AuthManager] 登録完了: {username} ({uid})");
-        return true;
+            if (task.IsFaulted || task.IsCanceled)
+            {
+                onFailed?.Invoke(TranslateError(task.Exception));
+                return;
+            }
+            CacheUser(task.Result.User);
+            onSuccess?.Invoke();
+        });
     }
 
-    // ---- ログイン ----
+    // ---- メール＋パスワード新規登録 ----
 
-    public static bool Login(string username, string password, out string errorMsg)
+    public static void Register(string email, string password, Action onSuccess, Action<string> onFailed)
     {
-        errorMsg = "";
+        if (auth == null) { onFailed?.Invoke("Firebase 未初期化"); return; }
 
-        string storedUID = PlayerPrefs.GetString($"GachaBlock_UserMap_{username}", "");
-        if (string.IsNullOrEmpty(storedUID))
+        if (string.IsNullOrEmpty(email) || !email.Contains("@"))
         {
-            errorMsg = "ユーザーが見つかりません";
-            return false;
+            onFailed?.Invoke("有効なメールアドレスを入力してください");
+            return;
+        }
+        if (string.IsNullOrEmpty(password) || password.Length < 6)
+        {
+            onFailed?.Invoke("パスワードは6文字以上で入力してください");
+            return;
         }
 
-        string storedHash = PlayerPrefs.GetString($"GachaBlock_UserPass_{username}", "");
-        string inputHash  = ComputeSimpleHash(password);
-        if (storedHash != inputHash)
+        auth.CreateUserWithEmailAndPasswordAsync(email, password).ContinueWithOnMainThread(task =>
         {
-            errorMsg = "パスワードが違います";
-            return false;
-        }
+            if (task.IsFaulted || task.IsCanceled)
+            {
+                onFailed?.Invoke(TranslateError(task.Exception));
+                return;
+            }
+            CacheUser(task.Result.User);
+            onSuccess?.Invoke();
+        });
+    }
 
-        PlayerPrefs.SetString(KeyUID, storedUID);
-        PlayerPrefs.SetString(KeyName, username);
-        PlayerPrefs.SetString(KeyPass, storedHash);
-        PlayerPrefs.SetInt(KeyIsGuest, 0);
-        PlayerPrefs.Save();
+    // ---- メール＋パスワードログイン ----
 
-        Debug.Log($"[AuthManager] ログイン成功: {username}");
-        return true;
+    public static void Login(string email, string password, Action onSuccess, Action<string> onFailed)
+    {
+        if (auth == null) { onFailed?.Invoke("Firebase 未初期化"); return; }
+
+        auth.SignInWithEmailAndPasswordAsync(email, password).ContinueWithOnMainThread(task =>
+        {
+            if (task.IsFaulted || task.IsCanceled)
+            {
+                onFailed?.Invoke(TranslateError(task.Exception));
+                return;
+            }
+            CacheUser(task.Result.User);
+            onSuccess?.Invoke();
+        });
     }
 
     // ---- ログアウト ----
 
     public static void Logout()
     {
-        Debug.Log($"[AuthManager] ログアウト: {GetName()}");
+        if (auth != null) auth.SignOut();
+        ClearCache();
+    }
+
+    // ---- 内部ヘルパー ----
+
+    static void CacheUser(FirebaseUser user)
+    {
+        PlayerPrefs.SetString(KeyUID, user.UserId);
+        string displayName = user.DisplayName;
+        if (string.IsNullOrEmpty(displayName))
+            displayName = user.Email ?? "Guest_" + user.UserId.Substring(0, 6);
+        PlayerPrefs.SetString(KeyName, displayName);
+        PlayerPrefs.SetInt(KeyIsGuest, user.IsAnonymous ? 1 : 0);
+        PlayerPrefs.Save();
+    }
+
+    static void ClearCache()
+    {
         PlayerPrefs.DeleteKey(KeyUID);
         PlayerPrefs.DeleteKey(KeyName);
-        PlayerPrefs.DeleteKey(KeyPass);
         PlayerPrefs.DeleteKey(KeyIsGuest);
         PlayerPrefs.Save();
     }
 
-    // ---- 簡易ハッシュ（モック用、本番は Firebase Auth に差し替え） ----
-
-    static string ComputeSimpleHash(string input)
+    static string TranslateError(AggregateException ex)
     {
-        int hash = 0;
-        foreach (char c in input)
-            hash = hash * 31 + c;
-        return hash.ToString("X8");
+        string msg = "";
+        if (ex?.InnerExceptions != null && ex.InnerExceptions.Count > 0)
+            msg = ex.InnerExceptions[0].Message;
+        else
+            return "不明なエラー";
+
+        if (msg.Contains("badly formatted"))
+            return "メールアドレスの形式が正しくありません";
+        if (msg.Contains("already in use"))
+            return "このメールアドレスは既に使用されています";
+        if (msg.Contains("wrong password") || msg.Contains("password is invalid"))
+            return "パスワードが正しくありません";
+        if (msg.Contains("no user record") || msg.Contains("user not found"))
+            return "このメールアドレスは登録されていません";
+        if (msg.Contains("too many requests"))
+            return "リクエストが多すぎます。しばらく待ってください";
+        if (msg.Contains("network"))
+            return "ネットワークエラー。接続を確認してください";
+        if (msg.Contains("weak password") || msg.Contains("6 characters"))
+            return "パスワードは6文字以上で入力してください";
+
+        return msg;
     }
 }

@@ -14,73 +14,140 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   stageNumber: 2
   blocks:
-  - blockType: 0
+  - blockType: 1
     gridPosition: {x: 1, y: 0}
-    hp: 1
-  - blockType: 0
+    hp: 5
+    speedMultiplier: 1.15
+  - blockType: 1
     gridPosition: {x: 2, y: 0}
-    hp: 1
-  - blockType: 0
+    hp: 5
+    speedMultiplier: 1.15
+  - blockType: 1
     gridPosition: {x: 3, y: 0}
-    hp: 1
-  - blockType: 0
+    hp: 5
+    speedMultiplier: 1.15
+  - blockType: 1
     gridPosition: {x: 4, y: 0}
-    hp: 1
-  - blockType: 0
+    hp: 5
+    speedMultiplier: 1.15
+  - blockType: 1
     gridPosition: {x: 5, y: 0}
-    hp: 1
-  - blockType: 0
+    hp: 5
+    speedMultiplier: 1.15
+  - blockType: 1
     gridPosition: {x: 6, y: 0}
-    hp: 1
-  - blockType: 0
+    hp: 5
+    speedMultiplier: 1.15
+  - blockType: 1
     gridPosition: {x: 7, y: 0}
-    hp: 1
-  - blockType: 0
+    hp: 5
+    speedMultiplier: 1.15
+  - blockType: 1
     gridPosition: {x: 1, y: 1}
-    hp: 1
-  - blockType: 0
+    hp: 5
+    speedMultiplier: 1.15
+  - blockType: 1
     gridPosition: {x: 2, y: 1}
-    hp: 1
-  - blockType: 0
+    hp: 5
+    speedMultiplier: 1.15
+  - blockType: 1
     gridPosition: {x: 3, y: 1}
-    hp: 1
-  - blockType: 0
+    hp: 5
+    speedMultiplier: 1.15
+  - blockType: 1
     gridPosition: {x: 4, y: 1}
-    hp: 1
-  - blockType: 0
+    hp: 5
+    speedMultiplier: 1.15
+  - blockType: 1
     gridPosition: {x: 5, y: 1}
-    hp: 1
-  - blockType: 0
+    hp: 5
+    speedMultiplier: 1.15
+  - blockType: 1
     gridPosition: {x: 6, y: 1}
-    hp: 1
-  - blockType: 0
+    hp: 5
+    speedMultiplier: 1.15
+  - blockType: 1
     gridPosition: {x: 7, y: 1}
-    hp: 1
-  - blockType: 0
+    hp: 5
+    speedMultiplier: 1.15
+  - blockType: 1
     gridPosition: {x: 1, y: 2}
-    hp: 1
-  - blockType: 0
+    hp: 8
+    speedMultiplier: 1.15
+  - blockType: 1
     gridPosition: {x: 2, y: 2}
-    hp: 1
-  - blockType: 0
+    hp: 8
+    speedMultiplier: 1.15
+  - blockType: 1
     gridPosition: {x: 3, y: 2}
-    hp: 1
-  - blockType: 0
+    hp: 8
+    speedMultiplier: 1.15
+  - blockType: 1
     gridPosition: {x: 4, y: 2}
-    hp: 1
-  - blockType: 0
+    hp: 8
+    speedMultiplier: 1.15
+  - blockType: 1
     gridPosition: {x: 5, y: 2}
-    hp: 1
-  - blockType: 0
+    hp: 8
+    speedMultiplier: 1.15
+  - blockType: 1
     gridPosition: {x: 6, y: 2}
-    hp: 1
-  - blockType: 0
+    hp: 8
+    speedMultiplier: 1.15
+  - blockType: 1
     gridPosition: {x: 7, y: 2}
+    hp: 8
+    speedMultiplier: 1.15
+  - blockType: 1
+    gridPosition: {x: 2, y: 3}
+    hp: 12
+    speedMultiplier: 1.15
+  - blockType: 1
+    gridPosition: {x: 3, y: 3}
+    hp: 12
+    speedMultiplier: 1.15
+  - blockType: 1
+    gridPosition: {x: 4, y: 3}
+    hp: 12
+    speedMultiplier: 1.15
+  - blockType: 1
+    gridPosition: {x: 5, y: 3}
+    hp: 12
+    speedMultiplier: 1.15
+  - blockType: 1
+    gridPosition: {x: 6, y: 3}
+    hp: 12
+    speedMultiplier: 1.15
+  - blockType: 4
+    gridPosition: {x: 3, y: 5}
     hp: 1
+    speedMultiplier: 1.15
+  - blockType: 4
+    gridPosition: {x: 5, y: 5}
+    hp: 1
+    speedMultiplier: 1.15
+  - blockType: 5
+    gridPosition: {x: 4, y: -3}
+    hp: 60
+    speedMultiplier: 1.15
   cellWidth: 1
-  cellHeight: 0.5
-  originOffset: {x: -4.5, y: 5}
-  characterName: Aria
+  cellHeight: 1.2
+  originOffset: {x: -4.5, y: 3.8}
+  characterName: "\u30A2\u30EA\u30A2"
+  illustSprite0: {fileID: 21300000, guid: 0de4a9f34baa5144ea6a4537c47ddc1d, type: 3}
+  illustSprite30: {fileID: 21300000, guid: b79d3fa5c5b75f1448c5a089d80dd850, type: 3}
+  illustSprite60: {fileID: 21300000, guid: 4c14b3783b2a7be4c862da25f0de4806, type: 3}
+  illustSpriteFull: {fileID: 21300000, guid: 5c71063962ae903438db99735864bffa, type: 3}
+  paddleScale: 1
   illustColor30: {r: 0.2, g: 0.2, b: 0.5, a: 1}
   illustColor60: {r: 0.3, g: 0.3, b: 0.7, a: 1}
   illustColorFull: {r: 0.6, g: 0.7, b: 1, a: 1}
+  hasTrueStage: 0
+  trueBossHPMul: 2
+  trueAttackMul: 2
+  truePaddleShrinkMul: 3
+  trueBlocks: []
+  trueIllustSprite0: {fileID: 0}
+  trueIllustSprite30: {fileID: 0}
+  trueIllustSprite60: {fileID: 0}
+  trueIllustSpriteFull: {fileID: 0}

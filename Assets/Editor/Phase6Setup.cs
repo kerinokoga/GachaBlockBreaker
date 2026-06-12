@@ -95,6 +95,66 @@ public static class Phase6Setup
         return true;
     }
 
+    // ---- SE 自動割当 ----
+
+    [MenuItem("GachaBlock/Phase6/5. Assign SE Clips to AudioManager")]
+    static void AssignSEClips()
+    {
+        var am = Object.FindObjectOfType<AudioManager>();
+        if (am == null)
+        {
+            EditorUtility.DisplayDialog("Phase6", "AudioManager が見つかりません。\n先にシーンに追加してください。", "OK");
+            return;
+        }
+
+        // ファイル名 → AudioManager フィールドの対応表
+        var mapping = new System.Collections.Generic.Dictionary<string, System.Action<AudioClip>>
+        {
+            { "blockbreak",  clip => am.seBlockBreak = clip },
+            { "ballstart",   clip => am.seBallLaunch = clip },
+            { "miss",        clip => am.seMiss = clip },
+            { "gameover",    clip => am.seGameOver = clip },
+            { "clear",       clip => am.seClear = clip },
+            { "gacha",       clip => am.seGacha = clip },
+            { "bottan",      clip => am.seButton = clip },
+            { "ougi",        clip => am.seUlt = clip },
+            { "ult charge",  clip => am.seUltReady = clip },
+        };
+
+        int assigned = 0;
+        var sb = new System.Text.StringBuilder();
+
+        // Assets/Audio/ 以下の全 AudioClip を検索
+        var guids = AssetDatabase.FindAssets("t:AudioClip", new[] { "Assets/Audio" });
+        foreach (var guid in guids)
+        {
+            string path = AssetDatabase.GUIDToAssetPath(guid);
+            string fileName = System.IO.Path.GetFileNameWithoutExtension(path).ToLower();
+
+            foreach (var kv in mapping)
+            {
+                if (fileName == kv.Key.ToLower())
+                {
+                    var clip = AssetDatabase.LoadAssetAtPath<AudioClip>(path);
+                    if (clip != null)
+                    {
+                        kv.Value(clip);
+                        assigned++;
+                        sb.AppendLine($"✓ {kv.Key} → {path}");
+                    }
+                    break;
+                }
+            }
+        }
+
+        EditorUtility.SetDirty(am);
+        EditorSceneManager.MarkSceneDirty(UnityEngine.SceneManagement.SceneManager.GetActiveScene());
+
+        Debug.Log($"[Phase6] SE割当完了: {assigned}/{mapping.Count}\n{sb}");
+        EditorUtility.DisplayDialog("Phase6",
+            $"SE割当完了！ {assigned}/{mapping.Count} 個\n\n{sb}\n\nシーンを保存してください。", "OK");
+    }
+
     // ---- デバッグ ----
 
     [MenuItem("GachaBlock/Phase6/Debug: Play Button SE")]

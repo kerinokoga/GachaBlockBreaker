@@ -23,8 +23,8 @@ public static class Phase2Setup
 
         CreateCharacter(folder, "Luna",
             "ルナ", Rarity.SR, new Color(0.75f, 0.3f, 1f),
-            PassiveEffectType.BallSpeedUp, 1.2f,
-            UltimateSkillType.SpeedBurst, 1.5f, 3f, 10,
+            PassiveEffectType.BallDamageUp, 1.2f,
+            UltimateSkillType.PowerBurst, 1.5f, 3f, 10,
             "SR キャラ。ボール速度が 1.2 倍になる。奥義で 3 秒間さらに加速！");
 
         CreateCharacter(folder, "Aria",

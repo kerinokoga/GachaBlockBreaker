@@ -38,4 +38,7 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/RankingScene.unity
     guid: 31c9f87c5e8a6e640ba403df7fd7d1fc
+  - enabled: 1
+    path: Assets/Scenes/PresentBoxScene.unity
+    guid: 50b7dd53abaa56a48976d72395cbda12
   m_configObjects: {}

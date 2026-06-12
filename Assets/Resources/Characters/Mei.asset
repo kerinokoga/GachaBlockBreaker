@@ -1,0 +1,38 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5103790b115591843b21eafc2ded6d7e, type: 3}
+  m_Name: Mei
+  m_EditorClassIdentifier: 
+  characterName: "\u30E1\u30A4"
+  rarity: 0
+  rarityColor: {r: 0.6, g: 0.6, b: 0.6, a: 1}
+  icon: {fileID: 21300000, guid: 5f930291db1465740923cf3ec6008da1, type: 3}
+  passiveType: 2
+  passiveValue: 1
+  passiveType2: 0
+  passiveValue2: 0
+  ultimateType: 3
+  ultimateValue: 2
+  ultimateDuration: 0
+  ultimateGaugeCost: 10
+  voiceVolumeMultiplier: 1
+  voiceTitle: {fileID: 8300000, guid: f8f7f478de64b564bb8af04516a74eb8, type: 3}
+  voiceSelect: {fileID: 8300000, guid: b406d04c56bddff45b2c9f5484b619aa, type: 3}
+  voiceUlt: {fileID: 8300000, guid: e4ee093370d04e24c9443db7a03dd3a0, type: 3}
+  voiceVictory: {fileID: 8300000, guid: 7a78d0a75cc650a40845b151b15f683d, type: 3}
+  voiceDefeat: {fileID: 8300000, guid: 46bed459d904aaa4f8347b15f0217142, type: 3}
+  voiceStageStart: {fileID: 8300000, guid: 59ce11b2cbfe68f4b9bd567e89d75ace, type: 3}
+  voiceDestroy30: {fileID: 8300000, guid: 216ea6262597a804face62a7ce6aa3a9, type: 3}
+  voiceDestroy60: {fileID: 8300000, guid: 288f74e27b77bdc4f9b3042738c24c8a, type: 3}
+  voiceBossDamaged: {fileID: 8300000, guid: 374af4fd35920684ca4f7d66dabbd94e, type: 3}
+  voiceBossAttack: {fileID: 8300000, guid: b9e7d51b1d785474580d028f01287add, type: 3}
+  description: "\u6625\u98A8\u306E\u5996\u7CBE\u3002\u8FFD\u52A0\u30C0\u30E1\u30FC\u30B8\uFF06\u5965\u7FA9\u3067\u30B9\u30C8\u30C3\u30AF+2\u56DE\u5FA9\u3002\u653B\u5B88\u30D0\u30E9\u30F3\u30B9\u578B\u3002"

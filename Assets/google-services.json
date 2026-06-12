@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1032604539285",
+    "project_id": "gachablockbreaker",
+    "storage_bucket": "gachablockbreaker.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1032604539285:android:dc32fc13e25a17d0d87e9c",
+        "android_client_info": {
+          "package_name": "com.kerinogame.gachablockbreaker"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAgff-9P55D0VJAhje-1f8f-VNHBQCsm4U"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

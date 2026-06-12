@@ -24,6 +24,7 @@ public static class SceneSetup
         cameraGo.transform.position = new Vector3(0, 0, -10);
         cameraGo.tag = "MainCamera";
         cameraGo.AddComponent<AudioListener>();
+        cameraGo.AddComponent<CameraFitWidth>();
 
         // ---- Walls 親オブジェクト ----
         GameObject walls = new GameObject("Walls");

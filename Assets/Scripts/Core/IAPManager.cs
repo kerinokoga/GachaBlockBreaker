@@ -9,10 +9,10 @@ public static class IAPManager
     // ---- 商品定義 ----
 
     public static readonly Product[] Products = {
-        new Product("orb_100",  100,  "¥150"),
-        new Product("orb_1000", 1000, "¥1,350"),
-        new Product("orb_3000", 3000, "¥4,150"),
-        new Product("orb_5000", 5000, "¥6,750"),
+        new Product("orb_100",  100,  "¥150",   150),
+        new Product("orb_1000", 1000, "¥1,350", 1350),
+        new Product("orb_3000", 3000, "¥4,150", 4150),
+        new Product("orb_5000", 5000, "¥6,750", 6750),
     };
 
     public struct Product
@@ -20,12 +20,14 @@ public static class IAPManager
         public string id;
         public int orbAmount;
         public string priceLabel;
+        public int priceYen;
 
-        public Product(string id, int orbAmount, string priceLabel)
+        public Product(string id, int orbAmount, string priceLabel, int priceYen)
         {
             this.id = id;
             this.orbAmount = orbAmount;
             this.priceLabel = priceLabel;
+            this.priceYen = priceYen;
         }
     }
 
@@ -44,8 +46,18 @@ public static class IAPManager
             return false;
         }
 
+        // 課金制限チェック
+        if (!AgeVerificationManager.CanPurchase(product.Value.priceYen))
+        {
+            Debug.Log($"[IAP] 課金制限により購入できません: {productId}");
+            return false;
+        }
+
         // オーブ付与
         OrbManager.AddOrbs(product.Value.orbAmount);
+
+        // 課金額を記録
+        AgeVerificationManager.AddSpent(product.Value.priceYen);
 
         // 購入履歴を PlayerPrefs に記録
         string key = $"GachaBlock_IAP_{productId}";

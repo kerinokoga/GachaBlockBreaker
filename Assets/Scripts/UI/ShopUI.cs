@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using System.Collections;
+using System.Collections.Generic;
 
 /// <summary>
 /// ショップ画面：オーブ購入（モック IAP）
@@ -10,8 +11,24 @@ public class ShopUI : MonoBehaviour
 {
     Text orbText;
     Text messageText;
+    List<RectTransform> particles = new List<RectTransform>();
 
     void Start() => BuildUI();
+
+    void Update()
+    {
+        // 光の粒アニメーション
+        for (int i = 0; i < particles.Count; i++)
+        {
+            if (particles[i] == null) continue;
+            var p = particles[i];
+            p.anchoredPosition += new Vector2(0f, 40f * Time.deltaTime);
+            if (p.anchoredPosition.y > 1000f)
+                p.anchoredPosition = new Vector2(Random.Range(-540f, 540f), -1000f);
+            float x = p.anchoredPosition.x + Mathf.Sin(Time.time * 0.8f + i * 1.3f) * 15f * Time.deltaTime;
+            p.anchoredPosition = new Vector2(x, p.anchoredPosition.y);
+        }
+    }
 
     void BuildUI()
     {
@@ -21,7 +38,7 @@ public class ShopUI : MonoBehaviour
         var cs = cGo.AddComponent<CanvasScaler>();
         cs.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
         cs.referenceResolution = new Vector2(1080, 1920);
-        cs.matchWidthOrHeight = 0.5f;
+        cs.matchWidthOrHeight = 0.0f;
         cGo.AddComponent<GraphicRaycaster>();
 
         if (FindObjectOfType<UnityEngine.EventSystems.EventSystem>() == null)
@@ -33,22 +50,58 @@ public class ShopUI : MonoBehaviour
 
         var root = cGo.transform;
 
-        // 背景
-        MakeBg(root, new Color(0.05f, 0.03f, 0.12f));
+        // ===== 背景（暗い紫/紺） =====
+        MakeBg(root, new Color(0.03f, 0.02f, 0.1f));
 
-        // タイトル
-        MakeText(root, "SHOP", 56, new Color(1f, 0.85f, 0.1f),
-            new Vector2(0.5f, 0.93f), new Vector2(400f, 70f));
+        // ===== 上部装飾バー =====
+        MakeDecorBar(root, new Vector2(0f, 0.97f), new Vector2(1f, 1f),
+            new Color(1f, 0.85f, 0.1f, 0.25f));
 
-        // オーブ表示
-        orbText = MakeText(root, $"Orb: {OrbManager.GetOrbs()}", 34,
-            new Color(0.4f, 0.9f, 1f), new Vector2(0.5f, 0.87f), new Vector2(400f, 45f));
+        // ===== 下部装飾バー =====
+        MakeDecorBar(root, Vector2.zero, new Vector2(1f, 0.02f),
+            new Color(1f, 0.85f, 0.1f, 0.25f));
 
-        // メッセージ（購入成功時に表示）
+        // ===== 光の粒パーティクル =====
+        CreateParticles(root, 12);
+
+        // ===== タイトル（Shadow + Outline付き） =====
+        var titleText = MakeText(root, "✦ オーブ購入 ✦", 56, new Color(1f, 0.85f, 0.1f),
+            new Vector2(0.5f, 0.93f), new Vector2(500f, 70f));
+        var shadow = titleText.gameObject.AddComponent<Shadow>();
+        shadow.effectColor = new Color(0.6f, 0.1f, 0.3f, 0.8f);
+        shadow.effectDistance = new Vector2(3f, -3f);
+        var outline = titleText.gameObject.AddComponent<Outline>();
+        outline.effectColor = new Color(0.8f, 0.2f, 0.4f, 0.9f);
+        outline.effectDistance = new Vector2(2f, -2f);
+
+        // ===== オーブ表示（Shadow付き） =====
+        orbText = MakeText(root, $"◆ 所持オーブ: {OrbManager.GetOrbs()}", 40,
+            new Color(0.4f, 0.9f, 1f), new Vector2(0.5f, 0.87f), new Vector2(600f, 55f));
+        AddShadow(orbText.gameObject);
+
+        // 課金制限表示（未成年のみ）
+        int limit = AgeVerificationManager.MonthlyLimit;
+        if (limit >= 0)
+        {
+            int spent = AgeVerificationManager.GetMonthlySpent();
+            int remaining = AgeVerificationManager.RemainingLimit;
+            var limitText = MakeText(root,
+                $"【{AgeVerificationManager.AgeGroupLabel}】今月の残り: ¥{remaining:N0} / ¥{limit:N0}",
+                24, new Color(1f, 0.7f, 0.3f),
+                new Vector2(0.5f, 0.84f), new Vector2(700f, 32f));
+            AddShadow(limitText.gameObject);
+        }
+
+        // オーブ表示下の装飾ライン
+        float lineY = limit >= 0 ? 0.82f : 0.845f;
+        MakeLine(root, new Vector2(0.5f, lineY), 500f, new Color(0.4f, 0.9f, 1f, 0.3f));
+
+        // ===== メッセージ（購入成功/失敗時に表示） =====
+        float msgY = limit >= 0 ? 0.79f : 0.82f;
         messageText = MakeText(root, "", 26, new Color(0.4f, 1f, 0.4f),
-            new Vector2(0.5f, 0.82f), new Vector2(600f, 36f));
+            new Vector2(0.5f, msgY), new Vector2(700f, 36f));
 
-        // 商品カード
+        // ===== 商品カード =====
         float[] ys = { 0.72f, 0.58f, 0.44f, 0.30f };
         Color[] colors = {
             new Color(0.2f, 0.4f, 0.6f),
@@ -63,19 +116,27 @@ public class ShopUI : MonoBehaviour
             BuildProductCard(root, p, ys[i], colors[i]);
         }
 
-        // BACK ボタン
-        MakeButton(root, "BACK", new Color(0.25f, 0.25f, 0.35f),
-            new Vector2(0.5f, 0.05f), new Vector2(360f, 70f),
+        // ===== HOME ボタン（左寄せ） =====
+        MakeStyledButton(root, "ホーム", new Color(0.25f, 0.25f, 0.35f),
+            new Color(0.4f, 0.4f, 0.55f),
+            new Vector2(0.3f, 0.05f), new Vector2(300f, 70f),
             () => SceneManager.LoadScene("HomeScene"));
+
+        // ===== GACHA ボタン（右寄せ） =====
+        MakeStyledButton(root, "がちゃ", new Color(0.5f, 0.1f, 0.5f),
+            new Color(0.7f, 0.3f, 0.7f),
+            new Vector2(0.7f, 0.05f), new Vector2(300f, 70f),
+            () => SceneManager.LoadScene("GachaScene"));
     }
 
     void BuildProductCard(Transform parent, IAPManager.Product product, float y, Color bgCol)
     {
-        string label = $"{product.orbAmount} Orb  —  {product.priceLabel}";
+        string label = $"{product.orbAmount} オーブ  —  {product.priceLabel}";
 
+        // 外枠（ハイライトカラー）
         var go = new GameObject($"Product_{product.id}");
         go.transform.SetParent(parent, false);
-        go.AddComponent<Image>().color = bgCol;
+        go.AddComponent<Image>().color = new Color(bgCol.r * 1.4f, bgCol.g * 1.4f, bgCol.b * 1.4f, 0.5f);
         var btn = go.AddComponent<Button>();
         var rt = go.GetComponent<RectTransform>();
         rt.anchorMin = rt.anchorMax = new Vector2(0.5f, y);
@@ -86,34 +147,83 @@ public class ShopUI : MonoBehaviour
         int amount = product.orbAmount;
         btn.onClick.AddListener(() => OnPurchase(pid, amount));
 
-        // ラベル
+        // 内側背景（暗めバージョン）
+        var innerGo = new GameObject("Inner");
+        innerGo.transform.SetParent(go.transform, false);
+        innerGo.AddComponent<Image>().color = new Color(bgCol.r * 0.7f, bgCol.g * 0.7f, bgCol.b * 0.7f, 0.92f);
+        var innerRt = innerGo.GetComponent<RectTransform>();
+        innerRt.anchorMin = Vector2.zero; innerRt.anchorMax = Vector2.one;
+        innerRt.offsetMin = new Vector2(3f, 3f); innerRt.offsetMax = new Vector2(-3f, -3f);
+
+        // 上半分ハイライト（光沢感）
+        var shineGo = new GameObject("Shine");
+        shineGo.transform.SetParent(innerGo.transform, false);
+        shineGo.AddComponent<Image>().color = new Color(1f, 1f, 1f, 0.12f);
+        var shineRt = shineGo.GetComponent<RectTransform>();
+        shineRt.anchorMin = new Vector2(0f, 0.5f); shineRt.anchorMax = Vector2.one;
+        shineRt.offsetMin = shineRt.offsetMax = Vector2.zero;
+
+        // ラベル（Shadow付き）
         var txtGo = new GameObject("Label");
         txtGo.transform.SetParent(go.transform, false);
         var t = txtGo.AddComponent<Text>();
         t.text = label; t.fontSize = 32; t.color = Color.white;
         t.alignment = TextAnchor.MiddleCenter;
-        t.font = Font.CreateDynamicFontFromOSFont("Arial", 32);
+        var cherry = Resources.Load<Font>("Fonts/CherryBombOne-Regular");
+        t.font = cherry != null ? cherry : Font.CreateDynamicFontFromOSFont("Arial", 32);
+        t.horizontalOverflow = HorizontalWrapMode.Overflow;
+        t.verticalOverflow = VerticalWrapMode.Overflow;
+        AddShadow(txtGo);
         var trt = txtGo.GetComponent<RectTransform>();
         trt.anchorMin = Vector2.zero; trt.anchorMax = Vector2.one;
         trt.offsetMin = trt.offsetMax = Vector2.zero;
+
+        // 下部レアリティバー
+        var barGo = new GameObject("RarityBar");
+        barGo.transform.SetParent(go.transform, false);
+        barGo.AddComponent<Image>().color = new Color(bgCol.r * 1.5f, bgCol.g * 1.5f, bgCol.b * 1.5f, 0.6f);
+        var barRt = barGo.GetComponent<RectTransform>();
+        barRt.anchorMin = Vector2.zero; barRt.anchorMax = new Vector2(1f, 0.06f);
+        barRt.offsetMin = new Vector2(3f, 3f); barRt.offsetMax = new Vector2(-3f, 0f);
 
         // 購入回数（右下小文字）
         int count = IAPManager.GetPurchaseCount(product.id);
         if (count > 0)
         {
-            MakeText(go.transform, $"x{count} purchased", 18,
+            var countText = MakeText(go.transform, $"x{count} 購入済み", 18,
                 new Color(0.8f, 0.8f, 0.8f, 0.6f),
                 new Vector2(0.85f, 0.15f), new Vector2(200f, 24f));
+            AddShadow(countText.gameObject);
         }
     }
 
     void OnPurchase(string productId, int amount)
     {
+        // 事前に課金制限チェック（エラーメッセージ表示用）
+        var product = System.Array.Find(IAPManager.Products, p => p.id == productId);
+        if (!AgeVerificationManager.CanPurchase(product.priceYen))
+        {
+            int remaining = AgeVerificationManager.RemainingLimit;
+            messageText.color = new Color(1f, 0.4f, 0.4f);
+            StartCoroutine(ShowMessage($"月額制限を超えています（残り ¥{remaining:N0}）"));
+            return;
+        }
+
         if (IAPManager.Purchase(productId))
         {
-            orbText.text = $"Orb: {OrbManager.GetOrbs()}";
-            StartCoroutine(ShowMessage($"+{amount} Orb!"));
+            orbText.text = $"◆ 所持オーブ: {OrbManager.GetOrbs()}";
+            messageText.color = new Color(0.4f, 1f, 0.4f);
+            StartCoroutine(ShowMessage($"+{amount} オーブ!"));
+            // 画面をリビルドして残額を更新
+            StartCoroutine(RebuildAfterDelay());
         }
+    }
+
+    IEnumerator RebuildAfterDelay()
+    {
+        yield return new WaitForSeconds(1.5f);
+        // シーンリロードで残額表示を更新
+        SceneManager.LoadScene("ShopScene");
     }
 
     IEnumerator ShowMessage(string msg)
@@ -135,6 +245,43 @@ public class ShopUI : MonoBehaviour
         rt.offsetMin = rt.offsetMax = Vector2.zero;
     }
 
+    void MakeDecorBar(Transform parent, Vector2 anchorMin, Vector2 anchorMax, Color col)
+    {
+        var go = new GameObject("DecorBar");
+        go.transform.SetParent(parent, false);
+        go.AddComponent<Image>().color = col;
+        go.GetComponent<Image>().raycastTarget = false;
+        var rt = go.GetComponent<RectTransform>();
+        rt.anchorMin = anchorMin; rt.anchorMax = anchorMax;
+        rt.offsetMin = rt.offsetMax = Vector2.zero;
+    }
+
+    void CreateParticles(Transform parent, int count)
+    {
+        for (int i = 0; i < count; i++)
+        {
+            var pGo = new GameObject("Particle");
+            pGo.transform.SetParent(parent, false);
+            var img = pGo.AddComponent<Image>();
+            img.raycastTarget = false;
+            float r = Random.Range(0.85f, 1f);
+            float g = Random.Range(0.7f, 0.95f);
+            float bv = Random.Range(0.8f, 1f);
+            float a = Random.Range(0.15f, 0.4f);
+            img.color = new Color(r, g, bv, a);
+
+            var prt = pGo.GetComponent<RectTransform>();
+            prt.anchorMin = prt.anchorMax = new Vector2(0.5f, 0.5f);
+            float startX = Random.Range(-540f, 540f);
+            float startY = Random.Range(-960f, 960f);
+            prt.anchoredPosition = new Vector2(startX, startY);
+            float size = Random.Range(4f, 12f);
+            prt.sizeDelta = new Vector2(size, size);
+
+            particles.Add(prt);
+        }
+    }
+
     Text MakeText(Transform parent, string txt, int size, Color col, Vector2 anchor, Vector2 sizeDelta)
     {
         var go = new GameObject("Txt");
@@ -151,12 +298,25 @@ public class ShopUI : MonoBehaviour
         return t;
     }
 
-    Button MakeButton(Transform parent, string label, Color bgCol,
+    void MakeLine(Transform parent, Vector2 anchor, float width, Color col)
+    {
+        var go = new GameObject("Line");
+        go.transform.SetParent(parent, false);
+        go.AddComponent<Image>().color = col;
+        go.GetComponent<Image>().raycastTarget = false;
+        var rt = go.GetComponent<RectTransform>();
+        rt.anchorMin = rt.anchorMax = anchor;
+        rt.anchoredPosition = Vector2.zero;
+        rt.sizeDelta = new Vector2(width, 2f);
+    }
+
+    void MakeStyledButton(Transform parent, string label, Color baseCol, Color highlightCol,
         Vector2 anchor, Vector2 sizeDelta, UnityEngine.Events.UnityAction onClick)
     {
+        // 外枠（明るい縁取り）
         var go = new GameObject(label + "Btn");
         go.transform.SetParent(parent, false);
-        go.AddComponent<Image>().color = bgCol;
+        go.AddComponent<Image>().color = new Color(highlightCol.r, highlightCol.g, highlightCol.b, 0.6f);
         var btn = go.AddComponent<Button>();
         var rt = go.GetComponent<RectTransform>();
         rt.anchorMin = rt.anchorMax = anchor;
@@ -164,15 +324,47 @@ public class ShopUI : MonoBehaviour
         rt.sizeDelta = sizeDelta;
         btn.onClick.AddListener(onClick);
 
-        var txtGo = new GameObject("Label");
+        // 内側背景
+        var innerGo = new GameObject("Inner");
+        innerGo.transform.SetParent(go.transform, false);
+        innerGo.AddComponent<Image>().color = new Color(baseCol.r, baseCol.g, baseCol.b, 0.92f);
+        var innerRt = innerGo.GetComponent<RectTransform>();
+        innerRt.anchorMin = Vector2.zero; innerRt.anchorMax = Vector2.one;
+        innerRt.offsetMin = new Vector2(3f, 3f); innerRt.offsetMax = new Vector2(-3f, -3f);
+
+        // 上半分ハイライト（光沢感）
+        var shineGo = new GameObject("Shine");
+        shineGo.transform.SetParent(innerGo.transform, false);
+        shineGo.AddComponent<Image>().color = new Color(1f, 1f, 1f, 0.12f);
+        var shineRt = shineGo.GetComponent<RectTransform>();
+        shineRt.anchorMin = new Vector2(0f, 0.5f); shineRt.anchorMax = Vector2.one;
+        shineRt.offsetMin = shineRt.offsetMax = Vector2.zero;
+
+        // ラベルテキスト（Shadow付き）
+        var txtGo = new GameObject("Txt");
         txtGo.transform.SetParent(go.transform, false);
         var t = txtGo.AddComponent<Text>();
         t.text = label; t.fontSize = 32; t.color = Color.white;
         t.alignment = TextAnchor.MiddleCenter;
-        t.font = Font.CreateDynamicFontFromOSFont("Arial", 32);
+        var cherry = Resources.Load<Font>("Fonts/CherryBombOne-Regular");
+        t.font = cherry != null ? cherry : Font.CreateDynamicFontFromOSFont("Arial", 32);
+        t.horizontalOverflow = HorizontalWrapMode.Overflow;
+        t.verticalOverflow = VerticalWrapMode.Overflow;
+        AddShadow(txtGo);
         var trt = txtGo.GetComponent<RectTransform>();
         trt.anchorMin = Vector2.zero; trt.anchorMax = Vector2.one;
         trt.offsetMin = trt.offsetMax = Vector2.zero;
-        return btn;
+
+        // ボタン全体にShadow（浮遊感）
+        var btnShadow = go.AddComponent<Shadow>();
+        btnShadow.effectColor = new Color(0f, 0f, 0f, 0.5f);
+        btnShadow.effectDistance = new Vector2(4f, -4f);
+    }
+
+    void AddShadow(GameObject go)
+    {
+        var s = go.AddComponent<Shadow>();
+        s.effectColor = new Color(0f, 0f, 0f, 0.6f);
+        s.effectDistance = new Vector2(2f, -2f);
     }
 }

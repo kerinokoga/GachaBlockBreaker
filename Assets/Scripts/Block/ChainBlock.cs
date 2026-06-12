@@ -8,6 +8,37 @@ public class ChainBlock : BlockBase
     [Header("連鎖設定")]
     [SerializeField] private float checkDistance = 1.1f; // 隣接チェックの距離
 
+    private TextMesh iconText;
+
+    protected override void Start()
+    {
+        base.Start();
+        CreateIconText("⚡", new Color(1f, 1f, 1f));
+    }
+
+    void CreateIconText(string icon, Color col)
+    {
+        var go = new GameObject("Icon");
+        go.transform.SetParent(transform, false);
+        go.transform.localPosition = new Vector3(0f, 0f, -0.1f);
+        iconText = go.AddComponent<TextMesh>();
+        iconText.text = icon;
+        iconText.alignment = TextAlignment.Center;
+        iconText.anchor = TextAnchor.MiddleCenter;
+        iconText.fontSize = 80;
+        iconText.characterSize = 0.05f;
+        iconText.color = col;
+        iconText.fontStyle = FontStyle.Bold;
+
+        Vector3 ps = transform.localScale;
+        float invX = (ps.x != 0f) ? 1f / ps.x : 1f;
+        float invY = (ps.y != 0f) ? 1f / ps.y : 1f;
+        go.transform.localScale = new Vector3(invX, invY, 1f);
+
+        var mr = go.GetComponent<MeshRenderer>();
+        if (mr != null) mr.sortingOrder = 10;
+    }
+
     protected override void DestroyBlock()
     {
         TriggerChain();

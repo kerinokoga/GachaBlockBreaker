@@ -1,0 +1,38 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5103790b115591843b21eafc2ded6d7e, type: 3}
+  m_Name: Akari
+  m_EditorClassIdentifier: 
+  characterName: "\u30A2\u30AB\u30EA"
+  rarity: 3
+  rarityColor: {r: 1, g: 0.85, b: 0.1, a: 1}
+  icon: {fileID: 21300000, guid: 9d981c89d1f287540ad2931848e1622e, type: 3}
+  passiveType: 1
+  passiveValue: 2
+  passiveType2: 5
+  passiveValue2: 3
+  ultimateType: 6
+  ultimateValue: 0
+  ultimateDuration: 0
+  ultimateGaugeCost: 10
+  voiceVolumeMultiplier: 1
+  voiceTitle: {fileID: 8300000, guid: 53ed3716b39575643a70d112e1844e09, type: 3}
+  voiceSelect: {fileID: 8300000, guid: aa0dbb90e83dea243aa6a620a62f77b9, type: 3}
+  voiceUlt: {fileID: 8300000, guid: 24f5128ce2c59bd48a5004168693a31f, type: 3}
+  voiceVictory: {fileID: 8300000, guid: d00d71ca90009ca438f9bda338174338, type: 3}
+  voiceDefeat: {fileID: 8300000, guid: e05a2015cda0b3b4c8ef292253821608, type: 3}
+  voiceStageStart: {fileID: 8300000, guid: a63e2c01e3068d84ea257faede8b2844, type: 3}
+  voiceDestroy30: {fileID: 8300000, guid: a0fa1b3ad37bd9d44aa6efa41142968e, type: 3}
+  voiceDestroy60: {fileID: 8300000, guid: f7c60087380c05145a589ed9019fc3a0, type: 3}
+  voiceBossDamaged: {fileID: 8300000, guid: 163f5bd8302bc3c4d94675d7b90a0f9c, type: 3}
+  voiceBossAttack: {fileID: 8300000, guid: 8e2f8515bd3966d4c8e33254f9f9653b, type: 3}
+  description: "\u706F\u706B\u306E\u5DEB\u5973\u3002\u30C0\u30E1\u30FC\u30B82\u500D\uFF06\u30AF\u30EA\u30C6\u30A3\u30AB\u30EB\u7BC4\u56F2+3%\uFF06\u5965\u7FA9\u3067\u30DC\u30FC\u30EB\u5206\u88C2\uFF01\u7121\u6570\u306E\u5149\u3067\u5168\u3066\u3092\u8CAB\u304F\u3002"

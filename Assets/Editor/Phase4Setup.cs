@@ -19,20 +19,6 @@ public static class Phase4Setup
         if (!AssetDatabase.IsValidFolder("Assets/Resources/Gacha"))
             AssetDatabase.CreateFolder("Assets/Resources", "Gacha");
 
-        // Elyssia (SSR) 作成
-        CreateCharacter("Elyssia", Rarity.SSR,
-            new Color(1.0f, 0.85f, 0.1f),
-            PassiveEffectType.BallSpeedUp, 1.5f,
-            UltimateSkillType.MassDestroy, 5f, 10f,
-            "星の力で全てを砕く最強の戦乙女");
-
-        // Lyra (SR) 作成
-        CreateCharacter("Lyra", Rarity.SR,
-            new Color(0.6f, 0.2f, 0.9f),
-            PassiveEffectType.UltGaugeBoost, 1.3f,
-            UltimateSkillType.SpeedBurst, 2.0f, 5f,
-            "音の旋律で敵を翻弄するバードマスター");
-
         // GachaPoolData 作成
         string poolPath = "Assets/Resources/Gacha/GachaPool.asset";
         var pool = AssetDatabase.LoadAssetAtPath<GachaPoolData>(poolPath);
@@ -51,7 +37,7 @@ public static class Phase4Setup
         AssetDatabase.SaveAssets();
         AssetDatabase.Refresh();
         EditorUtility.DisplayDialog("Phase4 Setup",
-            "ガチャアセットを生成しました！\nElyssia(SSR) / Lyra(SR) / GachaPool", "OK");
+            "ガチャアセットを生成しました！\nGachaPool", "OK");
     }
 
     static void CreateCharacter(string charName, Rarity rarity, Color col,

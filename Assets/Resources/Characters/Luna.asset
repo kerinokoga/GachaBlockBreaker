@@ -15,11 +15,24 @@ MonoBehaviour:
   characterName: "\u30EB\u30CA"
   rarity: 2
   rarityColor: {r: 0.75, g: 0.3, b: 1, a: 1}
+  icon: {fileID: 21300000, guid: 085d0d9f252980d4eb3e1bd6d8dcb296, type: 3}
   passiveType: 1
-  passiveValue: 1.2
+  passiveValue: 1.5
+  passiveType2: 0
+  passiveValue2: 0
   ultimateType: 1
-  ultimateValue: 1.5
-  ultimateDuration: 3
+  ultimateValue: 2
+  ultimateDuration: 30
   ultimateGaugeCost: 10
-  description: "SR \u30AD\u30E3\u30E9\u3002\u30DC\u30FC\u30EB\u901F\u5EA6\u304C 1.2
-    \u500D\u306B\u306A\u308B\u3002\u5965\u7FA9\u3067 3 \u79D2\u9593\u3055\u3089\u306B\u52A0\u901F\uFF01"
+  voiceVolumeMultiplier: 1
+  voiceTitle: {fileID: 8300000, guid: 7d1cbb9fe9238bd42b17738fcf1d0b0f, type: 3}
+  voiceSelect: {fileID: 8300000, guid: 37e2420b94f26474d9af3350cf189433, type: 3}
+  voiceUlt: {fileID: 8300000, guid: cb471b717d9d2c8488747017c2e9520f, type: 3}
+  voiceVictory: {fileID: 8300000, guid: 3e5de34f65ced7343bc0a603db804252, type: 3}
+  voiceDefeat: {fileID: 8300000, guid: 0e1bee2f9063f37499ffc4dd05eed51e, type: 3}
+  voiceStageStart: {fileID: 8300000, guid: b2fcf3e54a88a9e4aa6c60175ef6e4a7, type: 3}
+  voiceDestroy30: {fileID: 8300000, guid: 6daa42c8f012c4d429a6ceaf17344d94, type: 3}
+  voiceDestroy60: {fileID: 8300000, guid: 383baf0f3a410594db203b885402e027, type: 3}
+  voiceBossDamaged: {fileID: 8300000, guid: 649ed52aed7f1cb4fb6ba2a18092a8d5, type: 3}
+  voiceBossAttack: {fileID: 8300000, guid: c820cb15cbd2349408af77f3c2cf4310, type: 3}
+  description: "\u6708\u5149\u306E\u9B54\u529B\u3067\u30C0\u30E1\u30FC\u30B8\u3092\u5897\u5E45\u3059\u308B\u9280\u9AEA\u306E\u9B54\u6CD5\u5C11\u5973\u3002\u5965\u7FA9\u306730\u79D2\u9593\u30C0\u30E1\u30FC\u30B82\u500D\uFF01"

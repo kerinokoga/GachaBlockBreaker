@@ -1,0 +1,38 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5103790b115591843b21eafc2ded6d7e, type: 3}
+  m_Name: Yuki
+  m_EditorClassIdentifier: 
+  characterName: "\u30E6\u30AD"
+  rarity: 1
+  rarityColor: {r: 0.3, g: 0.5, b: 1, a: 1}
+  icon: {fileID: 21300000, guid: 1551270e23d6f184a934b5035e187d4c, type: 3}
+  passiveType: 1
+  passiveValue: 1.3
+  passiveType2: 0
+  passiveValue2: 0
+  ultimateType: 5
+  ultimateValue: 1
+  ultimateDuration: 20
+  ultimateGaugeCost: 10
+  voiceVolumeMultiplier: 1
+  voiceTitle: {fileID: 8300000, guid: 313a5639e0f40cd428c3b78e222ee7b4, type: 3}
+  voiceSelect: {fileID: 8300000, guid: 03b9ad43879889747854ad1307fca5d5, type: 3}
+  voiceUlt: {fileID: 8300000, guid: 27df2335ba875374f89ac2ec6764cbec, type: 3}
+  voiceVictory: {fileID: 8300000, guid: c9d17da57e0e24f478328c63b4b567c0, type: 3}
+  voiceDefeat: {fileID: 8300000, guid: 2204ef2a1f9b2764da1c1aa0a9403d05, type: 3}
+  voiceStageStart: {fileID: 8300000, guid: d48d087c3ec5f5b4f9606feb7588f1c1, type: 3}
+  voiceDestroy30: {fileID: 8300000, guid: 223bdb95fd5a2a649b0cec25e505cc34, type: 3}
+  voiceDestroy60: {fileID: 8300000, guid: a6fa3610a0966c94592c0ccf11b68453, type: 3}
+  voiceBossDamaged: {fileID: 8300000, guid: f5f7015f3ff1cd04ea5f4a7e0ca24b74, type: 3}
+  voiceBossAttack: {fileID: 8300000, guid: 365c706854871dd4cbbd20235ac7ca7b, type: 3}
+  description: "\u6C37\u306E\u7D50\u6676\u3092\u7E8F\u3046\u767D\u84BC\u306E\u59EB\u3002\u30C0\u30E1\u30FC\u30B81.3\u500D\uFF06\u5965\u7FA9\u306720\u79D2\u9593\u8CAB\u901A\uFF01"

@@ -1,0 +1,38 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5103790b115591843b21eafc2ded6d7e, type: 3}
+  m_Name: Hana
+  m_EditorClassIdentifier: 
+  characterName: "\u30CF\u30CA"
+  rarity: 1
+  rarityColor: {r: 0.3, g: 0.5, b: 1, a: 1}
+  icon: {fileID: 21300000, guid: f4d6e2bfb69f38e4ba081c5272dd4507, type: 3}
+  passiveType: 2
+  passiveValue: 2
+  passiveType2: 0
+  passiveValue2: 0
+  ultimateType: 3
+  ultimateValue: 2
+  ultimateDuration: 0
+  ultimateGaugeCost: 10
+  voiceVolumeMultiplier: 1
+  voiceTitle: {fileID: 8300000, guid: b8719cb686cd9f84c8643e6f07dc83b6, type: 3}
+  voiceSelect: {fileID: 8300000, guid: cba748cc1314b6f48bdb209c24da1ca4, type: 3}
+  voiceUlt: {fileID: 8300000, guid: 71dcbbb043555a84aacc247d7ad7394e, type: 3}
+  voiceVictory: {fileID: 8300000, guid: 1e20fcd0cf591e043a75f756652a4d5d, type: 3}
+  voiceDefeat: {fileID: 8300000, guid: 77509c0734e9bf44fa3a2d6e9db1431a, type: 3}
+  voiceStageStart: {fileID: 8300000, guid: 2a461b9f36472df48b304b2e2956f709, type: 3}
+  voiceDestroy30: {fileID: 8300000, guid: 0a8a2b5ddd9d53a418229481f7c7d747, type: 3}
+  voiceDestroy60: {fileID: 8300000, guid: 6dc947d82bfdb014f8e657d14e18d59e, type: 3}
+  voiceBossDamaged: {fileID: 8300000, guid: 13f37a0575451624eb7423bf5851cb26, type: 3}
+  voiceBossAttack: {fileID: 8300000, guid: 8aed893d4487bc846b479b9e932fcddd, type: 3}
+  description: "\u82B1\u306E\u529B\u3067\u5B88\u8B77\u3059\u308B\u91D1\u9AEA\u306E\u821E\u59EB\u3002\u8FFD\u52A0\u30C0\u30E1\u30FC\u30B8+2\uFF06\u5965\u7FA9\u3067\u30B9\u30C8\u30C3\u30AF+2\u56DE\u5FA9\uFF01"

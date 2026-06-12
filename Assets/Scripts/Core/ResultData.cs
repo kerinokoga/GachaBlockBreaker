@@ -5,6 +5,7 @@ public static class ResultData
 {
     public static bool IsClear;
     public static bool IsFirstClear;   // 初回クリアかどうか（オーブ報酬表示に使用）
+    public static bool IsTrueStageClear; // 裏ステージクリアかどうか（イラスト差し替えに使用）
     public static float DestroyRate;
     public static int RemainingStock;
     public static int StageNumber;

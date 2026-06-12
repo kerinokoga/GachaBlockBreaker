@@ -4,7 +4,7 @@ using UnityEngine.SceneManagement;
 using System.Collections.Generic;
 
 /// <summary>
-/// ランキング画面：ステージ別クリア率ランキング表示
+/// ランキング画面：ステージ別クリア率ランキング表示（装飾付き）
 /// </summary>
 public class RankingUI : MonoBehaviour
 {
@@ -18,7 +18,25 @@ public class RankingUI : MonoBehaviour
     Button[] tabButtons = new Button[5];
     Image[]  tabImages  = new Image[5];
 
+    // 光の粒パーティクル
+    List<RectTransform> particles = new List<RectTransform>();
+
     void Start() => BuildUI();
+
+    void Update()
+    {
+        // 光の粒アニメーション
+        for (int i = 0; i < particles.Count; i++)
+        {
+            if (particles[i] == null) continue;
+            var p = particles[i];
+            p.anchoredPosition += new Vector2(0f, 40f * Time.deltaTime);
+            if (p.anchoredPosition.y > 1000f)
+                p.anchoredPosition = new Vector2(Random.Range(-540f, 540f), -1000f);
+            float x = p.anchoredPosition.x + Mathf.Sin(Time.time * 0.8f + i * 1.3f) * 15f * Time.deltaTime;
+            p.anchoredPosition = new Vector2(x, p.anchoredPosition.y);
+        }
+    }
 
     void BuildUI()
     {
@@ -28,7 +46,7 @@ public class RankingUI : MonoBehaviour
         var cs = cGo.AddComponent<CanvasScaler>();
         cs.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
         cs.referenceResolution = new Vector2(1080, 1920);
-        cs.matchWidthOrHeight = 0.5f;
+        cs.matchWidthOrHeight = 0.0f;
         cGo.AddComponent<GraphicRaycaster>();
 
         if (FindObjectOfType<UnityEngine.EventSystems.EventSystem>() == null)
@@ -40,27 +58,57 @@ public class RankingUI : MonoBehaviour
 
         canvasRoot = cGo.transform;
 
-        // 背景
-        MakeBg(canvasRoot, new Color(0.05f, 0.03f, 0.12f));
+        // ===== 背景（ダークパープル/ネイビー） =====
+        MakeBg(canvasRoot, new Color(0.03f, 0.02f, 0.1f));
 
-        // タイトル
-        MakeText(canvasRoot, "RANKING", 52, new Color(1f, 0.85f, 0.1f),
-            new Vector2(0.5f, 0.93f), new Vector2(500f, 65f));
+        // ===== 上部デコレーションバー =====
+        var topBar = new GameObject("TopBar");
+        topBar.transform.SetParent(canvasRoot, false);
+        topBar.AddComponent<Image>().color = new Color(0.6f, 0.2f, 0.8f, 0.5f);
+        var topBarRT = topBar.GetComponent<RectTransform>();
+        topBarRT.anchorMin = new Vector2(0f, 0.97f);
+        topBarRT.anchorMax = Vector2.one;
+        topBarRT.offsetMin = topBarRT.offsetMax = Vector2.zero;
 
-        // ステージタブ
+        // ===== 下部デコレーションバー =====
+        var botBar = new GameObject("BotBar");
+        botBar.transform.SetParent(canvasRoot, false);
+        botBar.AddComponent<Image>().color = new Color(0.6f, 0.2f, 0.8f, 0.5f);
+        var botBarRT = botBar.GetComponent<RectTransform>();
+        botBarRT.anchorMin = Vector2.zero;
+        botBarRT.anchorMax = new Vector2(1f, 0.015f);
+        botBarRT.offsetMin = botBarRT.offsetMax = Vector2.zero;
+
+        // ===== 光の粒パーティクル =====
+        CreateParticles(canvasRoot, 12);
+
+        // ===== タイトル（Shadow+Outline付き） =====
+        var titleText = MakeText(canvasRoot, "\u2726 RANKING \u2726", 52, new Color(1f, 0.85f, 0.1f),
+            new Vector2(0.5f, 0.93f), new Vector2(600f, 65f));
+        var titleShadow = titleText.gameObject.AddComponent<Shadow>();
+        titleShadow.effectColor = new Color(0.6f, 0.1f, 0.3f, 0.8f);
+        titleShadow.effectDistance = new Vector2(3f, -3f);
+        var titleOutline = titleText.gameObject.AddComponent<Outline>();
+        titleOutline.effectColor = new Color(0.8f, 0.2f, 0.4f, 0.9f);
+        titleOutline.effectDistance = new Vector2(2f, -2f);
+
+        // ===== タイトル下の装飾ライン =====
+        MakeLine(canvasRoot, new Color(1f, 0.85f, 0.3f, 0.6f),
+            new Vector2(0.5f, 0.91f), new Vector2(500f, 3f));
+
+        // ===== ステージタブ =====
         BuildStageTabs(canvasRoot);
 
-        // ステージ名
+        // ===== ステージ名 =====
         stageTitle = MakeText(canvasRoot, "Stage 1", 28, new Color(0.7f, 0.7f, 0.85f),
             new Vector2(0.5f, 0.83f), new Vector2(400f, 36f));
+        AddShadow(stageTitle.gameObject);
 
-        // スクロールビュー
+        // ===== スクロールビュー =====
         BuildScrollView(canvasRoot);
 
-        // BACK ボタン
-        MakeButton(canvasRoot, "BACK", new Color(0.25f, 0.25f, 0.35f),
-            new Vector2(0.5f, 0.05f), new Vector2(360f, 70f),
-            () => SceneManager.LoadScene("HomeScene"));
+        // ===== BACK ボタン（装飾付き） =====
+        BuildBackButton(canvasRoot);
 
         RefreshRanking();
     }
@@ -75,6 +123,7 @@ public class RankingUI : MonoBehaviour
             int stageNum = i + 1;
             float x = startX + i * gap;
 
+            // 外枠（明るい縁取り）
             var go = new GameObject($"Tab_{stageNum}");
             go.transform.SetParent(parent, false);
             var img = go.AddComponent<Image>();
@@ -87,12 +136,24 @@ public class RankingUI : MonoBehaviour
             int s = stageNum;
             btn.onClick.AddListener(() => OnTabClick(s));
 
+            // 内側背景
+            var innerGo = new GameObject("Inner");
+            innerGo.transform.SetParent(go.transform, false);
+            innerGo.AddComponent<Image>().color = new Color(0.08f, 0.06f, 0.18f, 0.95f);
+            var innerRt = innerGo.GetComponent<RectTransform>();
+            innerRt.anchorMin = Vector2.zero; innerRt.anchorMax = Vector2.one;
+            innerRt.offsetMin = new Vector2(2f, 2f); innerRt.offsetMax = new Vector2(-2f, -2f);
+
             var txtGo = new GameObject("Label");
             txtGo.transform.SetParent(go.transform, false);
             var t = txtGo.AddComponent<Text>();
             t.text = stageNum.ToString(); t.fontSize = 26; t.color = Color.white;
             t.alignment = TextAnchor.MiddleCenter;
-            t.font = Font.CreateDynamicFontFromOSFont("Arial", 26);
+            var cherry = Resources.Load<Font>("Fonts/CherryBombOne-Regular");
+            t.font = cherry != null ? cherry : Font.CreateDynamicFontFromOSFont("Arial", 26);
+            t.horizontalOverflow = HorizontalWrapMode.Overflow;
+            t.verticalOverflow = VerticalWrapMode.Overflow;
+            AddShadow(txtGo);
             var trt = txtGo.GetComponent<RectTransform>();
             trt.anchorMin = Vector2.zero; trt.anchorMax = Vector2.one;
             trt.offsetMin = trt.offsetMax = Vector2.zero;
@@ -142,6 +203,57 @@ public class RankingUI : MonoBehaviour
         sr.viewport = vpRT;
     }
 
+    void BuildBackButton(Transform parent)
+    {
+        // 外枠
+        var go = new GameObject("BACKBtn");
+        go.transform.SetParent(parent, false);
+        var outerImg = go.AddComponent<Image>();
+        outerImg.color = new Color(0.4f, 0.4f, 0.6f, 0.6f);
+        var btn = go.AddComponent<Button>();
+        var rt = go.GetComponent<RectTransform>();
+        rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 0.05f);
+        rt.anchoredPosition = Vector2.zero;
+        rt.sizeDelta = new Vector2(360f, 70f);
+        btn.onClick.AddListener(() => SceneManager.LoadScene("HomeScene"));
+
+        // 内側背景
+        var innerGo = new GameObject("Inner");
+        innerGo.transform.SetParent(go.transform, false);
+        innerGo.AddComponent<Image>().color = new Color(0.18f, 0.15f, 0.3f, 0.95f);
+        var innerRt = innerGo.GetComponent<RectTransform>();
+        innerRt.anchorMin = Vector2.zero; innerRt.anchorMax = Vector2.one;
+        innerRt.offsetMin = new Vector2(3f, 3f); innerRt.offsetMax = new Vector2(-3f, -3f);
+
+        // 上半分ハイライト（光沢感）
+        var shineGo = new GameObject("Shine");
+        shineGo.transform.SetParent(innerGo.transform, false);
+        shineGo.AddComponent<Image>().color = new Color(1f, 1f, 1f, 0.1f);
+        var shineRt = shineGo.GetComponent<RectTransform>();
+        shineRt.anchorMin = new Vector2(0f, 0.5f); shineRt.anchorMax = Vector2.one;
+        shineRt.offsetMin = shineRt.offsetMax = Vector2.zero;
+
+        // ラベル
+        var txtGo = new GameObject("Label");
+        txtGo.transform.SetParent(go.transform, false);
+        var t = txtGo.AddComponent<Text>();
+        t.text = "ホーム"; t.fontSize = 32; t.color = Color.white;
+        t.alignment = TextAnchor.MiddleCenter;
+        var cherry = Resources.Load<Font>("Fonts/CherryBombOne-Regular");
+        t.font = cherry != null ? cherry : Font.CreateDynamicFontFromOSFont("Arial", 32);
+        t.horizontalOverflow = HorizontalWrapMode.Overflow;
+        t.verticalOverflow = VerticalWrapMode.Overflow;
+        AddShadow(txtGo);
+        var trt = txtGo.GetComponent<RectTransform>();
+        trt.anchorMin = Vector2.zero; trt.anchorMax = Vector2.one;
+        trt.offsetMin = trt.offsetMax = Vector2.zero;
+
+        // ボタン全体にShadow
+        var btnShadow = go.AddComponent<Shadow>();
+        btnShadow.effectColor = new Color(0f, 0f, 0f, 0.5f);
+        btnShadow.effectDistance = new Vector2(4f, -4f);
+    }
+
     void RefreshRanking()
     {
         // タブ色更新
@@ -165,7 +277,7 @@ public class RankingUI : MonoBehaviour
 
         if (ranking.Count == 0)
         {
-            MakeText(contentRoot, "No data", 28, new Color(0.5f, 0.5f, 0.5f),
+            var noData = MakeText(contentRoot, "No data", 28, new Color(0.5f, 0.5f, 0.5f),
                 new Vector2(0.5f, 0.5f), new Vector2(300f, 40f));
             return;
         }
@@ -182,13 +294,16 @@ public class RankingUI : MonoBehaviour
 
     void BuildRankRow(Transform parent, int index, RankingManager.RankEntry entry, float rowH, bool isMe)
     {
-        Color bgCol = isMe
-            ? new Color(0.2f, 0.3f, 0.5f)
-            : (index % 2 == 0 ? new Color(0.1f, 0.1f, 0.18f) : new Color(0.12f, 0.12f, 0.22f));
+        bool isTop3 = index < 3;
+
+        // 外枠（トップ3はゴールド枠）
+        Color outerCol = isTop3
+            ? new Color(1f, 0.85f, 0.2f, 0.6f)
+            : (isMe ? new Color(0.3f, 0.6f, 1f, 0.4f) : new Color(0.3f, 0.25f, 0.5f, 0.3f));
 
         var rowGo = new GameObject($"Rank_{index}");
         rowGo.transform.SetParent(parent, false);
-        rowGo.AddComponent<Image>().color = bgCol;
+        rowGo.AddComponent<Image>().color = outerCol;
         var rowRT = rowGo.GetComponent<RectTransform>();
         rowRT.anchorMin = new Vector2(0f, 1f);
         rowRT.anchorMax = new Vector2(1f, 1f);
@@ -196,10 +311,34 @@ public class RankingUI : MonoBehaviour
         rowRT.anchoredPosition = new Vector2(0f, -index * rowH);
         rowRT.sizeDelta = new Vector2(0f, rowH - 2f);
 
+        // 内側背景
+        Color innerCol = isMe
+            ? new Color(0.12f, 0.2f, 0.4f, 0.95f)
+            : (index % 2 == 0 ? new Color(0.06f, 0.05f, 0.14f, 0.95f) : new Color(0.08f, 0.07f, 0.18f, 0.95f));
+
+        var innerGo = new GameObject("Inner");
+        innerGo.transform.SetParent(rowGo.transform, false);
+        innerGo.AddComponent<Image>().color = innerCol;
+        var innerRt = innerGo.GetComponent<RectTransform>();
+        innerRt.anchorMin = Vector2.zero; innerRt.anchorMax = Vector2.one;
+        innerRt.offsetMin = new Vector2(2f, 2f); innerRt.offsetMax = new Vector2(-2f, -2f);
+
+        // 上半分ハイライト（トップ3のみ光沢）
+        if (isTop3)
+        {
+            var shineGo = new GameObject("Shine");
+            shineGo.transform.SetParent(innerGo.transform, false);
+            shineGo.AddComponent<Image>().color = new Color(1f, 1f, 1f, 0.08f);
+            var shineRt = shineGo.GetComponent<RectTransform>();
+            shineRt.anchorMin = new Vector2(0f, 0.5f); shineRt.anchorMax = Vector2.one;
+            shineRt.offsetMin = shineRt.offsetMax = Vector2.zero;
+        }
+
         // 順位
-        Color rankCol = index < 3 ? new Color(1f, 0.85f, 0.1f) : new Color(0.7f, 0.7f, 0.7f);
-        MakeText(rowGo.transform, $"#{index + 1}", 26, rankCol,
+        Color rankCol = isTop3 ? new Color(1f, 0.85f, 0.1f) : new Color(0.7f, 0.7f, 0.7f);
+        var rankText = MakeText(rowGo.transform, $"#{index + 1}", 26, rankCol,
             new Vector2(0.08f, 0.5f), new Vector2(80f, 34f));
+        if (isTop3) AddShadow(rankText.gameObject);
 
         // 名前
         Color nameCol = isMe ? new Color(0.5f, 0.9f, 1f) : Color.white;
@@ -210,6 +349,56 @@ public class RankingUI : MonoBehaviour
         // クリア率
         MakeText(rowGo.transform, $"{entry.rate:P0}", 26, new Color(0.4f, 1f, 0.4f),
             new Vector2(0.85f, 0.5f), new Vector2(150f, 34f));
+    }
+
+    // ---- 光の粒パーティクル生成 ----
+
+    void CreateParticles(Transform parent, int count)
+    {
+        for (int i = 0; i < count; i++)
+        {
+            var pGo = new GameObject("Particle");
+            pGo.transform.SetParent(parent, false);
+            var img = pGo.AddComponent<Image>();
+            img.raycastTarget = false;
+            float r = Random.Range(0.85f, 1f);
+            float g = Random.Range(0.7f, 0.95f);
+            float bv = Random.Range(0.8f, 1f);
+            float a = Random.Range(0.15f, 0.4f);
+            img.color = new Color(r, g, bv, a);
+
+            var prt = pGo.GetComponent<RectTransform>();
+            prt.anchorMin = prt.anchorMax = new Vector2(0.5f, 0.5f);
+            float startX = Random.Range(-540f, 540f);
+            float startY = Random.Range(-960f, 960f);
+            prt.anchoredPosition = new Vector2(startX, startY);
+            float size = Random.Range(4f, 12f);
+            prt.sizeDelta = new Vector2(size, size);
+
+            particles.Add(prt);
+        }
+    }
+
+    // ---- ヘルパーメソッド ----
+
+    void AddShadow(GameObject go)
+    {
+        var s = go.AddComponent<Shadow>();
+        s.effectColor = new Color(0f, 0f, 0f, 0.6f);
+        s.effectDistance = new Vector2(2f, -2f);
+    }
+
+    void MakeLine(Transform parent, Color col, Vector2 anchor, Vector2 sizeDelta)
+    {
+        var go = new GameObject("Line");
+        go.transform.SetParent(parent, false);
+        var img = go.AddComponent<Image>();
+        img.color = col;
+        img.raycastTarget = false;
+        var rt = go.GetComponent<RectTransform>();
+        rt.anchorMin = rt.anchorMax = anchor;
+        rt.anchoredPosition = Vector2.zero;
+        rt.sizeDelta = sizeDelta;
     }
 
     // ---- ファクトリーメソッド ----
@@ -238,30 +427,5 @@ public class RankingUI : MonoBehaviour
         rt.anchoredPosition = Vector2.zero;
         rt.sizeDelta = sizeDelta;
         return t;
-    }
-
-    Button MakeButton(Transform parent, string label, Color bgCol,
-        Vector2 anchor, Vector2 sizeDelta, UnityEngine.Events.UnityAction onClick)
-    {
-        var go = new GameObject(label + "Btn");
-        go.transform.SetParent(parent, false);
-        go.AddComponent<Image>().color = bgCol;
-        var btn = go.AddComponent<Button>();
-        var rt = go.GetComponent<RectTransform>();
-        rt.anchorMin = rt.anchorMax = anchor;
-        rt.anchoredPosition = Vector2.zero;
-        rt.sizeDelta = sizeDelta;
-        btn.onClick.AddListener(onClick);
-
-        var txtGo = new GameObject("Label");
-        txtGo.transform.SetParent(go.transform, false);
-        var t = txtGo.AddComponent<Text>();
-        t.text = label; t.fontSize = 32; t.color = Color.white;
-        t.alignment = TextAnchor.MiddleCenter;
-        t.font = Font.CreateDynamicFontFromOSFont("Arial", 32);
-        var trt = txtGo.GetComponent<RectTransform>();
-        trt.anchorMin = Vector2.zero; trt.anchorMax = Vector2.one;
-        trt.offsetMin = trt.offsetMax = Vector2.zero;
-        return btn;
     }
 }

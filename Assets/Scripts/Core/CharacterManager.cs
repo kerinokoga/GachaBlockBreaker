@@ -18,12 +18,33 @@ public class CharacterManager : MonoBehaviour
     // ExtraDamage パッシブ用：BlockBase から参照される
     public int BonusDamage { get; private set; } = 0;
 
-    // 合成強化倍率：BlockBase から参照される（1.0 = 等倍）
-    public float DamageMultiplier { get; private set; } = 1f;
+    // 3キャラのパワー合計（基本ヒットダメージ）
+    public float BasePower { get; private set; } = 1f;
+
+    // BallDamageUp パッシブ倍率：BlockBase から参照される（1.0 = 等倍）
+    public float PassiveDamageMultiplier { get; private set; } = 1f;
+
+    // PowerBurst 奥義中の一時的ダメージ倍率（1.0 = 等倍）
+    public float UltDamageMultiplier { get; private set; } = 1f;
+
+    // Penetrate 奥義中フラグ：BallController から参照される
+    public bool IsPenetrating { get; private set; } = false;
+
+    // CriticalRangeUp パッシブ：クリティカル判定範囲の追加値（デフォルト0.03に加算）
+    public float CriticalRangeBonus { get; private set; } = 0f;
+
+    /// <summary>現在のダメージ値を計算して返す（UI表示用）</summary>
+    public int GetCurrentDamage()
+    {
+        float baseDmg = BasePower + BonusDamage;
+        float mul = PassiveDamageMultiplier * UltDamageMultiplier;
+        return (int)System.Math.Ceiling(baseDmg * mul);
+    }
 
     // UI が購読するイベント
     public System.Action<int, float> OnGaugeChanged; // slotIndex, 0.0〜1.0
     public System.Action<int>        OnUltReady;     // slotIndex（ゲージ満タン通知）
+    public System.Action<int>        OnUltUsed;      // slotIndex（奥義発動通知、チュートリアル用）
 
     void Awake()
     {
@@ -57,32 +78,84 @@ public class CharacterManager : MonoBehaviour
 
         // パッシブ適用
         BonusDamage = 0;
+        PassiveDamageMultiplier = 1f;
+        UltDamageMultiplier = 1f;
+        IsPenetrating = false;
+        CriticalRangeBonus = 0f;
         foreach (var cd in selectedChars)
         {
             if (cd == null) continue;
-            switch (cd.passiveType)
-            {
-                case PassiveEffectType.BallSpeedUp:
-                    if (ball != null) ball.speed *= cd.passiveValue;
-                    break;
-                case PassiveEffectType.ExtraDamage:
-                    BonusDamage += (int)cd.passiveValue;
-                    break;
-                case PassiveEffectType.ExtraStock:
-                    gm?.AddStock((int)cd.passiveValue);
-                    break;
-                // UltGaugeBoost はゲージ増加時に参照
-            }
+            // パッシブ1を適用
+            ApplyPassive(cd.passiveType, cd.passiveValue, gm);
+            // パッシブ2を適用（複合パッシブ対応）
+            if (cd.passiveType2 != PassiveEffectType.None)
+                ApplyPassive(cd.passiveType2, cd.passiveValue2, gm);
         }
 
-        // 強化倍率計算（3キャラの平均強化レベルを反映）
-        float levelSum = 0f;
+        // 基本パワー計算（3キャラそれぞれのパワーを合計）
+        float powerSum = 0f;
         for (int i = 0; i < 3; i++)
-            if (selectedChars[i] != null)
-                levelSum += OrbManager.GetEnhanceLevel(selectedChars[i].characterName);
-        DamageMultiplier = 1.0f + 0.1f * (levelSum / 3.0f);
+        {
+            if (selectedChars[i] == null) continue;
+            string cName = selectedChars[i].characterName;
+            int lvl = OrbManager.GetEnhanceLevel(cName);
+            bool awakened = OrbManager.IsAwakened(cName);
+            // 各キャラのパワー = 1 + 0.2×Lv + (覚醒なら+0.5)
+            powerSum += 1f + 0.2f * lvl + (awakened ? OrbManager.AwakenBonusMultiplier : 0f);
+        }
+        BasePower = Mathf.Max(powerSum, 1f); // 最低1
 
-        Debug.Log($"[CharacterManager] Init完了 BonusDamage={BonusDamage} DamageMultiplier={DamageMultiplier:F2}");
+        Debug.Log($"[CharacterManager] Init完了 BasePower={BasePower:F1} BonusDamage={BonusDamage} CriticalRangeBonus={CriticalRangeBonus:F2}");
+    }
+
+    private void ApplyPassive(PassiveEffectType type, float value, GameManager gm)
+    {
+        switch (type)
+        {
+            case PassiveEffectType.BallDamageUp:
+                PassiveDamageMultiplier *= value;
+                break;
+            case PassiveEffectType.ExtraDamage:
+                BonusDamage += (int)value;
+                break;
+            case PassiveEffectType.ExtraStock:
+                gm?.AddStock((int)value);
+                break;
+            case PassiveEffectType.CriticalRangeUp:
+                CriticalRangeBonus += value / 100f; // 3% → 0.03
+                break;
+            // UltGaugeBoost はゲージ増加時に参照
+        }
+    }
+
+    /// <summary>
+    /// 指定キャラ名が装備されているスロット番号を返す。見つからなければ -1。
+    /// チュートリアル等で特定キャラを参照したい場合に利用。
+    /// </summary>
+    public int FindSlotByCharacterName(string characterName)
+    {
+        if (string.IsNullOrEmpty(characterName)) return -1;
+        for (int i = 0; i < 3; i++)
+        {
+            if (selectedChars[i] != null
+                && selectedChars[i].characterName == characterName)
+                return i;
+        }
+        return -1;
+    }
+
+    /// <summary>
+    /// 指定スロットの奥義ゲージを強制的に満タンにする（OnUltReady も発火）。
+    /// チュートリアル用：アリアの奥義（MassDestroy）を視覚デモするために使用。
+    /// </summary>
+    public void ForceFillGauge(int slot)
+    {
+        if (slot < 0 || slot >= 3) return;
+        if (selectedChars[slot] == null) return;
+        gauges[slot] = MaxGauge;
+        OnGaugeChanged?.Invoke(slot, 1f);
+        OnUltReady?.Invoke(slot);
+        AudioManager.Instance?.PlayUltReadySE();
     }
 
     /// <summary>
@@ -94,15 +167,22 @@ public class CharacterManager : MonoBehaviour
         {
             if (selectedChars[i] == null) continue;
 
+            if (gauges[i] >= MaxGauge) continue; // 既にMAXならスキップ
+
             float boost = 1f;
             if (selectedChars[i].passiveType == PassiveEffectType.UltGaugeBoost)
                 boost = selectedChars[i].passiveValue;
+            else if (selectedChars[i].passiveType2 == PassiveEffectType.UltGaugeBoost)
+                boost = selectedChars[i].passiveValue2;
 
             gauges[i] = Mathf.Min(gauges[i] + boost, MaxGauge);
             OnGaugeChanged?.Invoke(i, gauges[i] / MaxGauge);
 
             if (gauges[i] >= MaxGauge)
+            {
                 OnUltReady?.Invoke(i);
+                AudioManager.Instance?.PlayUltReadySE();
+            }
         }
     }
 
@@ -112,19 +192,20 @@ public class CharacterManager : MonoBehaviour
     public void TriggerUltimate(int slotIndex)
     {
         if (GameManager.Instance == null) return;
-        if (GameManager.Instance.CurrentState != GameManager.GameState.Playing) return;
+        var state = GameManager.Instance.CurrentState;
+        if (state != GameManager.GameState.Playing && state != GameManager.GameState.Ready) return;
         if (selectedChars[slotIndex] == null) return;
         if (gauges[slotIndex] < MaxGauge) return;
 
         var cd = selectedChars[slotIndex];
         gauges[slotIndex] = 0f;
         OnGaugeChanged?.Invoke(slotIndex, 0f);
+        AudioManager.Instance?.PlayUltSE();
 
         switch (cd.ultimateType)
         {
-            case UltimateSkillType.SpeedBurst:
-                var ball = FindObjectOfType<BallController>();
-                if (ball != null) StartCoroutine(SpeedBurstCoroutine(ball, cd.ultimateValue, cd.ultimateDuration));
+            case UltimateSkillType.PowerBurst:
+                StartCoroutine(PowerBurstCoroutine(cd.ultimateValue, cd.ultimateDuration));
                 break;
 
             case UltimateSkillType.MassDestroy:
@@ -134,16 +215,58 @@ public class CharacterManager : MonoBehaviour
                 break;
 
             case UltimateSkillType.StockRecover:
-                GameManager.Instance.AddStock(1);
+                GameManager.Instance.AddStock((int)cd.ultimateValue);
                 break;
 
             case UltimateSkillType.BarrierShot:
                 barrierActive = true;
                 Debug.Log("[CharacterManager] バリア発動");
                 break;
+
+            case UltimateSkillType.Penetrate:
+                StartCoroutine(PenetrateCoroutine(cd.ultimateDuration));
+                break;
+
+            case UltimateSkillType.BallSplit:
+                GameManager.Instance?.TriggerBallSplit();
+                break;
         }
 
+        // 奥義ボイス再生（SE は switch 前に再生済み）— High優先度で他ボイスから保護
+        if (cd.voiceUlt != null)
+            AudioManager.Instance?.PlayVoice(cd.voiceUlt, cd.voiceVolumeMultiplier, AudioManager.VoicePriority.High);
+
         Debug.Log($"[CharacterManager] 奥義発動: {cd.characterName} - {cd.ultimateType}");
+
+        // チュートリアル用に発動を通知
+        OnUltUsed?.Invoke(slotIndex);
+    }
+
+    /// <summary>
+    /// 裏ステージ突入時などに、奥義ゲージ以外の一時効果をリセットする。
+    /// - 進行中の PowerBurst / Penetrate コルーチンを停止
+    /// - UltDamageMultiplier / IsPenetrating / barrierActive をリセット
+    /// - gauges[]（奥義ゲージ）は維持
+    /// - パッシブ由来の値（BonusDamage / BasePower / PassiveDamageMultiplier / CriticalRangeBonus）も維持
+    /// </summary>
+    public void ResetTemporaryEffects()
+    {
+        // PowerBurst / Penetrate などの進行中コルーチンを全停止
+        StopAllCoroutines();
+
+        UltDamageMultiplier = 1f;
+
+        // 貫通中なら全ボールにも解除を反映
+        if (IsPenetrating)
+        {
+            foreach (var ball in FindObjectsOfType<BallController>())
+                ball.SetPenetrate(false);
+        }
+        IsPenetrating = false;
+
+        barrierActive = false;
+
+        Debug.Log("[CharacterManager] 一時効果をリセット（奥義ゲージは維持）");
     }
 
     /// <summary>
@@ -160,13 +283,43 @@ public class CharacterManager : MonoBehaviour
     public CharacterData GetSelected(int slot) =>
         (slot >= 0 && slot < 3) ? selectedChars[slot] : null;
 
-    private IEnumerator SpeedBurstCoroutine(BallController ball, float multiplier, float duration)
+    public CharacterData[] GetSelectedCharacters() => selectedChars;
+
+    /// <summary>Ready状態ならPlaying状態になるまで待機</summary>
+    private System.Collections.IEnumerator WaitForPlaying()
     {
-        float original = ball.speed;
-        ball.speed = original * multiplier;
-        Debug.Log($"[CharacterManager] SpeedBurst開始 speed={ball.speed}");
+        while (GameManager.Instance != null &&
+               GameManager.Instance.CurrentState == GameManager.GameState.Ready)
+        {
+            yield return null;
+        }
+    }
+
+    private IEnumerator PowerBurstCoroutine(float multiplier, float duration)
+    {
+        // Ready状態なら発射まで待つ（待機中は時間消費しない）
+        yield return StartCoroutine(WaitForPlaying());
+        UltDamageMultiplier = multiplier;
+        Debug.Log($"[CharacterManager] PowerBurst開始 倍率={multiplier}");
         yield return new WaitForSeconds(duration);
-        if (ball != null) ball.speed = original;
-        Debug.Log($"[CharacterManager] SpeedBurst終了 speed={ball.speed}");
+        UltDamageMultiplier = 1f;
+        Debug.Log("[CharacterManager] PowerBurst終了");
+    }
+
+    private IEnumerator PenetrateCoroutine(float duration)
+    {
+        IsPenetrating = true;
+        // 全ボールに貫通を適用（分裂ボール含む）
+        foreach (var ball in FindObjectsOfType<BallController>())
+            ball.SetPenetrate(true);
+        // Ready状態なら発射まで待つ（待機中は時間消費しない）
+        yield return StartCoroutine(WaitForPlaying());
+        Debug.Log($"[CharacterManager] 貫通開始 {duration}秒");
+        yield return new WaitForSeconds(duration);
+        IsPenetrating = false;
+        // 全ボールの貫通を解除
+        foreach (var ball in FindObjectsOfType<BallController>())
+            ball.SetPenetrate(false);
+        Debug.Log("[CharacterManager] 貫通終了");
     }
 }

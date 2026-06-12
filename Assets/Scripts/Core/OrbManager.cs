@@ -19,6 +19,7 @@ public static class OrbManager
 
     // ---- オーブ操作 ----
 
+    // 初期所持オーブはプレゼントボックスで配布するためデフォルトは 0
     public static int GetOrbs() =>
         PlayerPrefs.GetInt(KeyOrbs, 0);
 
@@ -99,6 +100,12 @@ public static class OrbManager
         PlayerPrefs.Save();
     }
 
+    public static void SetCharCount(string charName, int value)
+    {
+        PlayerPrefs.SetInt(KeyCount(charName), value);
+        PlayerPrefs.Save();
+    }
+
     // ---- 所持上限チェック（ユニーク数 50体まで） ----
 
     public static int GetOwnedCount()
@@ -132,7 +139,7 @@ public static class OrbManager
     {
         int count = GetCharCount(charName);
         int level = GetEnhanceLevel(charName);
-        if (count < 2 || level >= 10) return false;
+        if (count < 2 || level >= 5) return false;
         PlayerPrefs.SetInt(KeyCount(charName), count - 1);
         PlayerPrefs.SetInt(KeyLevel(charName), level + 1);
         PlayerPrefs.Save();
@@ -161,6 +168,26 @@ public static class OrbManager
         }
     }
 
+    // ---- 覚醒（Lv5到達後に解放） ----
+
+    private static string KeyAwakened(string n) => $"GachaBlock_Awakened_{n}";
+
+    public static bool IsAwakened(string charName) =>
+        PlayerPrefs.GetInt(KeyAwakened(charName), 0) == 1;
+
+    /// <summary>覚醒を実行（Lv5必須）。成功で true。</summary>
+    public static bool TryAwaken(string charName)
+    {
+        if (GetEnhanceLevel(charName) < 5) return false;
+        if (IsAwakened(charName)) return false;
+        PlayerPrefs.SetInt(KeyAwakened(charName), 1);
+        PlayerPrefs.Save();
+        return true;
+    }
+
+    /// <summary>覚醒後のダメージ倍率ボーナス（+0.5x）</summary>
+    public const float AwakenBonusMultiplier = 0.5f;
+
     // ---- デバッグ ----
 
     public static void ResetAll()
@@ -168,6 +195,25 @@ public static class OrbManager
         PlayerPrefs.DeleteKey(KeyOrbs);
         PlayerPrefs.DeleteKey(KeyPityCount);
         PlayerPrefs.DeleteKey(KeySRDrawCount);
+        PlayerPrefs.Save();
+    }
+
+    /// <summary>
+    /// 全キャラの所持情報をリセット（所持フラグ・所持枚数・強化Lv・覚醒）。
+    /// スターターキャラ復元は呼び出し側で EnsureStarterCharacters() を実行すること。
+    /// </summary>
+    public static void ResetAllCharacters()
+    {
+        var all = Resources.LoadAll<CharacterData>("Characters");
+        foreach (var c in all)
+        {
+            if (c == null || string.IsNullOrEmpty(c.characterName)) continue;
+            string n = c.characterName;
+            PlayerPrefs.DeleteKey(KeyOwned(n));
+            PlayerPrefs.DeleteKey(KeyCount(n));
+            PlayerPrefs.DeleteKey(KeyLevel(n));
+            PlayerPrefs.DeleteKey(KeyAwakened(n));
+        }
         PlayerPrefs.Save();
     }
 }

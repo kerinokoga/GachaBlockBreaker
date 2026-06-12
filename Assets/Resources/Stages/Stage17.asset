@@ -16,179 +16,194 @@ MonoBehaviour:
   blocks:
   - blockType: 1
     gridPosition: {x: 0, y: 0}
-    hp: 3
+    hp: 100
+    speedMultiplier: 1.15
   - blockType: 1
     gridPosition: {x: 1, y: 0}
-    hp: 3
+    hp: 100
+    speedMultiplier: 1.15
   - blockType: 1
     gridPosition: {x: 2, y: 0}
-    hp: 3
+    hp: 100
+    speedMultiplier: 1.15
   - blockType: 1
     gridPosition: {x: 3, y: 0}
-    hp: 3
+    hp: 100
+    speedMultiplier: 1.15
   - blockType: 1
     gridPosition: {x: 4, y: 0}
-    hp: 3
+    hp: 100
+    speedMultiplier: 1.15
   - blockType: 1
     gridPosition: {x: 5, y: 0}
-    hp: 3
+    hp: 100
+    speedMultiplier: 1.15
   - blockType: 1
     gridPosition: {x: 6, y: 0}
-    hp: 3
+    hp: 100
+    speedMultiplier: 1.15
   - blockType: 1
     gridPosition: {x: 7, y: 0}
-    hp: 3
+    hp: 100
+    speedMultiplier: 1.15
   - blockType: 1
     gridPosition: {x: 8, y: 0}
-    hp: 3
-  - blockType: 0
+    hp: 100
+    speedMultiplier: 1.15
+  - blockType: 1
     gridPosition: {x: 0, y: 1}
-    hp: 1
-  - blockType: 0
+    hp: 60
+    speedMultiplier: 1.15
+  - blockType: 1
     gridPosition: {x: 1, y: 1}
-    hp: 1
-  - blockType: 0
+    hp: 60
+    speedMultiplier: 1.15
+  - blockType: 1
     gridPosition: {x: 2, y: 1}
-    hp: 1
-  - blockType: 0
+    hp: 60
+    speedMultiplier: 1.15
+  - blockType: 1
     gridPosition: {x: 3, y: 1}
-    hp: 1
-  - blockType: 0
+    hp: 60
+    speedMultiplier: 1.15
+  - blockType: 1
     gridPosition: {x: 4, y: 1}
-    hp: 1
-  - blockType: 0
+    hp: 60
+    speedMultiplier: 1.15
+  - blockType: 1
     gridPosition: {x: 5, y: 1}
-    hp: 1
-  - blockType: 0
+    hp: 60
+    speedMultiplier: 1.15
+  - blockType: 1
     gridPosition: {x: 6, y: 1}
-    hp: 1
-  - blockType: 0
+    hp: 60
+    speedMultiplier: 1.15
+  - blockType: 1
     gridPosition: {x: 7, y: 1}
-    hp: 1
-  - blockType: 0
+    hp: 60
+    speedMultiplier: 1.15
+  - blockType: 1
     gridPosition: {x: 8, y: 1}
-    hp: 1
+    hp: 60
+    speedMultiplier: 1.15
   - blockType: 3
     gridPosition: {x: 0, y: 2}
     hp: 1
+    speedMultiplier: 1.15
   - blockType: 3
     gridPosition: {x: 2, y: 2}
     hp: 1
+    speedMultiplier: 1.15
   - blockType: 3
     gridPosition: {x: 4, y: 2}
     hp: 1
+    speedMultiplier: 1.15
   - blockType: 3
     gridPosition: {x: 6, y: 2}
     hp: 1
+    speedMultiplier: 1.15
   - blockType: 3
     gridPosition: {x: 8, y: 2}
     hp: 1
+    speedMultiplier: 1.15
   - blockType: 3
     gridPosition: {x: 1, y: 3}
     hp: 1
+    speedMultiplier: 1.15
   - blockType: 3
     gridPosition: {x: 3, y: 3}
     hp: 1
+    speedMultiplier: 1.15
   - blockType: 3
     gridPosition: {x: 5, y: 3}
     hp: 1
+    speedMultiplier: 1.15
   - blockType: 3
     gridPosition: {x: 7, y: 3}
     hp: 1
-  - blockType: 0
-    gridPosition: {x: 0, y: 4}
-    hp: 1
-  - blockType: 0
-    gridPosition: {x: 1, y: 4}
-    hp: 1
-  - blockType: 0
+    speedMultiplier: 1.15
+  - blockType: 2
     gridPosition: {x: 2, y: 4}
     hp: 1
-  - blockType: 0
-    gridPosition: {x: 3, y: 4}
-    hp: 1
-  - blockType: 0
+    speedMultiplier: 1.15
+  - blockType: 2
     gridPosition: {x: 4, y: 4}
     hp: 1
-  - blockType: 0
-    gridPosition: {x: 5, y: 4}
-    hp: 1
-  - blockType: 0
+    speedMultiplier: 1.15
+  - blockType: 2
     gridPosition: {x: 6, y: 4}
     hp: 1
-  - blockType: 0
+    speedMultiplier: 1.15
+  - blockType: 1
+    gridPosition: {x: 0, y: 4}
+    hp: 120
+    speedMultiplier: 1.15
+  - blockType: 1
+    gridPosition: {x: 1, y: 4}
+    hp: 120
+    speedMultiplier: 1.15
+  - blockType: 1
+    gridPosition: {x: 2, y: 4}
+    hp: 120
+    speedMultiplier: 1.15
+  - blockType: 1
+    gridPosition: {x: 3, y: 4}
+    hp: 120
+    speedMultiplier: 1.15
+  - blockType: 1
+    gridPosition: {x: 4, y: 4}
+    hp: 120
+    speedMultiplier: 1.15
+  - blockType: 1
+    gridPosition: {x: 5, y: 4}
+    hp: 120
+    speedMultiplier: 1.15
+  - blockType: 1
+    gridPosition: {x: 6, y: 4}
+    hp: 120
+    speedMultiplier: 1.15
+  - blockType: 1
     gridPosition: {x: 7, y: 4}
-    hp: 1
-  - blockType: 0
+    hp: 120
+    speedMultiplier: 1.15
+  - blockType: 1
     gridPosition: {x: 8, y: 4}
-    hp: 1
-  - blockType: 2
-    gridPosition: {x: 2, y: 5}
-    hp: 1
-  - blockType: 2
-    gridPosition: {x: 4, y: 5}
-    hp: 1
-  - blockType: 2
-    gridPosition: {x: 6, y: 5}
-    hp: 1
-  - blockType: 0
-    gridPosition: {x: 0, y: 5}
-    hp: 1
-  - blockType: 0
+    hp: 120
+    speedMultiplier: 1.15
+  - blockType: 4
     gridPosition: {x: 1, y: 5}
     hp: 1
-  - blockType: 0
-    gridPosition: {x: 2, y: 5}
-    hp: 1
-  - blockType: 0
+    speedMultiplier: 1.15
+  - blockType: 4
     gridPosition: {x: 3, y: 5}
     hp: 1
-  - blockType: 0
-    gridPosition: {x: 4, y: 5}
-    hp: 1
-  - blockType: 0
+    speedMultiplier: 1.15
+  - blockType: 4
     gridPosition: {x: 5, y: 5}
     hp: 1
-  - blockType: 0
-    gridPosition: {x: 6, y: 5}
-    hp: 1
-  - blockType: 0
-    gridPosition: {x: 7, y: 5}
-    hp: 1
-  - blockType: 0
-    gridPosition: {x: 8, y: 5}
-    hp: 1
-  - blockType: 1
-    gridPosition: {x: 0, y: 6}
-    hp: 4
-  - blockType: 1
-    gridPosition: {x: 1, y: 6}
-    hp: 4
-  - blockType: 1
-    gridPosition: {x: 2, y: 6}
-    hp: 4
-  - blockType: 1
-    gridPosition: {x: 3, y: 6}
-    hp: 4
-  - blockType: 1
-    gridPosition: {x: 4, y: 6}
-    hp: 4
-  - blockType: 1
-    gridPosition: {x: 5, y: 6}
-    hp: 4
-  - blockType: 1
-    gridPosition: {x: 6, y: 6}
-    hp: 4
-  - blockType: 1
-    gridPosition: {x: 7, y: 6}
-    hp: 4
-  - blockType: 1
-    gridPosition: {x: 8, y: 6}
-    hp: 4
+    speedMultiplier: 1.15
+  - blockType: 5
+    gridPosition: {x: 4, y: -3}
+    hp: 1800
+    speedMultiplier: 1.15
   cellWidth: 1
-  cellHeight: 0.5
-  originOffset: {x: -4.5, y: 5}
-  characterName: Saki
+  cellHeight: 1.2
+  originOffset: {x: -4.5, y: 3.8}
+  characterName: "\u30B5\u30AD"
+  illustSprite0: {fileID: 21300000, guid: d0174aab43807bd41987ef76f52e1d6f, type: 3}
+  illustSprite30: {fileID: 21300000, guid: 03cdcee686000364b87ae5ced02dfa1d, type: 3}
+  illustSprite60: {fileID: 21300000, guid: 1743c2e5df4e7194bae7a94d079fc324, type: 3}
+  illustSpriteFull: {fileID: 21300000, guid: 78b4b3704c7091f4d9ef2e8affa90d57, type: 3}
+  paddleScale: 0.75
   illustColor30: {r: 0.1, g: 0.4, b: 0.5, a: 1}
   illustColor60: {r: 0.1, g: 0.6, b: 0.7, a: 1}
   illustColorFull: {r: 0.2, g: 0.9, b: 1, a: 1}
+  hasTrueStage: 0
+  trueBossHPMul: 2
+  trueAttackMul: 2
+  truePaddleShrinkMul: 3
+  trueBlocks: []
+  trueIllustSprite0: {fileID: 0}
+  trueIllustSprite30: {fileID: 0}
+  trueIllustSprite60: {fileID: 0}
+  trueIllustSpriteFull: {fileID: 0}

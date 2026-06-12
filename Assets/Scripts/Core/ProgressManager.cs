@@ -10,6 +10,7 @@ public static class ProgressManager
     private static string KeyMaxUnlocked => "GachaBlock_MaxUnlocked";
     private static string KeyCleared(int stage) => $"GachaBlock_Cleared_{stage}";
     private static string KeyRate(int stage)    => $"GachaBlock_Rate_{stage}";
+    private static string KeyTrueCleared(int stage) => $"GachaBlock_TrueCleared_{stage}";
 
     public static int GetMaxUnlocked() =>
         PlayerPrefs.GetInt(KeyMaxUnlocked, 1);
@@ -49,8 +50,31 @@ public static class ProgressManager
         {
             PlayerPrefs.DeleteKey(KeyCleared(i));
             PlayerPrefs.DeleteKey(KeyRate(i));
+            PlayerPrefs.DeleteKey(KeyTrueCleared(i));
         }
         PlayerPrefs.SetInt(KeyMaxUnlocked, 1);
+        PlayerPrefs.Save();
+    }
+
+    // ============================================================
+    // 裏ステージ（Boss 復活）クリア管理
+    // ============================================================
+
+    /// <summary>指定ステージの裏ステージをクリア済みか。</summary>
+    public static bool IsTrueStageClear(int stage) =>
+        PlayerPrefs.GetInt(KeyTrueCleared(stage), 0) == 1;
+
+    /// <summary>裏ステージクリアを保存する。全イラスト（本＋裏）のコレクション解放を意味する。</summary>
+    public static void SaveTrueStageClear(int stage)
+    {
+        bool wasAlreadyCleared = IsTrueStageClear(stage);
+
+        PlayerPrefs.SetInt(KeyTrueCleared(stage), 1);
+
+        // 初回クリアのみ報酬（通常のステージクリア報酬と同じオーブ量）
+        if (!wasAlreadyCleared)
+            OrbManager.AddOrbs(OrbManager.StageClearReward);
+
         PlayerPrefs.Save();
     }
 

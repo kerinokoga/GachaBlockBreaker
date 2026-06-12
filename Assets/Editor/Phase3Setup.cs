@@ -246,5 +246,119 @@ public static class Phase3Setup
         ProgressManager.ResetAll();
         EditorUtility.DisplayDialog("Phase3 Debug", "進行状況をリセットしました。\n（Stage 1 のみ解放状態）", "OK");
     }
+
+    // ---- デバッグ: ステージ20だけ未クリア（他は全クリア＋裏もクリア）----
+
+    [MenuItem("GachaBlock/Phase3/Debug: Clear All Except Stage 20")]
+    static void ClearAllExceptStage20()
+    {
+        // 一旦全リセット
+        ProgressManager.ResetAll();
+
+        // Stage 1〜19 をクリア（裏ステージがあるなら裏もクリア）
+        for (int s = 1; s <= 19; s++)
+        {
+            PlayerPrefs.SetInt($"GachaBlock_Cleared_{s}", 1);
+            PlayerPrefs.SetFloat($"GachaBlock_Rate_{s}", 1f);
+            // 裏ステージあり（Stage 5/10/15）も裏クリア扱いに
+            if (s == 5 || s == 10 || s == 15)
+                PlayerPrefs.SetInt($"GachaBlock_TrueCleared_{s}", 1);
+        }
+
+        // Stage 20 を解放（未クリア状態を保つ）
+        PlayerPrefs.SetInt("GachaBlock_MaxUnlocked", 20);
+
+        // Stage 20 のクリアフラグは明示的に 0
+        PlayerPrefs.SetInt("GachaBlock_Cleared_20", 0);
+        PlayerPrefs.SetFloat("GachaBlock_Rate_20", 0f);
+        PlayerPrefs.SetInt("GachaBlock_TrueCleared_20", 0);
+
+        PlayerPrefs.Save();
+
+        EditorUtility.DisplayDialog("Phase3 Debug",
+            "Stage 1〜19 をクリア済み（5/10/15 は裏もクリア）にしました。\n" +
+            "Stage 20 のみ解放済み・未クリアです。\n\n" +
+            "ステージセレクト画面で:\n" +
+            "  - Stage 1〜19: 100% / 裏イラスト表示\n" +
+            "  - Stage 20  : シルエット表示", "OK");
+    }
+
+    // ---- デバッグ: チュートリアル進捗リセット ----
+
+    [MenuItem("GachaBlock/Phase3/Debug: Reset Tutorial")]
+    static void ResetTutorial()
+    {
+        PlayerPrefs.DeleteKey("Tutorial_Completed");
+        PlayerPrefs.DeleteKey("Tutorial_Skipped");
+        PlayerPrefs.DeleteKey("Tutorial_CurrentStep");
+        PlayerPrefs.Save();
+        EditorUtility.DisplayDialog("Phase3 Debug",
+            "チュートリアル状態をリセットしました。\n" +
+            "次回ホーム画面起動時にレイのガイドが表示されます。", "OK");
+    }
+
+    // ---- デバッグ: キャラ所持リセット（スターター 3 体のみ復元） ----
+
+    [MenuItem("GachaBlock/Phase3/Debug: Reset Character Ownership")]
+    static void ResetCharacterOwnership()
+    {
+        OrbManager.ResetAllCharacters();
+        OrbManager.EnsureStarterCharacters();
+
+        // スロット選択履歴もクリア（所持していないキャラの参照が残らないように）
+        PlayerPrefs.DeleteKey("GachaBlock_LastSlot0");
+        PlayerPrefs.DeleteKey("GachaBlock_LastSlot1");
+        PlayerPrefs.DeleteKey("GachaBlock_LastSlot2");
+        PlayerPrefs.Save();
+
+        EditorUtility.DisplayDialog("Phase3 Debug",
+            "全キャラ所持をリセットしました。\n" +
+            "スターター 3 体 (Luna / Aria / Sera) のみ所持状態です。\n" +
+            "スロット選択履歴もクリアしました。\n" +
+            "強化Lv・覚醒・所持枚数も0に戻ります。", "OK");
+    }
+
+    // ---- デバッグ: 完全初期状態（チュートリアル動作確認用） ----
+
+    [MenuItem("GachaBlock/Phase3/Debug: Reset to First-Run State")]
+    static void ResetToFirstRun()
+    {
+        // ステージ進行リセット
+        ProgressManager.ResetAll();
+
+        // チュートリアルリセット
+        PlayerPrefs.DeleteKey("Tutorial_Completed");
+        PlayerPrefs.DeleteKey("Tutorial_Skipped");
+        PlayerPrefs.DeleteKey("Tutorial_CurrentStep");
+
+        // オーブ・ガチャ関連リセット
+        OrbManager.ResetAll();
+
+        // キャラ所持リセット → スターターのみ復元
+        OrbManager.ResetAllCharacters();
+        OrbManager.EnsureStarterCharacters();
+
+        // スロット選択履歴をクリア（初期状態は全スロット空）
+        PlayerPrefs.DeleteKey("GachaBlock_LastSlot0");
+        PlayerPrefs.DeleteKey("GachaBlock_LastSlot1");
+        PlayerPrefs.DeleteKey("GachaBlock_LastSlot2");
+
+        // プレゼントボックスをクリア + スターターオーブ・ログインボーナスの再付与フラグもリセット
+        PlayerPrefs.DeleteKey("GachaBlock_PresentBox");
+        PlayerPrefs.DeleteKey("GachaBlock_StarterOrbsGranted");
+        PlayerPrefs.DeleteKey("GachaBlock_LastLoginDate");
+
+        PlayerPrefs.Save();
+        EditorUtility.DisplayDialog("Phase3 Debug",
+            "完全初期状態にリセットしました。\n\n" +
+            "・ステージ進行: Stage 1 のみ解放\n" +
+            "・チュートリアル: 未開始\n" +
+            "・オーブ: 0（初期）\n" +
+            "・プレゼントボックス: 空（次回ホーム到達で\n" +
+            "　スターター1000オーブ + ログインボーナス100付与）\n" +
+            "・所持キャラ: スターター 3 体のみ\n" +
+            "・スロット選択: 全スロット空\n" +
+            "・天井カウント・強化・覚醒: 全リセット", "OK");
+    }
 }
 #endif

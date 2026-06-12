@@ -198,18 +198,22 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   bgmSource: {fileID: 0}
   seSource: {fileID: 0}
+  voiceSource: {fileID: 0}
   bgmHome: {fileID: 0}
   bgmGame: {fileID: 0}
+  bgmGameBoss: {fileID: 0}
   bgmGacha: {fileID: 0}
   bgmResult: {fileID: 0}
-  seBlockBreak: {fileID: 0}
-  seMiss: {fileID: 0}
-  seClear: {fileID: 0}
-  seGameOver: {fileID: 0}
-  seBallLaunch: {fileID: 0}
-  seButton: {fileID: 0}
-  seGacha: {fileID: 0}
-  seUlt: {fileID: 0}
+  bgmCollection: {fileID: 0}
+  seBlockBreak: {fileID: 8300000, guid: cbf6aee5a73f1b54a87c1360485020dc, type: 3}
+  seMiss: {fileID: 8300000, guid: 80ff791f28ff6714db01ba89e39fc58a, type: 3}
+  seClear: {fileID: 8300000, guid: df41b3d079ee758498a1eb1edb90809d, type: 3}
+  seGameOver: {fileID: 8300000, guid: f25ffc8fd6a337b4881e5549a4930a69, type: 3}
+  seBallLaunch: {fileID: 8300000, guid: 9e31e6395d9c9c240ad0a807615d7f50, type: 3}
+  seButton: {fileID: 8300000, guid: 6c67ff4ddb5a47b479d9c251f250ddbd, type: 3}
+  seGacha: {fileID: 8300000, guid: 0a15a30d69ded9e42be78a41aaec625d, type: 3}
+  seUlt: {fileID: 8300000, guid: 9e292179d2913f048b716bfb98d5272a, type: 3}
+  seUltReady: {fileID: 8300000, guid: e5ba14e3b4622d6489b143e2f0d5d641, type: 3}
 --- !u!4 &1560655632
 Transform:
   m_ObjectHideFlags: 0

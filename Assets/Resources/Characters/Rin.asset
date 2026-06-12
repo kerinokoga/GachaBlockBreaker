@@ -1,0 +1,38 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5103790b115591843b21eafc2ded6d7e, type: 3}
+  m_Name: Rin
+  m_EditorClassIdentifier: 
+  characterName: "\u30EA\u30F3"
+  rarity: 1
+  rarityColor: {r: 0.3, g: 0.5, b: 1, a: 1}
+  icon: {fileID: 21300000, guid: 2b868958b3e7e9f4e9a19f356e92183d, type: 3}
+  passiveType: 4
+  passiveValue: 2
+  passiveType2: 0
+  passiveValue2: 0
+  ultimateType: 1
+  ultimateValue: 2
+  ultimateDuration: 25
+  ultimateGaugeCost: 10
+  voiceVolumeMultiplier: 1.5
+  voiceTitle: {fileID: 8300000, guid: ef763341b814dfe4ebe1a8c839faeee6, type: 3}
+  voiceSelect: {fileID: 8300000, guid: fd2c7016a2f34ff4e9f3be78eefad96c, type: 3}
+  voiceUlt: {fileID: 8300000, guid: f3c340c436afe354bb8a35ec93432c26, type: 3}
+  voiceVictory: {fileID: 8300000, guid: aaac0f932881f434986037f9c164d4e1, type: 3}
+  voiceDefeat: {fileID: 8300000, guid: a27517e025a88e744b3ec0e45a3d13c5, type: 3}
+  voiceStageStart: {fileID: 8300000, guid: 6fe304db9fdc6e94991ef8f79af7f1d6, type: 3}
+  voiceDestroy30: {fileID: 8300000, guid: 4cc5931cc8da5194191d4c219c6a74d1, type: 3}
+  voiceDestroy60: {fileID: 8300000, guid: 7e95a423ef5037b419838e151d4b963f, type: 3}
+  voiceBossDamaged: {fileID: 8300000, guid: 2d6e661014eb09246838337588a5c850, type: 3}
+  voiceBossAttack: {fileID: 8300000, guid: 00ba09afe93a1694391ae92b40a52c79, type: 3}
+  description: "\u7FE0\u7389\u306E\u6697\u6BBA\u8005\u3002\u30B2\u30FC\u30B82\u500D\u901F\uFF06\u5965\u7FA9\u306725\u79D2\u9593\u30C0\u30E1\u30FC\u30B82\u500D\uFF01"

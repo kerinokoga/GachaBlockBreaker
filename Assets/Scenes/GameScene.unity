@@ -855,11 +855,18 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   bgmSource: {fileID: 1012465788}
   seSource: {fileID: 1012465787}
+  bgmHome: {fileID: 0}
+  bgmGame: {fileID: 0}
+  bgmGacha: {fileID: 0}
+  bgmResult: {fileID: 0}
   seBlockBreak: {fileID: 0}
   seMiss: {fileID: 0}
   seClear: {fileID: 0}
   seGameOver: {fileID: 0}
   seBallLaunch: {fileID: 0}
+  seButton: {fileID: 0}
+  seGacha: {fileID: 0}
+  seUlt: {fileID: 0}
 --- !u!4 &1012465790
 Transform:
   m_ObjectHideFlags: 0
@@ -1139,7 +1146,10 @@ MonoBehaviour:
   - {fileID: 6262814960748306010, guid: 61d18b028e650274bbf1f698f055ec8a, type: 3}
   - {fileID: 8178241690125457505, guid: 2fd9e939e4b8c2f4fb77ba605b7f3686, type: 3}
   - {fileID: 991661173245833343, guid: b204f0d064df74a4284c7572e6d32eeb, type: 3}
+  - {fileID: 8172043933083611344, guid: dc87ae1c8ebcc2241ba9ad2c81178523, type: 3}
+  - {fileID: 4485283113592592823, guid: d4a3d24d78735504ab3fbe8ff0db5d23, type: 3}
   blockParent: {fileID: 1756135659}
+  paddleRef: {fileID: 0}
 --- !u!4 &1782567568
 Transform:
   m_ObjectHideFlags: 0
@@ -1166,6 +1176,7 @@ GameObject:
   - component: {fileID: 1857792497}
   - component: {fileID: 1857792496}
   - component: {fileID: 1857792495}
+  - component: {fileID: 1857792498}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -1247,6 +1258,19 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1857792498
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1857792494}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 03acf687958164c4c9a59c6b2a555ba3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  targetWorldWidth: 11
 --- !u!1 &2080856235
 GameObject:
   m_ObjectHideFlags: 0
