@@ -43,6 +43,7 @@ public class StageSelectUI : MonoBehaviour
 
         var overlay = TutorialOverlay.Create(canvasRoot);
         overlay.SetCharacterByName("Rei", "レイ");
+        overlay.SetMessageAlignment(TextAnchor.MiddleLeft);
         overlay.SetMessage(
             "ここがステージセレクト画面よ\n" +
             "ステージをクリアするごとに次のステージが開放されるわよ\n" +
@@ -102,6 +103,7 @@ public class StageSelectUI : MonoBehaviour
         overlay.SetBubbleAnchor(
             new Vector2(0.05f, 0.40f),
             new Vector2(0.95f, 0.55f));
+        overlay.SetMessageAlignment(TextAnchor.MiddleLeft);
         overlay.SetMessage(
             "ぐだぐだうるさいわね…\n" +
             "実際にやって覚えなさい！\n" +

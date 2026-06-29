@@ -142,6 +142,7 @@ public class CharaSelectUI : MonoBehaviour
 
         var overlay = TutorialOverlay.Create(canvasRoot);
         overlay.HideCharacter();
+        overlay.SetMessageAlignment(TextAnchor.MiddleLeft);
         overlay.SetMessage(
             "ここがキャラ選択画面よ\n" +
             "下のキャラを長押ししてから、\n" +
@@ -202,6 +203,7 @@ public class CharaSelectUI : MonoBehaviour
         overlay.SetBubbleAnchor(
             new Vector2(0.05f, 0.10f),
             new Vector2(0.95f, 0.24f));
+        overlay.SetMessageAlignment(TextAnchor.MiddleLeft);
         overlay.SetMessage(
             "じゃあ実際にやってみなさい\n" +
             "キャラを長押し→ドラッグで3人スロットにセットして、\n" +
@@ -925,6 +927,7 @@ public class CharaSelectUI : MonoBehaviour
         overlay.SetBubbleAnchor(
             new Vector2(0.05f, 0.66f),
             new Vector2(0.95f, 0.82f));
+        overlay.SetMessageAlignment(TextAnchor.MiddleLeft);
         overlay.SetMessage(
             "ゲーム開始にはスタミナを使うの\n" +
             "そのまま『はい』を押しなさい！");

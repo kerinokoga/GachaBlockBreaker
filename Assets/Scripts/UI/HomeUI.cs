@@ -70,6 +70,7 @@ public class HomeUI : MonoBehaviour
 
         var overlay = TutorialOverlay.Create(canvasRoot);
         overlay.SetCharacterByName("Rei", "レイ");
+        overlay.SetMessageAlignment(TextAnchor.MiddleLeft);
         overlay.SetMessage(
             "これでばっちりね\n" +
             "あとは自分でやりなさい");
@@ -140,6 +141,7 @@ public class HomeUI : MonoBehaviour
         overlay.SetBubbleAnchor(
             new Vector2(0.05f, 0.50f),
             new Vector2(0.95f, 0.75f));
+        overlay.SetMessageAlignment(TextAnchor.MiddleLeft);
         overlay.SetMessage(
             "オーブが届いてるはずよ\n" +
             "受け取りなさい");
@@ -200,6 +202,7 @@ public class HomeUI : MonoBehaviour
         overlay.SetBubbleAnchor(
             new Vector2(0.05f, 0.30f),
             new Vector2(0.95f, 0.55f));
+        overlay.SetMessageAlignment(TextAnchor.MiddleLeft);
         overlay.SetMessage(
             "もらったオーブで\n" +
             "新しいキャラをゲットしなさい！\n" +
@@ -248,6 +251,7 @@ public class HomeUI : MonoBehaviour
         var overlay = TutorialOverlay.Create(canvasRoot);
         overlay.SetCharacterByName("Rei", "レイ");
         // レイらしいツンツン口調のチュートリアル導入
+        overlay.SetMessageAlignment(TextAnchor.MiddleLeft);
         overlay.SetMessage(
             "ふんっ、あんたはじめてみたいね\n" +
             "しかたないわ、私が特別に\n" +
@@ -319,6 +323,7 @@ public class HomeUI : MonoBehaviour
 
         // 吹き出しを画面上部に配置
         overlay.SetBubbleAnchor(new Vector2(0.05f, 0.82f), new Vector2(0.95f, 0.92f));
+        overlay.SetMessageAlignment(TextAnchor.MiddleLeft);
         overlay.SetMessage("まずはスタートを押しなさいよ！");
 
         // 矢印をスタートボタン真上に配置（x=0.12, y=0.80）

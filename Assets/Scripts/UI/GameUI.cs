@@ -46,6 +46,11 @@ public class GameUI : MonoBehaviour
     private bool ultTutorialShown = false;          // 段階5-C 起動済みフラグ
     private TutorialOverlay currentUltTutorialOverlay; // 段階5-C Part1 のオーバーレイ参照
 
+    // 持続系奥義タイマーの縦積み管理（重複しても重ならないように）
+    private readonly System.Collections.Generic.List<RectTransform> activeUltTimers
+        = new System.Collections.Generic.List<RectTransform>();
+    private const float UltTimerSpacing = 50f;       // 行間（px）
+
     void Start()
     {
         BuildUI();
@@ -69,6 +74,8 @@ public class GameUI : MonoBehaviour
             // 段階5-C: 奥義チュートリアル用
             CharacterManager.Instance.OnUltReady     += TryShowUltTutorial;
             CharacterManager.Instance.OnUltUsed      += OnUltUsedForTutorial;
+            // 奥義発動バナー（常時、チュートリアル外でも表示）
+            CharacterManager.Instance.OnUltUsed      += ShowUltBanner;
         }
 
         // クリティカル表示購読
@@ -132,6 +139,7 @@ public class GameUI : MonoBehaviour
         overlay.SetBubbleAnchor(
             new Vector2(0.05f, 0.45f),
             new Vector2(0.95f, 0.65f));
+        overlay.SetMessageAlignment(TextAnchor.MiddleLeft);
         overlay.SetMessage(
             "画面の『残り打数』を見なさい！\n" +
             "これがあんたがパドルで打てる回数よ\n" +
@@ -177,7 +185,7 @@ public class GameUI : MonoBehaviour
         overlay.SetBubbleAnchor(
             new Vector2(0.05f, 0.16f),
             new Vector2(0.95f, 0.84f));
-        overlay.SetMessageAlignment(TextAnchor.UpperLeft);
+        overlay.SetMessageAlignment(TextAnchor.MiddleLeft);
         overlay.SetMessage(
             "操作箇所の説明をまとめといてあげたわ\n" +
             "感謝しなさい\n" +
@@ -258,6 +266,189 @@ public class GameUI : MonoBehaviour
     }
 
     // ============================================================
+    // 奥義発動バナー（何が起きたかを画面上部に短時間表示）
+    // ============================================================
+
+    /// <summary>
+    /// OnUltUsed から呼ばれる。発動キャラ名 + 効果説明をバナー表示する。
+    /// ボールの邪魔をしないよう、上部配置・背景無し・短時間・クリック透過。
+    /// </summary>
+    void ShowUltBanner(int slot)
+    {
+        if (canvasRoot == null || CharacterManager.Instance == null) return;
+        var cd = CharacterManager.Instance.GetSelectedChar(slot);
+        if (cd == null) return;
+
+        string effectLine = GetUltEffectText(cd);
+        StartCoroutine(UltBannerCoroutine($"{cd.characterName}の奥義！", effectLine));
+
+        // 持続系奥義は効果内容 + 残り時間も表示（案D）
+        if (cd.ultimateType == UltimateSkillType.PowerBurst)
+        {
+            StartCoroutine(UltEffectTimerCoroutine(
+                $"ダメージ×{cd.ultimateValue:0.#}倍", cd.ultimateDuration));
+        }
+        else if (cd.ultimateType == UltimateSkillType.Penetrate)
+        {
+            StartCoroutine(UltEffectTimerCoroutine(
+                "ボール貫通", cd.ultimateDuration));
+        }
+    }
+
+    /// <summary>奥義タイプから効果説明文を生成</summary>
+    string GetUltEffectText(CharacterData cd)
+    {
+        switch (cd.ultimateType)
+        {
+            case UltimateSkillType.PowerBurst:
+                return $"{cd.ultimateDuration:0.#}秒間 ダメージ×{cd.ultimateValue:0.#}！";
+            case UltimateSkillType.MassDestroy:
+                return $"全ブロックに {cd.ultimateValue:0.#} ダメージ！";
+            case UltimateSkillType.StockRecover:
+                return $"ストック +{cd.ultimateValue:0.#} 回復！";
+            case UltimateSkillType.BarrierShot:
+                return "次のミスを1回防ぐ！";
+            case UltimateSkillType.Penetrate:
+                return $"{cd.ultimateDuration:0.#}秒間 ボール貫通！";
+            case UltimateSkillType.BallSplit:
+                return "ボールが2つに分裂！";
+            default:
+                return "";
+        }
+    }
+
+    System.Collections.IEnumerator UltBannerCoroutine(string title, string effect)
+    {
+        // 親（2行まとめ）
+        var go = new GameObject("UltBanner");
+        go.transform.SetParent(canvasRoot, false);
+        go.transform.SetAsLastSibling();
+        var rt = go.AddComponent<RectTransform>();
+        rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 0.80f);
+        rt.pivot = new Vector2(0.5f, 0.5f);
+        rt.anchoredPosition = Vector2.zero;
+        rt.sizeDelta = new Vector2(900f, 160f);
+
+        // タイトル行（キャラ名の奥義！）
+        var titleT = MakeBannerText(go.transform, title, 60,
+            new Color(1f, 0.85f, 0.25f), new Vector2(0.5f, 0.72f));
+        // 効果行
+        var effectT = MakeBannerText(go.transform, effect, 44,
+            Color.white, new Vector2(0.5f, 0.26f));
+
+        // フェードイン 0.25s → 静止 1.2s → フェードアウト 0.3s（実時間）
+        float fadeIn = 0.25f, hold = 1.2f, fadeOut = 0.3f;
+        float t = 0f;
+        while (t < fadeIn)
+        {
+            t += Time.unscaledDeltaTime;
+            float k = Mathf.Clamp01(t / fadeIn);
+            SetBannerAlpha(titleT, effectT, k);
+            rt.localScale = Vector3.one * Mathf.Lerp(0.85f, 1f, k);
+            yield return null;
+        }
+        yield return new WaitForSecondsRealtime(hold);
+        t = 0f;
+        while (t < fadeOut)
+        {
+            t += Time.unscaledDeltaTime;
+            SetBannerAlpha(titleT, effectT, 1f - Mathf.Clamp01(t / fadeOut));
+            yield return null;
+        }
+        Destroy(go);
+    }
+
+    Text MakeBannerText(Transform parent, string text, int fontSize, Color color, Vector2 anchor)
+    {
+        var go = new GameObject("BannerTxt");
+        go.transform.SetParent(parent, false);
+        var t = go.AddComponent<Text>();
+        t.text = text;
+        t.fontSize = fontSize;
+        t.color = new Color(color.r, color.g, color.b, 0f); // 初期透明
+        t.alignment = TextAnchor.MiddleCenter;
+        t.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        t.fontStyle = FontStyle.Bold;
+        t.raycastTarget = false; // 操作を妨げない
+        t.horizontalOverflow = HorizontalWrapMode.Overflow;
+        t.verticalOverflow = VerticalWrapMode.Overflow;
+        var ol = go.AddComponent<Outline>();
+        ol.effectColor = new Color(0f, 0f, 0f, 0.9f);
+        ol.effectDistance = new Vector2(3f, -3f);
+        var rt = go.GetComponent<RectTransform>();
+        rt.anchorMin = rt.anchorMax = anchor;
+        rt.anchoredPosition = Vector2.zero;
+        rt.sizeDelta = new Vector2(900f, 70f);
+        return t;
+    }
+
+    void SetBannerAlpha(Text a, Text b, float alpha)
+    {
+        if (a != null) { var c = a.color; c.a = alpha; a.color = c; }
+        if (b != null) { var c = b.color; c.a = alpha; b.color = c; }
+    }
+
+    /// <summary>
+    /// 持続系奥義（PowerBurst / Penetrate）の効果内容 + 残り時間を表示。
+    /// ボスアイコン（中央上部）と被らないよう右側に配置。
+    /// ゲーム内時間で減少（一時停止中は止まる）。
+    /// </summary>
+    System.Collections.IEnumerator UltEffectTimerCoroutine(string effectLabel, float duration)
+    {
+        var go = new GameObject("UltEffectTimer");
+        go.transform.SetParent(canvasRoot, false);
+        go.transform.SetAsLastSibling();
+        var t = go.AddComponent<Text>();
+        t.fontSize = 30;
+        t.color = new Color(1f, 0.75f, 0.2f);
+        t.alignment = TextAnchor.MiddleRight;
+        t.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        t.fontStyle = FontStyle.Bold;
+        t.raycastTarget = false;
+        t.horizontalOverflow = HorizontalWrapMode.Overflow;
+        t.verticalOverflow = VerticalWrapMode.Overflow;
+        var ol = go.AddComponent<Outline>();
+        ol.effectColor = new Color(0f, 0f, 0f, 0.85f);
+        ol.effectDistance = new Vector2(2f, -2f);
+        // 右端寄せ（ボスアイコンは中央上部のため右サイドへ退避）
+        var rt = go.GetComponent<RectTransform>();
+        rt.anchorMin = rt.anchorMax = new Vector2(1f, 0.745f);
+        rt.pivot = new Vector2(1f, 0.5f);
+        rt.sizeDelta = new Vector2(420f, 44f);
+
+        // 縦積みリストに登録して再レイアウト（重複しても重ならない）
+        activeUltTimers.Add(rt);
+        RelayoutUltTimers();
+
+        // ゲーム内時間でカウントダウン（奥義効果の進行と同期、pause 中は停止）
+        float remaining = duration;
+        while (remaining > 0f)
+        {
+            remaining -= Time.deltaTime;
+            t.text = $"{effectLabel}　残り {Mathf.Max(remaining, 0f):0.0}秒";
+            yield return null;
+        }
+
+        // リストから外して残りを上に詰める
+        activeUltTimers.Remove(rt);
+        Destroy(go);
+        RelayoutUltTimers();
+    }
+
+    /// <summary>
+    /// アクティブな奥義タイマーを上から順に縦積み配置し直す。
+    /// 個数に上限はなく、3つ以上でも自動で間隔を空けて並ぶ。
+    /// </summary>
+    void RelayoutUltTimers()
+    {
+        activeUltTimers.RemoveAll(r => r == null); // 破棄済みを掃除
+        for (int i = 0; i < activeUltTimers.Count; i++)
+        {
+            activeUltTimers[i].anchoredPosition = new Vector2(-20f, -i * UltTimerSpacing);
+        }
+    }
+
+    // ============================================================
     // 段階5-C: 奥義チュートリアル（ゲージ満タン → 発動 → フィードバック）
     // ============================================================
 
@@ -311,6 +502,7 @@ public class GameUI : MonoBehaviour
         overlay.SetBubbleAnchor(
             new Vector2(0.20f, 0.45f),
             new Vector2(0.95f, 0.70f));
+        overlay.SetMessageAlignment(TextAnchor.MiddleLeft);
         overlay.SetMessage(
             "奥義ゲージが満タンよ！\n" +
             "左下のキャラアイコンが\n" +
@@ -374,6 +566,7 @@ public class GameUI : MonoBehaviour
         overlay.SetBubbleAnchor(
             new Vector2(0.05f, 0.35f),
             new Vector2(0.95f, 0.65f));
+        overlay.SetMessageAlignment(TextAnchor.MiddleLeft);
         overlay.SetMessage(
             "ふんっ、それが奥義よ\n" +
             "キャラごとに違う効果があるから\n" +
@@ -440,6 +633,7 @@ public class GameUI : MonoBehaviour
             voiceKey = "Tutorial/miss_second";
         }
 
+        overlay.SetMessageAlignment(TextAnchor.MiddleLeft);
         overlay.SetMessage(message);
 
         AudioClip voice = Resources.Load<AudioClip>(voiceKey);
@@ -1428,6 +1622,7 @@ public class GameUI : MonoBehaviour
             CharacterManager.Instance.OnUltReady     -= ShowUltButton;
             CharacterManager.Instance.OnUltReady     -= TryShowUltTutorial;
             CharacterManager.Instance.OnUltUsed      -= OnUltUsedForTutorial;
+            CharacterManager.Instance.OnUltUsed      -= ShowUltBanner;
         }
         var sm = FindObjectOfType<StageManager>();
         if (sm != null) sm.OnBossTurnChanged -= UpdateBossTurn;

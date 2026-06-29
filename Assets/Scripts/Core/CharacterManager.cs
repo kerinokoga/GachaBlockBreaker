@@ -128,6 +128,13 @@ public class CharacterManager : MonoBehaviour
         }
     }
 
+    /// <summary>指定スロットの装備キャラを返す（未装備なら null）。UI 表示用。</summary>
+    public CharacterData GetSelectedChar(int slot)
+    {
+        if (slot < 0 || slot >= 3) return null;
+        return selectedChars[slot];
+    }
+
     /// <summary>
     /// 指定キャラ名が装備されているスロット番号を返す。見つからなければ -1。
     /// チュートリアル等で特定キャラを参照したい場合に利用。

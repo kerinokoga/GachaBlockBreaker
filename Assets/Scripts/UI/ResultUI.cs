@@ -42,6 +42,7 @@ public class ResultUI : MonoBehaviour
 
         var overlay = TutorialOverlay.Create(canvasRoot);
         overlay.SetCharacterByName("Rei", "レイ");
+        overlay.SetMessageAlignment(TextAnchor.MiddleLeft);
         overlay.SetMessage(
             "ふんっ、やっとできたじゃない！\n" +
             "…でも、まあまあの腕前ね？\n" +
@@ -96,6 +97,7 @@ public class ResultUI : MonoBehaviour
         overlay.SetBubbleAnchor(
             new Vector2(0.05f, 0.40f),
             new Vector2(0.95f, 0.75f));
+        overlay.SetMessageAlignment(TextAnchor.MiddleLeft);
         overlay.SetMessage(
             "次のステージが解放されたよ！\n" +
             "\n" +
