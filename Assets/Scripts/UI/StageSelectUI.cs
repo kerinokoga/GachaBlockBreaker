@@ -10,6 +10,7 @@ public class StageSelectUI : MonoBehaviour
 {
     List<RectTransform> particles = new List<RectTransform>();
     Transform canvasRoot;
+    RectTransform stage1CardRT;  // 段階3チュートリアル用：ステージ1カードの実位置参照
 
     void Start()
     {
@@ -44,6 +45,7 @@ public class StageSelectUI : MonoBehaviour
         var overlay = TutorialOverlay.Create(canvasRoot);
         overlay.SetCharacterByName("Rei", "レイ");
         overlay.SetMessageAlignment(TextAnchor.MiddleLeft);
+        overlay.SetMessageFontSize(38);
         overlay.SetMessage(
             "ここがステージセレクト画面よ\n" +
             "ステージをクリアするごとに次のステージが開放されるわよ\n" +
@@ -82,22 +84,10 @@ public class StageSelectUI : MonoBehaviour
         var overlay = TutorialOverlay.Create(canvasRoot);
         overlay.HideCharacter();
 
-        // ステージ1カードの canvas 上の範囲（正規化、1080×1920 基準）
-        //   ScrollView: anchorMax.y = 0.88 → content top = 0.88 * 1920 = 1689.6 px
-        //   カードの pivot は (0.5, 1) = top-center、yPos = -198 はカード TOP の位置
-        //     → カード TOP y    = 1689.6 - 198 = 1491.6 px → 正規化 0.777
-        //     → カード BOTTOM y = 1689.6 - 558 = 1131.6 px → 正規化 0.589
-        //   カード幅 950 → x 範囲 (540±475)/1080 = 0.060〜0.940
-        // 視覚的余白を加えて少し外側まで囲む
-        Vector2 stage1Min = new Vector2(0.04f, 0.575f);
-        Vector2 stage1Max = new Vector2(0.96f, 0.790f);
-
-        // スポットライト（クリックブロック）
-        overlay.ShowSpotlight(stage1Min, stage1Max);
-
-        // 強調表示：脈動する黄金色フレーム
-        overlay.AddHighlightFrame(stage1Min, stage1Max,
-            new Color(1f, 0.9f, 0.2f), 10f);
+        // ステージ1カードの実 RectTransform から枠を算出（アスペクト比非依存）
+        Vector2 cardCenter = new Vector2(0.5f, 0.6825f);
+        if (stage1CardRT != null)
+            cardCenter = overlay.HighlightTarget(stage1CardRT, 14f, new Color(1f, 0.9f, 0.2f));
 
         // 吹き出しはカード下に配置（カードと被らないように）
         overlay.SetBubbleAnchor(
@@ -118,7 +108,7 @@ public class StageSelectUI : MonoBehaviour
         }
 
         // 矢印をカード上端の真上に配置（正規化 y=0.82、カード TOP 0.79 より少し上）
-        overlay.AddArrowAt(new Vector2(0.50f, 0.82f), "▼");
+        overlay.AddArrowAt(new Vector2(cardCenter.x, Mathf.Min(cardCenter.y + 0.11f, 0.95f)), "▼");
 
         overlay.ShowSkipButton(() =>
         {
@@ -313,6 +303,9 @@ public class StageSelectUI : MonoBehaviour
         outerRT.pivot = new Vector2(0.5f, 1f);
         outerRT.anchoredPosition = new Vector2(0f, yPos);
         outerRT.sizeDelta = new Vector2(w, h);
+
+        // 段階3チュートリアル用：ステージ1カードの参照を保持
+        if (stageNum == 1) stage1CardRT = outerRT;
 
         // 外枠に Shadow（浮遊感）
         var outerShadow = outerGo.AddComponent<Shadow>();

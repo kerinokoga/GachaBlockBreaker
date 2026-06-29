@@ -122,18 +122,22 @@ public class GameUI : MonoBehaviour
         var overlay = TutorialOverlay.Create(canvasRoot);
         overlay.HideCharacter();
 
-        // 残り打数表示 (bossTurnPanel) の canvas 上範囲（正規化）
-        //   anchor (0.5, 1), pivot (0.5, 1), anchoredPosition (0, -160), sizeDelta (600, 70)
-        //   パネル top:    canvas y = 1920 - 160 = 1760 → 正規化 0.917
-        //   パネル bottom: 1760 - 70 = 1690 → 正規化 0.880
-        //   x: 540 ± 300 = 240〜840 → 正規化 0.222〜0.778
-        // 視覚的余白を加える
-        Vector2 turnsMin = new Vector2(0.18f, 0.870f);
-        Vector2 turnsMax = new Vector2(0.82f, 0.925f);
-
-        overlay.ShowSpotlight(turnsMin, turnsMax);
-        overlay.AddHighlightFrame(turnsMin, turnsMax,
-            new Color(1f, 0.9f, 0.2f), 10f);
+        // 残り打数表示(bossTurnPanel)の実 RectTransform から枠を算出（アスペクト比非依存）
+        Vector2 turnsCenter = new Vector2(0.5f, 0.8975f);
+        var turnsRT = (bossTurnPanel != null && bossTurnPanel.activeInHierarchy)
+            ? bossTurnPanel.GetComponent<RectTransform>() : null;
+        if (turnsRT != null)
+        {
+            turnsCenter = overlay.HighlightTarget(turnsRT, 12f, new Color(1f, 0.9f, 0.2f));
+        }
+        else
+        {
+            // フォールバック：固定座標（パネル未活性時のみ）
+            Vector2 turnsMin = new Vector2(0.18f, 0.870f);
+            Vector2 turnsMax = new Vector2(0.82f, 0.925f);
+            overlay.ShowSpotlight(turnsMin, turnsMax);
+            overlay.AddHighlightFrame(turnsMin, turnsMax, new Color(1f, 0.9f, 0.2f), 10f);
+        }
 
         // 吹き出しは画面中央に配置
         overlay.SetBubbleAnchor(
@@ -146,7 +150,7 @@ public class GameUI : MonoBehaviour
             "ゼロになる前にブロック全部壊しなさい！");
 
         // 矢印を残り打数表示の下に配置
-        overlay.AddArrowAt(new Vector2(0.5f, 0.83f), "▲");
+        overlay.AddArrowAt(new Vector2(turnsCenter.x, Mathf.Max(turnsCenter.y - 0.07f, 0.05f)), "▲");
 
         // 専用ボイス（Tutorial/turns.wav）
         AudioClip turnsVoice = Resources.Load<AudioClip>("Tutorial/turns");
@@ -479,24 +483,11 @@ public class GameUI : MonoBehaviour
         var overlay = TutorialOverlay.Create(canvasRoot);
         overlay.HideCharacter();
 
-        // 奥義アイコン位置（BuildUltGaugeUI と同じ式）
-        //   baseY=140, slotSpacing=160, iconSize=130, iconCenter x=95
-        //   iconCenterY = baseY + slot*slotSpacing + iconSize*0.5 + 4
-        const float baseY = 140f, slotSpacing = 160f, iconSize = 130f;
-        float iconCenterY = baseY + slot * slotSpacing + iconSize * 0.5f + 4f;
-        const float iconCenterX = 95f;
-        const float half = iconSize * 0.5f + 10f; // 視覚的余白
-
-        Vector2 iconMin = new Vector2(
-            (iconCenterX - half) / 1080f,
-            (iconCenterY - half) / 1920f);
-        Vector2 iconMax = new Vector2(
-            (iconCenterX + half) / 1080f,
-            (iconCenterY + half) / 1920f);
-
-        overlay.ShowSpotlight(iconMin, iconMax);
-        overlay.AddHighlightFrame(iconMin, iconMax,
-            new Color(1f, 0.9f, 0.2f), 10f);
+        // 奥義アイコンの実 RectTransform から枠を算出（アスペクト比非依存）
+        Vector2 iconCenter = new Vector2(0.1f, 0.5f);
+        if (ultIconImages != null && slot < ultIconImages.Length && ultIconImages[slot] != null)
+            iconCenter = overlay.HighlightTarget(
+                ultIconImages[slot].rectTransform, 12f, new Color(1f, 0.9f, 0.2f));
 
         // 吹き出しは画面中央付近に配置
         overlay.SetBubbleAnchor(
@@ -510,9 +501,8 @@ public class GameUI : MonoBehaviour
             "タップして奥義を発動しなさい！");
 
         // 矢印：アイコンの右側に ◀ を配置してアイコンを指す
-        float arrowX = (iconMax.x + 0.04f);
-        float arrowY = (iconMin.y + iconMax.y) * 0.5f;
-        overlay.AddArrowAt(new Vector2(arrowX, arrowY), "◀");
+        float arrowX = Mathf.Min(iconCenter.x + 0.10f, 0.95f);
+        overlay.AddArrowAt(new Vector2(arrowX, iconCenter.y), "◀");
 
         // 専用ボイス（Tutorial/ult_ready.wav）
         AudioClip ultReadyVoice = Resources.Load<AudioClip>("Tutorial/ult_ready");

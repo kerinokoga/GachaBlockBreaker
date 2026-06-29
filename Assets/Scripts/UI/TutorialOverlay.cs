@@ -247,6 +247,37 @@ public class TutorialOverlay : MonoBehaviour
         if (bubbleText != null) bubbleText.alignment = anchor;
     }
 
+    /// <summary>吹き出しのフォントサイズを変更（既定は40）</summary>
+    public void SetMessageFontSize(int size)
+    {
+        if (bubbleText != null) bubbleText.fontSize = size;
+    }
+
+    /// <summary>
+    /// ターゲット UI 要素の実位置からスポットライト＋枠を表示（アスペクト比非依存）。
+    /// ScreenSpaceOverlay では GetWorldCorners がスクリーンpxを返すため、画面サイズで割って
+    /// 正規化アンカーに変換する。端末の縦横比に関係なく枠がぴったり合う。
+    /// 戻り値は中心アンカー（矢印配置などに利用）。
+    /// </summary>
+    public Vector2 HighlightTarget(RectTransform target, float padPx, Color frameColor)
+    {
+        if (target == null) return new Vector2(0.5f, 0.5f);
+        var corners = new Vector3[4];
+        target.GetWorldCorners(corners); // 0=左下, 2=右上（スクリーンpx）
+        float w = Screen.width, h = Screen.height;
+        if (w <= 0f || h <= 0f) return new Vector2(0.5f, 0.5f);
+        float padX = padPx / w, padY = padPx / h;
+        Vector2 min = new Vector2(
+            Mathf.Clamp01(corners[0].x / w - padX),
+            Mathf.Clamp01(corners[0].y / h - padY));
+        Vector2 max = new Vector2(
+            Mathf.Clamp01(corners[2].x / w + padX),
+            Mathf.Clamp01(corners[2].y / h + padY));
+        ShowSpotlight(min, max);
+        AddHighlightFrame(min, max, frameColor, 10f);
+        return new Vector2((min.x + max.x) * 0.5f, (min.y + max.y) * 0.5f);
+    }
+
     /// <summary>「はい / いいえ」選択肢を表示</summary>
     public void ShowYesNo(string yesLabel, string noLabel, Action<bool> onChoice)
     {

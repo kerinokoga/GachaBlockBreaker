@@ -252,6 +252,7 @@ public class HomeUI : MonoBehaviour
         overlay.SetCharacterByName("Rei", "レイ");
         // レイらしいツンツン口調のチュートリアル導入
         overlay.SetMessageAlignment(TextAnchor.MiddleLeft);
+        overlay.SetMessageFontSize(38);
         overlay.SetMessage(
             "ふんっ、あんたはじめてみたいね\n" +
             "しかたないわ、私が特別に\n" +
