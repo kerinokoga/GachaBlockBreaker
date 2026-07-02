@@ -794,14 +794,16 @@ public class HomeUI : MonoBehaviour
         contentRT.anchorMin = new Vector2(0f, 1f);
         contentRT.anchorMax = new Vector2(1f, 1f);
         contentRT.pivot = new Vector2(0.5f, 1f);
-        contentRT.sizeDelta = new Vector2(0f, 2200f);
+        // テキスト(2500px)＋上マージン(20px)＋余白を確実に収める高さにする
+        // （テキストより低いと末尾がスクロールできず、Elastic だと弾かれて戻る）
+        contentRT.sizeDelta = new Vector2(0f, 2560f);
 
         var scrollRect = scrollGo.AddComponent<ScrollRect>();
         scrollRect.content = contentRT;
         scrollRect.viewport = vpRT;
         scrollRect.vertical = true;
         scrollRect.horizontal = false;
-        scrollRect.movementType = ScrollRect.MovementType.Elastic;
+        scrollRect.movementType = ScrollRect.MovementType.Clamped; // 端で弾かれて戻らないように
         scrollRect.scrollSensitivity = 40f;
 
         // ---- 説明テキスト（GameUI と同じ内容） ----

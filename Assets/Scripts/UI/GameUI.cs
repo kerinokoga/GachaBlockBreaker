@@ -787,7 +787,20 @@ public class GameUI : MonoBehaviour
         }
 
         Transform root = cGo.transform;
-        canvasRoot = root; // チュートリアルから参照
+        canvasRoot = root; // チュートリアルから参照（全画面のまま）
+
+        // ===== セーフエリア対応 =====
+        // ノッチ搭載スマホでは画面最上部が切り欠きに隠れるため、
+        // HUD（ハート・ポーズ・破壊率など）は Screen.safeArea 内のコンテナに配置する。
+        // PC/エディタでは safeArea = 全画面なので影響なし。
+        var safeGo = new GameObject("SafeArea");
+        safeGo.transform.SetParent(root, false);
+        var safeRt = safeGo.AddComponent<RectTransform>();
+        var sa = Screen.safeArea;
+        safeRt.anchorMin = new Vector2(sa.xMin / Screen.width, sa.yMin / Screen.height);
+        safeRt.anchorMax = new Vector2(sa.xMax / Screen.width, sa.yMax / Screen.height);
+        safeRt.offsetMin = safeRt.offsetMax = Vector2.zero;
+        root = safeGo.transform; // 以降の HUD はセーフエリア内に生成
 
         // ---- ライフ表示（左上：Unicode ハート♥ をテキストで表示）----
         // 旧: CreateHeartSprite() で生成した Image を使用していたが、上下反転で

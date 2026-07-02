@@ -478,7 +478,7 @@ public class CharaManageUI : MonoBehaviour
 
         // メッセージ
         MakeText(dp,
-            $"{cd.characterName}{excess}体を\nオーブに変換しますか？",
+            $"{cd.characterName}{excess}体を\n{totalOrb}オーブに変換しますか？",
             32, Color.white,
             new Vector2(0.5f, 0.6f), new Vector2(650f, 120f));
 

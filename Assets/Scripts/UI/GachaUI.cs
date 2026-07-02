@@ -114,15 +114,7 @@ public class GachaUI : MonoBehaviour
             bgRt.offsetMin = bgRt.offsetMax = Vector2.zero;
         }
 
-        var glowGo = new GameObject("CenterGlow");
-        glowGo.transform.SetParent(canvasRoot, false);
-        var glowImg = glowGo.AddComponent<Image>();
-        glowImg.color = new Color(0.4f, 0.15f, 0.7f, 0.15f);
-        glowImg.raycastTarget = false;
-        var glowRt = glowGo.GetComponent<RectTransform>();
-        glowRt.anchorMin = glowRt.anchorMax = new Vector2(0.5f, 0.55f);
-        glowRt.anchoredPosition = Vector2.zero;
-        glowRt.sizeDelta = new Vector2(900f, 900f);
+        // （中央の紫グロー矩形は「大きい薄い四角が邪魔」とのことで削除）
 
         // 上部装飾バー
         var topBar = new GameObject("TopBar");
@@ -1794,8 +1786,11 @@ public class GachaUI : MonoBehaviour
         hOl.effectColor = new Color(0f, 0f, 0f, 0.95f);
         hOl.effectDistance = new Vector2(2f, -2f);
         var hRt = hintGo.GetComponent<RectTransform>();
-        // 結果パネルは canvas の y=0.30〜0.78 → その下 y=0.12 に配置
-        hRt.anchorMin = hRt.anchorMax = new Vector2(0.5f, 0.12f);
+        // 結果パネル(y=0.30〜0.78)の下端と単発ボタン上端(≈0.247)の間の空きに配置
+        // （y=0.12 だと10連ボタンに重なって読みにくいため移動）
+        hint.horizontalOverflow = HorizontalWrapMode.Overflow;
+        hint.verticalOverflow   = VerticalWrapMode.Overflow; // 高さ不足でも Truncate で消えないように
+        hRt.anchorMin = hRt.anchorMax = new Vector2(0.5f, 0.275f);
         hRt.anchoredPosition = Vector2.zero;
         hRt.sizeDelta = new Vector2(600f, 70f);
 

@@ -53,16 +53,22 @@ public class PresentBoxUI : MonoBehaviour
         var overlay = TutorialOverlay.Create(canvasRoot);
         overlay.HideCharacter();
 
+        // スポットライトの穴は「すべて受け取るボタン＋プレゼント一覧」を含めて開ける
+        // （届いているプレゼントの中身が見えるように。暗幕で隠さない）
+        Vector2 holeMin = new Vector2(0.04f, 0.55f);
+        Vector2 holeMax = new Vector2(0.96f, 0.875f);
+        overlay.ShowSpotlight(holeMin, holeMax);
+
+        // 黄金フレームは「すべて受け取る」ボタンだけを囲む
         Vector2 allMin = new Vector2(0.32f, 0.815f);
         Vector2 allMax = new Vector2(0.68f, 0.865f);
-
-        overlay.ShowSpotlight(allMin, allMax);
         overlay.AddHighlightFrame(allMin, allMax,
             new Color(1f, 0.9f, 0.2f), 10f);
 
+        // 吹き出しはプレゼント一覧の下に配置（一覧を隠さない）
         overlay.SetBubbleAnchor(
-            new Vector2(0.05f, 0.45f),
-            new Vector2(0.95f, 0.75f));
+            new Vector2(0.05f, 0.15f),
+            new Vector2(0.95f, 0.35f));
         overlay.SetMessage(
             "プレゼントを全部受け取りなさい！\n" +
             "『すべて受け取る』ボタンをタップよ");
@@ -347,6 +353,21 @@ public class PresentBoxUI : MonoBehaviour
             () => {
                 PresentBoxManager.Receive(pid);
                 RefreshList();
+
+                // 段階7 補足: チュートリアル中に個別受取で全部受け取り切った場合も
+                // 「すべて受け取る」と同様にフェーズ2（ホーム誘導）へ進める
+                if (TutorialManager.Instance != null
+                    && TutorialManager.Instance.CurrentStep == TutorialManager.Step.PresentBox
+                    && currentTutorialOverlay != null
+                    && PresentBoxManager.GetPendingCount() == 0)
+                {
+                    currentTutorialOverlay.Close();
+                    currentTutorialOverlay = null;
+                    ShowNotice("プレゼントを受け取りました！", () =>
+                    {
+                        ShowPresentTutorialPhase2();
+                    });
+                }
             });
     }
 

@@ -932,8 +932,8 @@ public class CharaSelectUI : MonoBehaviour
             "ゲーム開始にはスタミナを使うの\n" +
             "そのまま『はい』を押しなさい！");
 
-        // 矢印を「はい」ボタンの上に配置
-        overlay.AddArrowAt(new Vector2(0.36f, 0.51f), "▼");
+        // 矢印はポップアップ本文と被って読めなくなるため表示しない
+        // （「はい」はスポットライト＋黄金フレームで十分誘導できる）
 
         // 専用ボイス（Tutorial/stamina.wav）
         AudioClip staminaVoice = Resources.Load<AudioClip>("Tutorial/stamina");
