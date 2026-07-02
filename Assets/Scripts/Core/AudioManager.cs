@@ -336,6 +336,9 @@ public class AudioManager : MonoBehaviour
     ///   ・同優先度同士     → Stop() せずオーバーレイ再生（両方鳴る）
     /// CharacterData.voiceVolumeMultiplier を volumeScale に渡すことでキャラ別補正可能。
     /// </summary>
+    /// <summary>全ボイス共通の底上げ倍率（BGMに対して聞き取りやすくする）</summary>
+    const float VoiceBoost = 1.5f;
+
     public void PlayVoice(AudioClip clip, float volumeScale, VoicePriority priority)
     {
         if (clip == null || voiceSource == null) return;
@@ -355,7 +358,7 @@ public class AudioManager : MonoBehaviour
             voiceSource.Stop();
         }
 
-        voiceSource.PlayOneShot(clip, Mathf.Clamp(volumeScale, 0.1f, 3f));
+        voiceSource.PlayOneShot(clip, Mathf.Clamp(volumeScale * VoiceBoost, 0.1f, 3f));
 
         // 状態更新：再生中の最大優先度＋最遅終了時刻を保持
         float newEndTime = Time.unscaledTime + (clip.length > 0f ? clip.length : 1f);
@@ -401,7 +404,16 @@ public class AudioManager : MonoBehaviour
 
     private void LoadSettings()
     {
-        bgmSource.volume = PlayerPrefs.GetFloat("BGMVolume", 1f);
+        // 音量バランス調整(v3): 初期BGMがボイスに対して大きすぎたため既定値を 0.25 に引き下げ。
+        // 既にプレイ済みの端末でも一度だけ新既定値を適用する（以降はユーザー設定を尊重）。
+        if (!PlayerPrefs.HasKey("AudioDefaultsV3"))
+        {
+            PlayerPrefs.SetFloat("BGMVolume", 0.25f);
+            PlayerPrefs.SetInt("AudioDefaultsV3", 1);
+            PlayerPrefs.Save();
+        }
+
+        bgmSource.volume = PlayerPrefs.GetFloat("BGMVolume", 0.25f);
         seSource.volume  = PlayerPrefs.GetFloat("SEVolume",  1f);
         if (voiceSource != null)
             voiceSource.volume = PlayerPrefs.GetFloat("VoiceVolume", 1f);

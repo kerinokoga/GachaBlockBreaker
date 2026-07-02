@@ -23,6 +23,8 @@ public class GachaUI : MonoBehaviour
     GameObject resultPanel;
     Button btnSingle;
     Button btnTen;
+    GameObject graySingle;  // オーブ不足時のグレーオーバーレイ（単発）
+    GameObject grayTen;     // オーブ不足時のグレーオーバーレイ（10連）
     List<RectTransform> particles = new List<RectTransform>();
 
     GachaPoolData pool;
@@ -219,6 +221,10 @@ public class GachaUI : MonoBehaviour
             new Color(0.5f, 0.1f, 0.85f), new Color(0.7f, 0.3f, 1f),
             new Vector2(0.5f, 0.10f), new Vector2(650f, 105f), "★",
             () => ShowConfirmPopup(10));
+
+        // オーブ不足時のグレー表示用オーバーレイ（ボタン全面を薄いグレーで覆う）
+        graySingle = MakeGrayOverlay(btnSingle);
+        grayTen    = MakeGrayOverlay(btnTen);
 
         MakeLine(canvasRoot, new Color(0.5f, 0.3f, 0.8f, 0.3f), 0.285f, 1f);
 
@@ -2300,6 +2306,7 @@ public class GachaUI : MonoBehaviour
         bool canTen    = OrbManager.CanAfford(OrbManager.CostTen)    && OrbManager.CanDrawTen();
         if (btnSingle) btnSingle.interactable = canSingle;
         if (btnTen)    btnTen.interactable    = canTen;
+        UpdateGrayOverlays();
 
         if (capacityText != null)
         {
@@ -2317,6 +2324,37 @@ public class GachaUI : MonoBehaviour
     {
         if (btnSingle) btnSingle.interactable = value && OrbManager.CanAfford(OrbManager.CostSingle) && OrbManager.CanDrawSingle();
         if (btnTen)    btnTen.interactable    = value && OrbManager.CanAfford(OrbManager.CostTen)    && OrbManager.CanDrawTen();
+        UpdateGrayOverlays();
+    }
+
+    /// <summary>
+    /// ボタン全面を覆う薄いグレーの Image を最前面子として生成（初期非表示）。
+    /// 引けない状態の視覚表現用。raycast は透過しない設定にして誤タップも防ぐ。
+    /// </summary>
+    GameObject MakeGrayOverlay(Button btn)
+    {
+        if (btn == null) return null;
+        var go = new GameObject("GrayOverlay");
+        go.transform.SetParent(btn.transform, false);
+        var img = go.AddComponent<Image>();
+        img.color = new Color(0.55f, 0.55f, 0.58f, 0.72f); // 薄いグレー（半透明）
+        img.raycastTarget = true; // オーバーレイ表示中はタップも遮断
+        var rt = go.GetComponent<RectTransform>();
+        rt.anchorMin = Vector2.zero;
+        rt.anchorMax = Vector2.one;
+        rt.offsetMin = rt.offsetMax = Vector2.zero;
+        go.transform.SetAsLastSibling(); // ラベル・アイコンより前面
+        go.SetActive(false);
+        return go;
+    }
+
+    /// <summary>引けるかどうかに応じてグレーオーバーレイの表示を切替。</summary>
+    void UpdateGrayOverlays()
+    {
+        bool canSingle = OrbManager.CanAfford(OrbManager.CostSingle) && OrbManager.CanDrawSingle();
+        bool canTen    = OrbManager.CanAfford(OrbManager.CostTen)    && OrbManager.CanDrawTen();
+        if (graySingle != null) graySingle.SetActive(!canSingle);
+        if (grayTen    != null) grayTen.SetActive(!canTen);
     }
 
     // ---- レアリティカラー ----
