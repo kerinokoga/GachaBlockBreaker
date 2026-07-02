@@ -106,7 +106,12 @@ public static class OrbManager
         PlayerPrefs.Save();
     }
 
-    // ---- 所持上限チェック（ユニーク数 50体まで） ----
+    // ---- 所持数 ----
+    // ※ガチャの所持上限ロジックは撤廃済み（余剰キャラはオーブ変換できるため不要）。
+    //   MaxOwnedCharacters は所持数表示の分母（N / 20）としてのみ使用する。
+
+    /// <summary>実装キャラ総数（所持数表示の分母用）</summary>
+    public const int MaxOwnedCharacters = 20;
 
     public static int GetOwnedCount()
     {
@@ -116,9 +121,6 @@ public static class OrbManager
             if (IsOwned(c.characterName)) count++;
         return count;
     }
-
-    public static bool CanDrawSingle() => GetOwnedCount() < 50;
-    public static bool CanDrawTen()    => GetOwnedCount() <= 48;
 
     // ---- キャラ削除 ----
 

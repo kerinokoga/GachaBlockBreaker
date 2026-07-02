@@ -201,7 +201,7 @@ public class CharaManageUI : MonoBehaviour
 
         int count = owned.Length;
 
-        if (countText) countText.text = $"所持: {count} / 50";
+        if (countText) countText.text = $"所持: {count} / {OrbManager.MaxOwnedCharacters}";
 
         // Content の高さを行数に合わせる
         const float rowH = 170f;

@@ -438,7 +438,7 @@ public class CharaSelectUI : MonoBehaviour
         AddOutlineCS(detailDesc.gameObject);
 
         // ---- 所持キャラ一覧ラベル ----
-        var listLabel = MakeText(root, $"所持キャラ一覧  ({ownedChars.Length}/50)", 30,
+        var listLabel = MakeText(root, $"所持キャラ一覧  ({ownedChars.Length}/{OrbManager.MaxOwnedCharacters})", 30,
             new Color(0.7f, 0.7f, 0.9f),
             new Vector2(0.5f, 0.40f), new Vector2(900f, 40f));
         AddShadow(listLabel.gameObject);

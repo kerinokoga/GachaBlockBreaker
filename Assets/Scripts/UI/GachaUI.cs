@@ -168,7 +168,7 @@ public class GachaUI : MonoBehaviour
         pityText.gameObject.AddComponent<Outline>().effectColor = new Color(0f, 0f, 0f, 0.7f);
 
         // 所持数表示（大きく、上に）
-        ownedText = MakeText(canvasRoot, $"キャラ所持数: {OrbManager.GetOwnedCount()} / 50", 38,
+        ownedText = MakeText(canvasRoot, $"キャラ所持数: {OrbManager.GetOwnedCount()} / {OrbManager.MaxOwnedCharacters}", 38,
             new Color(1f, 1f, 1f), new Vector2(0.5f, 0.81f), new Vector2(600f, 50f));
         AddShadow(ownedText.gameObject);
         ownedText.gameObject.AddComponent<Outline>().effectColor = new Color(0f, 0f, 0f, 0.7f);
@@ -389,7 +389,6 @@ public class GachaUI : MonoBehaviour
             new Color(0.7f, 0.7f, 0.9f), yPos, w); yPos -= 36f;
         AddContentText(contentGo.transform, "・10連ガチャは SR 以上1体確定", 24, Color.white, yPos, w); yPos -= 36f;
         AddContentText(contentGo.transform, "・天井: 100回で SSR 確定", 24, Color.white, yPos, w); yPos -= 36f;
-        AddContentText(contentGo.transform, "・所持上限: 50体", 24, Color.white, yPos, w); yPos -= 36f;
 
         // キャラ別排出率
         yPos -= 20f;
@@ -2291,34 +2290,26 @@ public class GachaUI : MonoBehaviour
     {
         if (orbText)   orbText.text   = $"◆ 所持オーブ: {OrbManager.GetOrbs()}";
         if (pityText)  pityText.text  = $"天井まで: {OrbManager.PityLimit - OrbManager.GetPityCount()}";
-        if (ownedText) ownedText.text = $"キャラ所持数: {OrbManager.GetOwnedCount()} / 50";
+        if (ownedText) ownedText.text = $"キャラ所持数: {OrbManager.GetOwnedCount()} / {OrbManager.MaxOwnedCharacters}";
         RefreshButtons();
     }
 
     void RefreshButtons()
     {
-        bool canSingle = OrbManager.CanAfford(OrbManager.CostSingle) && OrbManager.CanDrawSingle();
-        bool canTen    = OrbManager.CanAfford(OrbManager.CostTen)    && OrbManager.CanDrawTen();
+        bool canSingle = OrbManager.CanAfford(OrbManager.CostSingle);
+        bool canTen    = OrbManager.CanAfford(OrbManager.CostTen);
         if (btnSingle) btnSingle.interactable = canSingle;
         if (btnTen)    btnTen.interactable    = canTen;
         UpdateGrayOverlays();
 
-        if (capacityText != null)
-        {
-            int owned = OrbManager.GetOwnedCount();
-            if (owned >= 50)
-                capacityText.text = "所持上限(50体)です。キャラ管理で削除してください";
-            else if (owned == 49)
-                capacityText.text = "所持49体：1連のみ引けます";
-            else
-                capacityText.text = "";
-        }
+        // 所持上限ロジックは撤廃（余剰キャラはオーブ変換できるため上限不要）
+        if (capacityText != null) capacityText.text = "";
     }
 
     void SetButtonsInteractable(bool value)
     {
-        if (btnSingle) btnSingle.interactable = value && OrbManager.CanAfford(OrbManager.CostSingle) && OrbManager.CanDrawSingle();
-        if (btnTen)    btnTen.interactable    = value && OrbManager.CanAfford(OrbManager.CostTen)    && OrbManager.CanDrawTen();
+        if (btnSingle) btnSingle.interactable = value && OrbManager.CanAfford(OrbManager.CostSingle);
+        if (btnTen)    btnTen.interactable    = value && OrbManager.CanAfford(OrbManager.CostTen);
         UpdateGrayOverlays();
     }
 
@@ -2346,8 +2337,8 @@ public class GachaUI : MonoBehaviour
     /// <summary>引けるかどうかに応じてグレーオーバーレイの表示を切替。</summary>
     void UpdateGrayOverlays()
     {
-        bool canSingle = OrbManager.CanAfford(OrbManager.CostSingle) && OrbManager.CanDrawSingle();
-        bool canTen    = OrbManager.CanAfford(OrbManager.CostTen)    && OrbManager.CanDrawTen();
+        bool canSingle = OrbManager.CanAfford(OrbManager.CostSingle);
+        bool canTen    = OrbManager.CanAfford(OrbManager.CostTen);
         if (graySingle != null) graySingle.SetActive(!canSingle);
         if (grayTen    != null) grayTen.SetActive(!canTen);
     }
