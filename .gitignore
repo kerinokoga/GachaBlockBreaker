@@ -97,3 +97,10 @@ InitTestScene*.unity*
 
 # Auto-generated scenes by play mode tests
 /[Aa]ssets/[Ii]nit[Tt]est[Ss]cene*.unity*
+
+# GitHub 100MB制限対策: Mac/Linux エディタ用 Firebase ネイティブライブラリは除外
+# (Windows開発 + Android/iOS ビルドには不要。SDK再インポートで復元可能)
+Assets/Firebase/Plugins/x86_64/FirebaseCppApp-*.bundle
+Assets/Firebase/Plugins/x86_64/FirebaseCppApp-*.bundle.meta
+Assets/Firebase/Plugins/x86_64/FirebaseCppApp-*.so
+Assets/Firebase/Plugins/x86_64/FirebaseCppApp-*.so.meta
