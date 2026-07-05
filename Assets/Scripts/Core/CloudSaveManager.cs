@@ -1,142 +1,249 @@
 using UnityEngine;
-using System.IO;
+using System;
 using System.Collections.Generic;
+using Firebase.Firestore;
+using Firebase.Extensions;
 
 /// <summary>
-/// モッククラウドセーブ（ローカル JSON ファイル）
-/// 後から Firebase Firestore に差し替え可能
+/// クラウドセーブ（Firebase Firestore 本実装）
+/// ドキュメント: users/{uid}
+/// - Save: 進行状況を Firestore にバックアップ（ホーム到達・クリア時に呼ぶ）
+/// - LoadIfFreshDevice: ローカルが初期状態のときだけクラウドから復元
+///   （機種変更・再インストール時の引き継ぎ用。プレイ中の端末は上書きしない）
+/// ※匿名ログインは再インストールで UID が変わるため、確実な引き継ぎには
+///   メール連携が必要。
 /// </summary>
 public static class CloudSaveManager
 {
-    static string SavePath
+    static FirebaseFirestore Db => FirebaseFirestore.DefaultInstance;
+
+    /// <summary>
+    /// 現在の認証済み UID（Firebase Auth の実状態から取得）。
+    /// PlayerPrefs キャッシュだと未認証セッションでも値が残っており、
+    /// ルールで拒否される書き込みを投げてしまうため実状態を見る。
+    /// </summary>
+    static string CurrentUid
     {
         get
         {
-            string uid = AuthManager.GetUID();
-            if (string.IsNullOrEmpty(uid)) uid = "default";
-            return Path.Combine(Application.persistentDataPath, $"cloudsave_{uid}.json");
+            try
+            {
+                var user = Firebase.Auth.FirebaseAuth.DefaultInstance.CurrentUser;
+                return user != null ? user.UserId : null;
+            }
+            catch { return null; }
         }
     }
 
-    // ---- セーブ ----
+    /// <summary>ログイン済みで Firestore を使える状態か</summary>
+    static bool CanUseCloud => !string.IsNullOrEmpty(CurrentUid);
 
-    public static void Save()
+    // ============================================================
+    // セーブ
+    // ============================================================
+
+    /// <summary>
+    /// 進行状況を Firestore に保存（非同期・失敗してもゲームは継続）。
+    /// </summary>
+    public static void Save(Action<bool> onDone = null)
     {
-        var data = new SaveData();
-
-        // オーブ・ガチャ状態
-        data.orbs       = OrbManager.GetOrbs();
-        data.pityCount  = OrbManager.GetPityCount();
-
-        // ステージ進行
-        data.maxUnlocked = ProgressManager.GetMaxUnlocked();
-        for (int i = 1; i <= ProgressManager.TotalStages; i++)
+        if (!CanUseCloud)
         {
-            if (ProgressManager.IsCleared(i))
-                data.clearedStages.Add(i);
-            float rate = ProgressManager.GetBestRate(i);
-            if (rate > 0f)
-                data.bestRates[i] = rate;
+            Debug.LogWarning("[CloudSave] 未ログインのため保存スキップ");
+            onDone?.Invoke(false);
+            return;
         }
 
-        // 所持キャラ
+        var data = CollectSaveData();
+        string uid = CurrentUid;
+
+        Db.Collection("users").Document(uid).SetAsync(data)
+            .ContinueWithOnMainThread(task =>
+            {
+                if (task.IsCompletedSuccessfully)
+                {
+                    Debug.Log("[CloudSave] Firestore 保存完了");
+                    onDone?.Invoke(true);
+                }
+                else
+                {
+                    Debug.LogWarning($"[CloudSave] 保存失敗: {task.Exception?.GetBaseException().Message}");
+                    onDone?.Invoke(false);
+                }
+            });
+    }
+
+    /// <summary>現在のローカル進行状況を Firestore 用 Dictionary に集約</summary>
+    static Dictionary<string, object> CollectSaveData()
+    {
+        var data = new Dictionary<string, object>();
+
+        // オーブ・ガチャ状態
+        data["orbs"]        = OrbManager.GetOrbs();
+        data["pityCount"]   = OrbManager.GetPityCount();
+        data["srDrawCount"] = OrbManager.GetSRDrawCount();
+
+        // チュートリアル完了状態
+        data["tutorialCompleted"] = PlayerPrefs.GetInt("Tutorial_Completed", 0);
+        data["tutorialSkipped"]   = PlayerPrefs.GetInt("Tutorial_Skipped", 0);
+
+        // ステージ進行
+        data["maxUnlocked"] = ProgressManager.GetMaxUnlocked();
+        var cleared     = new List<object>();
+        var trueCleared = new List<object>();
+        var bestRates   = new Dictionary<string, object>();
+        for (int i = 1; i <= ProgressManager.TotalStages; i++)
+        {
+            if (ProgressManager.IsCleared(i)) cleared.Add(i);
+            if (ProgressManager.IsTrueStageClear(i)) trueCleared.Add(i);
+            float rate = ProgressManager.GetBestRate(i);
+            if (rate > 0f) bestRates[i.ToString()] = rate;
+        }
+        data["clearedStages"]     = cleared;
+        data["trueClearedStages"] = trueCleared;
+        data["bestRates"]         = bestRates;
+
+        // 所持キャラ（枚数・強化Lv・覚醒）
+        var chars = new List<object>();
         var allChars = Resources.LoadAll<CharacterData>("Characters");
         foreach (var c in allChars)
         {
-            if (OrbManager.IsOwned(c.characterName))
+            if (c == null || !OrbManager.IsOwned(c.characterName)) continue;
+            chars.Add(new Dictionary<string, object>
             {
-                data.ownedChars.Add(new CharSaveEntry
-                {
-                    name  = c.characterName,
-                    count = OrbManager.GetCharCount(c.characterName),
-                    level = OrbManager.GetEnhanceLevel(c.characterName)
-                });
-            }
+                { "name",     c.characterName },
+                { "count",    OrbManager.GetCharCount(c.characterName) },
+                { "level",    OrbManager.GetEnhanceLevel(c.characterName) },
+                { "awakened", OrbManager.IsAwakened(c.characterName) }
+            });
         }
+        data["ownedChars"] = chars;
 
-        string json = JsonUtility.ToJson(data, true);
-        File.WriteAllText(SavePath, json);
-        Debug.Log($"[CloudSave] 保存完了: {SavePath}");
+        // 保存日時（サーバー時刻）
+        data["updatedAt"] = FieldValue.ServerTimestamp;
+
+        return data;
     }
 
-    // ---- ロード ----
+    // ============================================================
+    // ロード（復元）
+    // ============================================================
 
-    public static bool Load()
+    /// <summary>
+    /// ローカルが初期状態（チュートリアル未完了かつステージ未進行）のときだけ
+    /// クラウドから復元する。結果に関わらず必ず onDone を呼ぶ。
+    /// </summary>
+    public static void LoadIfFreshDevice(Action<bool> onDone)
     {
-        if (!File.Exists(SavePath))
+        bool isFresh = PlayerPrefs.GetInt("Tutorial_Completed", 0) == 0
+                    && ProgressManager.GetMaxUnlocked() <= 1;
+        if (!isFresh || !CanUseCloud)
         {
-            Debug.LogWarning($"[CloudSave] セーブファイルなし: {SavePath}");
-            return false;
+            onDone?.Invoke(false);
+            return;
+        }
+        Load(onDone);
+    }
+
+    /// <summary>
+    /// Firestore から進行状況を取得してローカル（PlayerPrefs）へ復元。
+    /// ドキュメントが無い／通信失敗時は false。
+    /// </summary>
+    public static void Load(Action<bool> onDone)
+    {
+        if (!CanUseCloud)
+        {
+            onDone?.Invoke(false);
+            return;
         }
 
-        string json = File.ReadAllText(SavePath);
-        var data = JsonUtility.FromJson<SaveData>(json);
+        string uid = CurrentUid;
+        Db.Collection("users").Document(uid).GetSnapshotAsync()
+            .ContinueWithOnMainThread(task =>
+            {
+                if (!task.IsCompletedSuccessfully)
+                {
+                    Debug.LogWarning($"[CloudSave] 読込失敗: {task.Exception?.GetBaseException().Message}");
+                    onDone?.Invoke(false);
+                    return;
+                }
 
-        // オーブ復元
-        PlayerPrefs.SetInt("GachaBlock_Orbs", data.orbs);
-        PlayerPrefs.SetInt("GachaBlock_PityCount", data.pityCount);
+                var snap = task.Result;
+                if (!snap.Exists)
+                {
+                    Debug.Log("[CloudSave] クラウドセーブなし（新規ユーザー）");
+                    onDone?.Invoke(false);
+                    return;
+                }
 
-        // ステージ進行復元
-        PlayerPrefs.SetInt("GachaBlock_MaxUnlocked", data.maxUnlocked);
-        for (int i = 1; i <= ProgressManager.TotalStages; i++)
+                try
+                {
+                    ApplySnapshot(snap);
+                    Debug.Log("[CloudSave] Firestore から復元完了");
+                    onDone?.Invoke(true);
+                }
+                catch (Exception e)
+                {
+                    Debug.LogWarning($"[CloudSave] 復元中にエラー: {e.Message}");
+                    onDone?.Invoke(false);
+                }
+            });
+    }
+
+    /// <summary>スナップショットの内容を PlayerPrefs に書き戻す</summary>
+    static void ApplySnapshot(DocumentSnapshot snap)
+    {
+        // オーブ・ガチャ状態
+        if (snap.TryGetValue<long>("orbs", out var orbs))
+            PlayerPrefs.SetInt("GachaBlock_Orbs", (int)orbs);
+        if (snap.TryGetValue<long>("pityCount", out var pity))
+            PlayerPrefs.SetInt("GachaBlock_PityCount", (int)pity);
+        if (snap.TryGetValue<long>("srDrawCount", out var srDraw))
+            PlayerPrefs.SetInt("GachaBlock_SRDrawCount", (int)srDraw);
+
+        // チュートリアル状態
+        if (snap.TryGetValue<long>("tutorialCompleted", out var tuto))
+            PlayerPrefs.SetInt("Tutorial_Completed", (int)tuto);
+        if (snap.TryGetValue<long>("tutorialSkipped", out var skip))
+            PlayerPrefs.SetInt("Tutorial_Skipped", (int)skip);
+
+        // ステージ進行
+        if (snap.TryGetValue<long>("maxUnlocked", out var maxUnlocked))
+            PlayerPrefs.SetInt("GachaBlock_MaxUnlocked", (int)maxUnlocked);
+
+        if (snap.TryGetValue<List<object>>("clearedStages", out var cleared))
+            foreach (var s in cleared)
+                PlayerPrefs.SetInt($"GachaBlock_Cleared_{(long)s}", 1);
+
+        if (snap.TryGetValue<List<object>>("trueClearedStages", out var trueCleared))
+            foreach (var s in trueCleared)
+                PlayerPrefs.SetInt($"GachaBlock_TrueCleared_{(long)s}", 1);
+
+        if (snap.TryGetValue<Dictionary<string, object>>("bestRates", out var rates))
+            foreach (var kv in rates)
+                PlayerPrefs.SetFloat($"GachaBlock_Rate_{kv.Key}", Convert.ToSingle(kv.Value));
+
+        // 所持キャラ
+        if (snap.TryGetValue<List<object>>("ownedChars", out var chars))
         {
-            PlayerPrefs.SetInt($"GachaBlock_Cleared_{i}",
-                data.clearedStages.Contains(i) ? 1 : 0);
-            if (data.bestRates.ContainsKey(i))
-                PlayerPrefs.SetFloat($"GachaBlock_Rate_{i}", data.bestRates[i]);
-        }
+            foreach (var entryObj in chars)
+            {
+                var entry = entryObj as Dictionary<string, object>;
+                if (entry == null) continue;
+                if (!entry.TryGetValue("name", out var nameObj)) continue;
+                string name = nameObj as string;
+                if (string.IsNullOrEmpty(name)) continue;
 
-        // キャラ復元
-        foreach (var entry in data.ownedChars)
-        {
-            PlayerPrefs.SetInt($"GachaBlock_Owned_{entry.name}", 1);
-            PlayerPrefs.SetInt($"GachaBlock_Count_{entry.name}", entry.count);
-            PlayerPrefs.SetInt($"GachaBlock_Level_{entry.name}", entry.level);
+                PlayerPrefs.SetInt($"GachaBlock_Owned_{name}", 1);
+                if (entry.TryGetValue("count", out var cnt))
+                    PlayerPrefs.SetInt($"GachaBlock_Count_{name}", Convert.ToInt32(cnt));
+                if (entry.TryGetValue("level", out var lvl))
+                    PlayerPrefs.SetInt($"GachaBlock_Level_{name}", Convert.ToInt32(lvl));
+                if (entry.TryGetValue("awakened", out var awk) && awk is bool b && b)
+                    PlayerPrefs.SetInt($"GachaBlock_Awakened_{name}", 1);
+            }
         }
 
         PlayerPrefs.Save();
-        Debug.Log($"[CloudSave] 読込完了: {SavePath}");
-        return true;
-    }
-
-    // ---- データ構造 ----
-
-    [System.Serializable]
-    class SaveData
-    {
-        public int orbs;
-        public int pityCount;
-        public int maxUnlocked = 1;
-        public List<int> clearedStages = new List<int>();
-        public SerializableDict bestRates = new SerializableDict();
-        public List<CharSaveEntry> ownedChars = new List<CharSaveEntry>();
-    }
-
-    [System.Serializable]
-    class CharSaveEntry
-    {
-        public string name;
-        public int count;
-        public int level;
-    }
-
-    // JsonUtility は Dictionary 非対応のため簡易ラッパー
-    [System.Serializable]
-    class SerializableDict
-    {
-        public List<int> keys   = new List<int>();
-        public List<float> vals = new List<float>();
-
-        public bool ContainsKey(int k) => keys.Contains(k);
-        public float this[int k]
-        {
-            get { int i = keys.IndexOf(k); return i >= 0 ? vals[i] : 0f; }
-            set
-            {
-                int i = keys.IndexOf(k);
-                if (i >= 0) vals[i] = value;
-                else { keys.Add(k); vals.Add(value); }
-            }
-        }
     }
 }

@@ -267,29 +267,41 @@ public class RankingUI : MonoBehaviour
 
         stageTitle.text = $"Stage {currentStage}";
 
-        // Content クリア
+        // Content クリア + 読み込み中表示
         foreach (Transform child in contentRoot)
             Destroy(child.gameObject);
+        contentRT.sizeDelta = new Vector2(0f, 70f);
+        MakeText(contentRoot, "読み込み中...", 28, new Color(0.6f, 0.6f, 0.7f),
+            new Vector2(0.5f, 0.5f), new Vector2(400f, 40f));
 
-        var ranking = RankingManager.GetTopRanking(currentStage, 20);
-        const float rowH = 70f;
-        contentRT.sizeDelta = new Vector2(0f, Mathf.Max(ranking.Count, 1) * rowH);
-
-        if (ranking.Count == 0)
+        // Firestore から非同期取得（取得中にステージ切替・シーン破棄されたら結果を破棄）
+        int requestStage = currentStage;
+        RankingManager.GetTopRanking(currentStage, 20, ranking =>
         {
-            var noData = MakeText(contentRoot, "No data", 28, new Color(0.5f, 0.5f, 0.5f),
-                new Vector2(0.5f, 0.5f), new Vector2(300f, 40f));
-            return;
-        }
+            if (this == null || contentRoot == null) return;
+            if (requestStage != currentStage) return;
 
-        string myName = AuthManager.GetName();
+            foreach (Transform child in contentRoot)
+                Destroy(child.gameObject);
 
-        for (int i = 0; i < ranking.Count; i++)
-        {
-            var entry = ranking[i];
-            bool isMe = entry.name == myName;
-            BuildRankRow(contentRoot, i, entry, rowH, isMe);
-        }
+            const float rowH = 70f;
+            contentRT.sizeDelta = new Vector2(0f, Mathf.Max(ranking.Count, 1) * rowH);
+
+            if (ranking.Count == 0)
+            {
+                MakeText(contentRoot, "No data", 28, new Color(0.5f, 0.5f, 0.5f),
+                    new Vector2(0.5f, 0.5f), new Vector2(300f, 40f));
+                return;
+            }
+
+            string myUid = AuthManager.GetUID();
+            for (int i = 0; i < ranking.Count; i++)
+            {
+                var entry = ranking[i];
+                bool isMe = !string.IsNullOrEmpty(myUid) && entry.uid == myUid;
+                BuildRankRow(contentRoot, i, entry, rowH, isMe);
+            }
+        });
     }
 
     void BuildRankRow(Transform parent, int index, RankingManager.RankEntry entry, float rowH, bool isMe)

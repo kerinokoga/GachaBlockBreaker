@@ -82,15 +82,23 @@ public class LoginUI : MonoBehaviour
         // スプラッシュ2秒 + ログイン完了の両方が揃ったら進む
         if (!splashDone || !loginReady) return;
 
-        if (!AgeVerificationManager.IsSetupComplete)
+        // 機種変更・再インストール時のクラウド復元
+        // （ローカルが初期状態のときだけ実行。通常起動では即コールバックされる）
+        CloudSaveManager.LoadIfFreshDevice(restored =>
         {
-            ShowMainCanvas();
-            ShowTermsAndAgePopup();
-        }
-        else
-        {
-            SceneManager.LoadScene("HomeScene");
-        }
+            if (restored)
+                Debug.Log("[CloudSave] クラウドセーブから進行状況を復元しました");
+
+            if (!AgeVerificationManager.IsSetupComplete)
+            {
+                ShowMainCanvas();
+                ShowTermsAndAgePopup();
+            }
+            else
+            {
+                SceneManager.LoadScene("HomeScene");
+            }
+        });
     }
 
     void ShowMainCanvas()

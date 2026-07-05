@@ -179,23 +179,22 @@ public static class Phase5Setup
     [MenuItem("GachaBlock/Phase5/Debug: Force Cloud Save")]
     static void DebugCloudSave()
     {
-        CloudSaveManager.Save();
-        Debug.Log("[Phase5] クラウドセーブ完了");
+        // Firestore 非同期API（結果は Console ログで確認）
+        CloudSaveManager.Save(ok =>
+            Debug.Log(ok ? "[Phase5] クラウドセーブ完了" : "[Phase5] クラウドセーブ失敗"));
     }
 
     [MenuItem("GachaBlock/Phase5/Debug: Force Cloud Load")]
     static void DebugCloudLoad()
     {
-        if (CloudSaveManager.Load())
-            Debug.Log("[Phase5] クラウドロード完了");
-        else
-            Debug.LogWarning("[Phase5] クラウドロード失敗（データなし or ログインなし）");
+        // Firestore 非同期API（結果は Console ログで確認）
+        CloudSaveManager.Load(ok =>
+        {
+            if (ok) Debug.Log("[Phase5] クラウドロード完了");
+            else    Debug.LogWarning("[Phase5] クラウドロード失敗（データなし or ログインなし）");
+        });
     }
 
-    [MenuItem("GachaBlock/Phase5/Debug: Generate Dummy Rankings")]
-    static void DebugGenerateRankings()
-    {
-        RankingManager.GenerateDummyData();
-        Debug.Log("[Phase5] ダミーランキングデータ生成完了");
-    }
+    // ※ダミーランキング生成メニューは Firestore 本実装に伴い廃止
+    //   （実データはステージクリアで rankings/ に記録される）
 }

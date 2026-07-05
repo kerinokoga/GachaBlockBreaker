@@ -16,6 +16,8 @@ public class HomeUI : MonoBehaviour
         // 初回起動時にスターターオーブ 1000 をプレゼントボックスへ付与
         PresentBoxManager.EnsureStarterOrbs();
         PresentBoxManager.CheckLoginBonus();
+        // 進行状況をクラウドへバックアップ（ホーム到達ごと・非同期）
+        CloudSaveManager.Save();
         BuildUI();
         AudioManager.Instance?.PlayBGMForScene("HomeScene");
         StartCoroutine(FadeInButtons());

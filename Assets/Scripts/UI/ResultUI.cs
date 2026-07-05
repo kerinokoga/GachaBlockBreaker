@@ -122,12 +122,18 @@ public class ResultUI : MonoBehaviour
         float rate = ResultData.DestroyRate;
         int stage = ResultData.StageNumber;
 
-        // クリア時にランキング送信
+        // クリア時にランキング送信 + クラウドバックアップ
         if (isClear)
         {
             string playerName = AuthManager.GetName();
-            if (!string.IsNullOrEmpty(playerName))
-                RankingManager.SubmitScore(stage, playerName, rate);
+            if (string.IsNullOrEmpty(playerName))
+            {
+                // ゲスト（匿名ログイン）は表示名が無いため UID から仮名を生成
+                string uid = AuthManager.GetUID();
+                playerName = "ゲスト" + (uid != null && uid.Length >= 4 ? uid.Substring(0, 4) : "????");
+            }
+            RankingManager.SubmitScore(stage, playerName, rate);
+            CloudSaveManager.Save();
         }
 
         var cGo = new GameObject("ResultCanvas");

@@ -1,129 +1,119 @@
 using UnityEngine;
-using System.IO;
+using System;
 using System.Collections.Generic;
+using Firebase.Firestore;
+using Firebase.Extensions;
 
 /// <summary>
-/// モックランキング（ローカル JSON ファイル）
-/// 後から Firebase Realtime Database に差し替え可能
+/// ランキング（Firebase Firestore 本実装）
+/// 構造: rankings/stage_{N}/entries/{uid} → { name, rate, updatedAt }
+/// - 1プレイヤー1エントリ（uid をドキュメントIDに使用）
+/// - 自己ベスト更新時のみ書き込み
+/// - 取得は破壊率降順の上位 N 件
 /// </summary>
 public static class RankingManager
 {
-    static string FilePath => Path.Combine(Application.persistentDataPath, "ranking.json");
+    static FirebaseFirestore Db => FirebaseFirestore.DefaultInstance;
+
+    static CollectionReference StageEntries(int stage) =>
+        Db.Collection("rankings").Document($"stage_{stage}").Collection("entries");
 
     // ---- スコア送信 ----
 
+    /// <summary>
+    /// スコアを送信（非同期・自己ベストのときだけ更新）。
+    /// クリア時に呼ばれる。失敗してもゲームは継続。
+    /// </summary>
     public static void SubmitScore(int stage, string playerName, float rate)
     {
-        var data = LoadOrCreate();
-        string key = stage.ToString();
-
-        List<RankEntry> list = FindStage(data, key);
-        if (list == null)
+        // Firebase Auth の実状態から UID を取得
+        // （PlayerPrefs キャッシュだと未認証セッションでルール拒否される）
+        string uid = null;
+        try
         {
-            list = new List<RankEntry>();
-            data.stageList.Add(new StageRanking { stageKey = key, entries = list });
+            var user = Firebase.Auth.FirebaseAuth.DefaultInstance.CurrentUser;
+            if (user != null) uid = user.UserId;
         }
+        catch { }
 
-        // 同名プレイヤーの既存スコアを更新（より高い方を残す）
-        int existing = list.FindIndex(e => e.name == playerName);
-        if (existing >= 0)
+        if (string.IsNullOrEmpty(uid))
         {
-            if (rate > list[existing].rate)
-                list[existing].rate = rate;
+            Debug.LogWarning("[Ranking] 未ログインのため送信スキップ");
+            return;
         }
-        else
+        var docRef = StageEntries(stage).Document(uid);
+
+        // 既存スコアを読み、自己ベスト更新時のみ書き込む
+        docRef.GetSnapshotAsync().ContinueWithOnMainThread(task =>
         {
-            list.Add(new RankEntry { name = playerName, rate = rate });
-        }
+            if (!task.IsCompletedSuccessfully)
+            {
+                Debug.LogWarning($"[Ranking] 既存スコア取得失敗: {task.Exception?.GetBaseException().Message}");
+                return;
+            }
 
-        list.Sort((a, b) => b.rate.CompareTo(a.rate));
-        if (list.Count > 100) list.RemoveRange(100, list.Count - 100);
+            var snap = task.Result;
+            if (snap.Exists && snap.TryGetValue<double>("rate", out var existing)
+                && (float)existing >= rate)
+            {
+                return; // 既存の方が高い → 更新不要
+            }
 
-        WriteFile(data);
-        Debug.Log($"[Ranking] Stage{stage} スコア送信: {playerName} = {rate:P0}");
+            var data = new Dictionary<string, object>
+            {
+                { "name",      playerName },
+                { "rate",      rate },
+                { "updatedAt", FieldValue.ServerTimestamp }
+            };
+            docRef.SetAsync(data).ContinueWithOnMainThread(t2 =>
+            {
+                if (t2.IsCompletedSuccessfully)
+                    Debug.Log($"[Ranking] スコア送信完了: stage{stage} {playerName} {rate:P0}");
+                else
+                    Debug.LogWarning($"[Ranking] スコア送信失敗: {t2.Exception?.GetBaseException().Message}");
+            });
+        });
     }
 
     // ---- ランキング取得 ----
 
-    public static List<RankEntry> GetTopRanking(int stage, int count = 20)
+    /// <summary>
+    /// 指定ステージの上位 count 件を取得（非同期）。
+    /// 失敗時は空リストで onDone を呼ぶ。
+    /// </summary>
+    public static void GetTopRanking(int stage, int count, Action<List<RankEntry>> onDone)
     {
-        var data = LoadOrCreate();
-        var list = FindStage(data, stage.ToString());
-        if (list == null) return new List<RankEntry>();
-        int n = Mathf.Min(count, list.Count);
-        return list.GetRange(0, n);
-    }
-
-    // ---- ダミーデータ生成 ----
-
-    public static void GenerateDummyData()
-    {
-        string[] names = {
-            "Alice", "Bob", "Charlie", "Diana", "Eve",
-            "Frank", "Grace", "Henry", "Iris", "Jack"
-        };
-
-        var data = new RankingData();
-        for (int stage = 1; stage <= 5; stage++)
-        {
-            var list = new List<RankEntry>();
-            for (int i = 0; i < names.Length; i++)
+        StageEntries(stage)
+            .OrderByDescending("rate")
+            .Limit(count)
+            .GetSnapshotAsync()
+            .ContinueWithOnMainThread(task =>
             {
-                float baseRate = 1.0f - stage * 0.05f;
-                float rate = Mathf.Clamp01(baseRate - i * 0.06f + Random.Range(-0.03f, 0.03f));
-                list.Add(new RankEntry { name = names[i], rate = rate });
-            }
-            list.Sort((a, b) => b.rate.CompareTo(a.rate));
-            data.stageList.Add(new StageRanking { stageKey = stage.ToString(), entries = list });
-        }
-        WriteFile(data);
-        Debug.Log("[Ranking] ダミーデータ生成完了");
+                var result = new List<RankEntry>();
+                if (task.IsCompletedSuccessfully)
+                {
+                    foreach (var doc in task.Result.Documents)
+                    {
+                        string name = doc.TryGetValue<string>("name", out var n) ? n : "???";
+                        float rate  = doc.TryGetValue<double>("rate", out var r) ? (float)r : 0f;
+                        result.Add(new RankEntry { name = name, rate = rate, uid = doc.Id });
+                    }
+                }
+                else
+                {
+                    Debug.LogWarning($"[Ranking] 取得失敗: {task.Exception?.GetBaseException().Message}");
+                }
+                onDone?.Invoke(result);
+            });
     }
 
-    // ---- 内部ヘルパー ----
-
-    static List<RankEntry> FindStage(RankingData data, string key)
-    {
-        foreach (var sr in data.stageList)
-            if (sr.stageKey == key) return sr.entries;
-        return null;
-    }
-
-    static RankingData LoadOrCreate()
-    {
-        if (!File.Exists(FilePath))
-            GenerateDummyData();
-
-        string json = File.ReadAllText(FilePath);
-        var d = JsonUtility.FromJson<RankingData>(json);
-        return d ?? new RankingData();
-    }
-
-    static void WriteFile(RankingData data)
-    {
-        string json = JsonUtility.ToJson(data, true);
-        File.WriteAllText(FilePath, json);
-    }
-
-    // ---- データ構造（JsonUtility 対応） ----
+    // ---- データ構造 ----
 
     [System.Serializable]
     public class RankEntry
     {
         public string name;
         public float rate;
-    }
-
-    [System.Serializable]
-    class RankingData
-    {
-        public List<StageRanking> stageList = new List<StageRanking>();
-    }
-
-    [System.Serializable]
-    class StageRanking
-    {
-        public string stageKey;
-        public List<RankEntry> entries = new List<RankEntry>();
+        public string uid;  // 自分のエントリ判定用（ドキュメントID = プレイヤーUID）
     }
 }
