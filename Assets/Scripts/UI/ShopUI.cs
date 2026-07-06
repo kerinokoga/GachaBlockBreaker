@@ -13,7 +13,12 @@ public class ShopUI : MonoBehaviour
     Text messageText;
     List<RectTransform> particles = new List<RectTransform>();
 
-    void Start() => BuildUI();
+    void Start()
+    {
+        // Unity IAP を初期化（冪等。初回はストア接続に少し時間がかかる場合あり）
+        IAPManager.Initialize();
+        BuildUI();
+    }
 
     void Update()
     {
@@ -102,12 +107,14 @@ public class ShopUI : MonoBehaviour
             new Vector2(0.5f, msgY), new Vector2(700f, 36f));
 
         // ===== 商品カード =====
-        float[] ys = { 0.72f, 0.58f, 0.44f, 0.30f };
+        float[] ys = { 0.72f, 0.61f, 0.50f, 0.39f, 0.28f, 0.17f };
         Color[] colors = {
             new Color(0.2f, 0.4f, 0.6f),
+            new Color(0.2f, 0.5f, 0.5f),
             new Color(0.3f, 0.5f, 0.2f),
             new Color(0.5f, 0.35f, 0.15f),
             new Color(0.6f, 0.2f, 0.5f),
+            new Color(0.7f, 0.55f, 0.1f), // 最上位はゴールド系
         };
 
         for (int i = 0; i < IAPManager.Products.Length; i++)
@@ -123,15 +130,16 @@ public class ShopUI : MonoBehaviour
             () => SceneManager.LoadScene("HomeScene"));
 
         // ===== GACHA ボタン（右寄せ） =====
-        MakeStyledButton(root, "がちゃ", new Color(0.5f, 0.1f, 0.5f),
+        MakeStyledButton(root, "ガチャ", new Color(0.5f, 0.1f, 0.5f),
             new Color(0.7f, 0.3f, 0.7f),
             new Vector2(0.7f, 0.05f), new Vector2(300f, 70f),
             () => SceneManager.LoadScene("GachaScene"));
     }
 
-    void BuildProductCard(Transform parent, IAPManager.Product product, float y, Color bgCol)
+    void BuildProductCard(Transform parent, IAPManager.ProductDef product, float y, Color bgCol)
     {
-        string label = $"{product.orbAmount} オーブ  —  {product.priceLabel}";
+        // ストア接続済みならローカライズ価格、未接続なら定義のフォールバック価格
+        string label = $"{product.orbAmount} オーブ  —  {IAPManager.GetStorePrice(product.id)}";
 
         // 外枠（ハイライトカラー）
         var go = new GameObject($"Product_{product.id}");
@@ -167,7 +175,7 @@ public class ShopUI : MonoBehaviour
         var txtGo = new GameObject("Label");
         txtGo.transform.SetParent(go.transform, false);
         var t = txtGo.AddComponent<Text>();
-        t.text = label; t.fontSize = 32; t.color = Color.white;
+        t.text = label; t.fontSize = 40; t.color = Color.white;
         t.alignment = TextAnchor.MiddleCenter;
         var cherry = Resources.Load<Font>("Fonts/CherryBombOne-Regular");
         t.font = cherry != null ? cherry : Font.CreateDynamicFontFromOSFont("Arial", 32);
@@ -186,14 +194,17 @@ public class ShopUI : MonoBehaviour
         barRt.anchorMin = Vector2.zero; barRt.anchorMax = new Vector2(1f, 0.06f);
         barRt.offsetMin = new Vector2(3f, 3f); barRt.offsetMax = new Vector2(-3f, 0f);
 
-        // 購入回数（右下小文字）
-        int count = IAPManager.GetPurchaseCount(product.id);
-        if (count > 0)
+        // お得額バッジ（右寄り）: 最小パック（¥150=100オーブ、1.5円/オーブ）換算との差額
+        int save = Mathf.RoundToInt(product.orbAmount * 1.5f) - product.priceYen;
+        if (save > 0)
         {
-            var countText = MakeText(go.transform, $"x{count} 購入済み", 18,
-                new Color(0.8f, 0.8f, 0.8f, 0.6f),
-                new Vector2(0.85f, 0.15f), new Vector2(200f, 24f));
-            AddShadow(countText.gameObject);
+            var saveText = MakeText(go.transform, $"¥{save:N0} お得!", 32,
+                new Color(1f, 0.9f, 0.3f),
+                new Vector2(0.82f, 0.82f), new Vector2(300f, 42f));
+            AddShadow(saveText.gameObject);
+            var saveOl = saveText.gameObject.AddComponent<Outline>();
+            saveOl.effectColor = new Color(0.4f, 0.2f, 0f, 0.9f);
+            saveOl.effectDistance = new Vector2(1.5f, -1.5f);
         }
     }
 
@@ -209,14 +220,28 @@ public class ShopUI : MonoBehaviour
             return;
         }
 
-        if (IAPManager.Purchase(productId))
+        // 購入開始（結果は非同期で返る。ストアダイアログ中はこの表示のまま）
+        messageText.color = new Color(0.8f, 0.8f, 1f);
+        messageText.text = "購入処理中...";
+
+        IAPManager.Purchase(productId, (success, message) =>
         {
-            orbText.text = $"◆ 所持オーブ: {OrbManager.GetOrbs()}";
-            messageText.color = new Color(0.4f, 1f, 0.4f);
-            StartCoroutine(ShowMessage($"+{amount} オーブ!"));
-            // 画面をリビルドして残額を更新
-            StartCoroutine(RebuildAfterDelay());
-        }
+            if (this == null || messageText == null) return; // シーン離脱済みなら無視
+
+            if (success)
+            {
+                orbText.text = $"◆ 所持オーブ: {OrbManager.GetOrbs()}";
+                messageText.color = new Color(0.4f, 1f, 0.4f);
+                StartCoroutine(ShowMessage($"+{amount} オーブ!"));
+                // 画面をリビルドして残額を更新
+                StartCoroutine(RebuildAfterDelay());
+            }
+            else
+            {
+                messageText.color = new Color(1f, 0.4f, 0.4f);
+                StartCoroutine(ShowMessage(message));
+            }
+        });
     }
 
     IEnumerator RebuildAfterDelay()
