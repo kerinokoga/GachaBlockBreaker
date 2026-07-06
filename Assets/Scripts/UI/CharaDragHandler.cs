@@ -19,7 +19,7 @@ public class CharaDragHandler : MonoBehaviour,
     IBeginDragHandler, IDragHandler, IEndDragHandler,
     IInitializePotentialDragHandler
 {
-    public const float LongPressDuration = 0.4f;
+    public const float LongPressDuration = 0.3f;
 
     [HideInInspector] public int charIndex;
     [HideInInspector] public CharaSelectUI ownerUI;

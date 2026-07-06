@@ -265,6 +265,19 @@ public class CharaSelectUI : MonoBehaviour
             es.AddComponent<UnityEngine.EventSystems.StandaloneInputModule>();
         }
 
+        // 長押し→ドラッグの成立率改善:
+        // 既定のドラッグ判定しきい値(10px)は高DPI端末では約0.5mmしかなく、
+        // 指の自然な揺れで「スクロール開始」と誤判定されて長押しが失敗する。
+        // 約2mm相当（DPI×0.08インチ）まで許容する。
+        var eventSystem = UnityEngine.EventSystems.EventSystem.current
+            ?? FindObjectOfType<UnityEngine.EventSystems.EventSystem>();
+        if (eventSystem != null && Screen.dpi > 0f)
+        {
+            eventSystem.pixelDragThreshold = Mathf.Max(
+                eventSystem.pixelDragThreshold,
+                Mathf.RoundToInt(Screen.dpi * 0.08f));
+        }
+
         Transform root = cGo.transform;
 
         // ===== 背景（深い紫/ネイビー） =====
