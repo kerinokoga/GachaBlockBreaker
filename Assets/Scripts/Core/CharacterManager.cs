@@ -170,6 +170,24 @@ public class CharacterManager : MonoBehaviour
     /// </summary>
     public void OnBlockDestroyed()
     {
+        AddGauge(1f);
+    }
+
+    /// <summary>
+    /// ブロックにダメージを与えるたびに呼ばれる（破壊に至らないヒットでも溜まる）。
+    /// 高HPブロックやボスだけが残った状況でも奥義ゲージが回るようにする。
+    /// </summary>
+    public void OnBlockHit()
+    {
+        AddGauge(GaugePerHit);
+    }
+
+    /// <summary>ヒット1回あたりのゲージ増加量（破壊は 1.0）</summary>
+    const float GaugePerHit = 0.25f;
+
+    /// <summary>ゲージ加算の共通処理（UltGaugeBoost パッシブは加算量に乗算）</summary>
+    void AddGauge(float baseAmount)
+    {
         for (int i = 0; i < 3; i++)
         {
             if (selectedChars[i] == null) continue;
@@ -182,7 +200,7 @@ public class CharacterManager : MonoBehaviour
             else if (selectedChars[i].passiveType2 == PassiveEffectType.UltGaugeBoost)
                 boost = selectedChars[i].passiveValue2;
 
-            gauges[i] = Mathf.Min(gauges[i] + boost, MaxGauge);
+            gauges[i] = Mathf.Min(gauges[i] + baseAmount * boost, MaxGauge);
             OnGaugeChanged?.Invoke(i, gauges[i] / MaxGauge);
 
             if (gauges[i] >= MaxGauge)

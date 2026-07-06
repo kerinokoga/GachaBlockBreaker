@@ -55,6 +55,10 @@ public abstract class BlockBase : MonoBehaviour
         currentHP -= amount;
         AudioManager.Instance?.PlaySE(AudioManager.Instance?.seBlockBreak);
 
+        // 奥義ゲージ：破壊に至らないヒットでも溜める
+        // （高HPブロック・ボスだけが残っても奥義が回るように。破壊時は別途 +1.0）
+        CharacterManager.Instance?.OnBlockHit();
+
         // ダメージ数値ポップアップ（全ブロック共通）
         SpawnDamagePopup(actualDamage);
 
