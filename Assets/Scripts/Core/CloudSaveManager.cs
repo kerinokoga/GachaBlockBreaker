@@ -57,7 +57,20 @@ public static class CloudSaveManager
         var data = CollectSaveData();
         string uid = CurrentUid;
 
-        Db.Collection("users").Document(uid).SetAsync(data)
+        // Firestore の初期化自体が失敗する端末でも必ずコールバックを返す
+        System.Threading.Tasks.Task setTask;
+        try
+        {
+            setTask = Db.Collection("users").Document(uid).SetAsync(data);
+        }
+        catch (Exception e)
+        {
+            Debug.LogWarning($"[CloudSave] Firestore にアクセスできません: {e.Message}");
+            onDone?.Invoke(false);
+            return;
+        }
+
+        setTask
             .ContinueWithOnMainThread(task =>
             {
                 if (task.IsCompletedSuccessfully)
@@ -158,7 +171,21 @@ public static class CloudSaveManager
         }
 
         string uid = CurrentUid;
-        Db.Collection("users").Document(uid).GetSnapshotAsync()
+
+        // Firestore の初期化自体が失敗する端末でも必ずコールバックを返す
+        Firebase.Firestore.DocumentReference docRef;
+        try
+        {
+            docRef = Db.Collection("users").Document(uid);
+        }
+        catch (Exception e)
+        {
+            Debug.LogWarning($"[CloudSave] Firestore にアクセスできません: {e.Message}");
+            onDone?.Invoke(false);
+            return;
+        }
+
+        docRef.GetSnapshotAsync()
             .ContinueWithOnMainThread(task =>
             {
                 if (!task.IsCompletedSuccessfully)

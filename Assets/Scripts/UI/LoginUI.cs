@@ -21,7 +21,58 @@ public class LoginUI : MonoBehaviour
 
         // スプラッシュ2秒 + Firebase初期化を並行
         StartCoroutine(SplashTimer());
-        InitFirebase();
+
+        // Firebase 初期化（同期例外で止まらないようガード。
+        // Android のネイティブ初期化失敗はここで throw されることがある）
+        try
+        {
+            InitFirebase();
+        }
+        catch (System.Exception e)
+        {
+            // TypeInitializationException 等は InnerException に真因が入るため全体を出力
+            Debug.LogWarning($"[Login] Firebase 初期化で例外: {e}");
+        }
+
+        // 認証が一定時間終わらなくてもオフラインで必ず先へ進むフォールバック
+        StartCoroutine(LoginWatchdog());
+    }
+
+    /// <summary>
+    /// 認証が終わらない端末でもゲームを止めないための監視。
+    /// スプラッシュ後は進行状況を表示し、12秒で諦めてオフライン進行する。
+    /// </summary>
+    IEnumerator LoginWatchdog()
+    {
+        float elapsed = 0f;
+        const float giveUp = 12f;
+
+        while (!loginReady && elapsed < giveUp)
+        {
+            elapsed += Time.unscaledDeltaTime;
+
+            // スプラッシュが明けても認証中なら状況を表示（無言のフリーズに見せない）
+            if (splashDone && statusText != null && !loginReady)
+            {
+                ShowMainCanvas();
+                statusText.color = new Color(0.7f, 0.8f, 1f);
+                statusText.text = $"サーバー接続中... ({Mathf.CeilToInt(giveUp - elapsed)})";
+            }
+            yield return null;
+        }
+
+        if (!loginReady)
+        {
+            // オフライン進行（クラウドセーブ・ランキングは自動でスキップされる設計）
+            Debug.LogWarning("[Login] 認証タイムアウト。オフラインで進行します");
+            if (statusText != null)
+            {
+                statusText.color = new Color(1f, 0.8f, 0.4f);
+                statusText.text = "オフラインで開始します";
+            }
+            loginReady = true;
+            TryProceed();
+        }
     }
 
     IEnumerator SplashTimer()
@@ -77,28 +128,48 @@ public class LoginUI : MonoBehaviour
         );
     }
 
+    bool proceeded = false; // 二重進行ガード
+
     void TryProceed()
     {
         // スプラッシュ2秒 + ログイン完了の両方が揃ったら進む
         if (!splashDone || !loginReady) return;
+        if (proceeded) return;
+        proceeded = true;
+        StartCoroutine(ProceedWithRestore());
+    }
 
+    IEnumerator ProceedWithRestore()
+    {
         // 機種変更・再インストール時のクラウド復元
         // （ローカルが初期状態のときだけ実行。通常起動では即コールバックされる）
+        bool done = false;
         CloudSaveManager.LoadIfFreshDevice(restored =>
         {
             if (restored)
                 Debug.Log("[CloudSave] クラウドセーブから進行状況を復元しました");
-
-            if (!AgeVerificationManager.IsSetupComplete)
-            {
-                ShowMainCanvas();
-                ShowTermsAndAgePopup();
-            }
-            else
-            {
-                SceneManager.LoadScene("HomeScene");
-            }
+            done = true;
         });
+
+        // 端末側の Firestore 不調で応答が無くても 6 秒で必ず先へ進む（タイトル画面での固まり防止）
+        float timeout = 6f;
+        while (!done && timeout > 0f)
+        {
+            timeout -= Time.unscaledDeltaTime;
+            yield return null;
+        }
+        if (!done)
+            Debug.LogWarning("[CloudSave] 復元チェックがタイムアウト。スキップして進行します");
+
+        if (!AgeVerificationManager.IsSetupComplete)
+        {
+            ShowMainCanvas();
+            ShowTermsAndAgePopup();
+        }
+        else
+        {
+            SceneManager.LoadScene("HomeScene");
+        }
     }
 
     void ShowMainCanvas()
