@@ -529,23 +529,23 @@ public class HomeUI : MonoBehaviour
         // ===== 3. ボタン（フェードイン付き） =====
         MakeMenuButton(cGo.transform, "スタート",
             new Color(0.1f, 0.4f, 0.8f), new Color(0.2f, 0.6f, 1f),
-            0.74f, "▷", () => SceneManager.LoadScene("StageSelectScene"));
+            0.74f, "♡", () => SceneManager.LoadScene("StageSelectScene"));
 
         MakeMenuButton(cGo.transform, "ガチャ",
             new Color(0.55f, 0.15f, 0.8f), new Color(0.75f, 0.35f, 1f),
-            0.65f, "♦", () => SceneManager.LoadScene("GachaScene"));
+            0.65f, "♡", () => SceneManager.LoadScene("GachaScene"));
 
         MakeMenuButton(cGo.transform, "オーブ購入",
             new Color(0.75f, 0.45f, 0.1f), new Color(0.95f, 0.65f, 0.2f),
-            0.56f, "◆", () => SceneManager.LoadScene("ShopScene"));
+            0.56f, "♡", () => SceneManager.LoadScene("ShopScene"));
 
         MakeMenuButton(cGo.transform, "キャラ管理",
             new Color(0.1f, 0.45f, 0.35f), new Color(0.2f, 0.65f, 0.5f),
-            0.47f, "◇", () => SceneManager.LoadScene("CharaManageScene"));
+            0.47f, "♡", () => SceneManager.LoadScene("CharaManageScene"));
 
         MakeMenuButton(cGo.transform, "コレクション",
             new Color(0.7f, 0.15f, 0.4f), new Color(0.9f, 0.35f, 0.55f),
-            0.38f, "♥", () => SceneManager.LoadScene("CollectionScene"));
+            0.38f, "♡", () => SceneManager.LoadScene("CollectionScene"));
 
         // ランキング機能は一旦非公開（バックエンドのスコア送信は継続中）
         // 再公開する場合は以下のコメントを外すだけ
