@@ -129,8 +129,9 @@ public class HomeUI : MonoBehaviour
         overlay.HideCharacter();
 
         // 視覚的余白を加えてプレゼントボタンを少し外側まで囲む
-        Vector2 pMin = new Vector2(0.0f, 0.165f);
-        Vector2 pMax = new Vector2(0.27f, 0.235f);
+        // プレゼントボタン位置 (0.12, 0.29) size 260x78 に合わせた範囲（余白込み）
+        Vector2 pMin = new Vector2(0.0f, 0.255f);
+        Vector2 pMax = new Vector2(0.27f, 0.325f);
 
         // スポットライト（プレゼントボタンのみクリック可）
         overlay.ShowSpotlight(pMin, pMax);
@@ -149,7 +150,7 @@ public class HomeUI : MonoBehaviour
             "受け取りなさい");
 
         // 矢印をプレゼントボタンの右に配置（◀ でボタンを指す）
-        overlay.AddArrowAt(new Vector2(0.32f, 0.20f), "◀");
+        overlay.AddArrowAt(new Vector2(0.32f, 0.29f), "◀");
 
         // 専用ボイス（Tutorial/present.wav）
         AudioClip presentVoice = Resources.Load<AudioClip>("Tutorial/present");
@@ -546,12 +547,15 @@ public class HomeUI : MonoBehaviour
             new Color(0.7f, 0.15f, 0.4f), new Color(0.9f, 0.35f, 0.55f),
             0.38f, "♥", () => SceneManager.LoadScene("CollectionScene"));
 
-        MakeMenuButton(cGo.transform, "ランキング",
-            new Color(0.15f, 0.3f, 0.55f), new Color(0.3f, 0.5f, 0.8f),
-            0.29f, "▷", () => SceneManager.LoadScene("RankingScene"));
+        // ランキング機能は一旦非公開（バックエンドのスコア送信は継続中）
+        // 再公開する場合は以下のコメントを外すだけ
+        // MakeMenuButton(cGo.transform, "ランキング",
+        //     new Color(0.15f, 0.3f, 0.55f), new Color(0.3f, 0.5f, 0.8f),
+        //     0.29f, "▷", () => SceneManager.LoadScene("RankingScene"));
 
         // プレゼントボックスボタン（バッジ付き）
-        MakePresentButton(cGo.transform, 0.20f);
+        // ランキングボタン非公開に伴い 0.20 → 0.29 に詰めた
+        MakePresentButton(cGo.transform, 0.29f);
 
         // アカウント連携ボタン（左上）
         var linkGo = new GameObject("LinkBtn");
