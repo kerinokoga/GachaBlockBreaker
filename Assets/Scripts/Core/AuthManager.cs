@@ -108,6 +108,44 @@ public static class AuthManager
         });
     }
 
+    // ---- ゲストアカウントへのメール連携（UID を維持したまま認証を紐付け） ----
+
+    /// <summary>
+    /// 現在のゲスト（匿名）アカウントにメール＋パスワード認証を紐付ける。
+    /// UID が変わらないため、クラウドセーブ・ランキング等のデータがそのまま引き継がれる。
+    /// （Register は新規アカウント作成＝UIDが変わるため、引き継ぎ用途にはこちらを使うこと）
+    /// </summary>
+    public static void LinkWithEmail(string email, string password, Action onSuccess, Action<string> onFailed)
+    {
+        if (auth == null || auth.CurrentUser == null)
+        {
+            onFailed?.Invoke("ログイン状態を確認できません。通信環境をご確認ください");
+            return;
+        }
+        if (string.IsNullOrEmpty(email) || !email.Contains("@"))
+        {
+            onFailed?.Invoke("有効なメールアドレスを入力してください");
+            return;
+        }
+        if (string.IsNullOrEmpty(password) || password.Length < 6)
+        {
+            onFailed?.Invoke("パスワードは6文字以上で入力してください");
+            return;
+        }
+
+        var credential = EmailAuthProvider.GetCredential(email, password);
+        auth.CurrentUser.LinkWithCredentialAsync(credential).ContinueWithOnMainThread(task =>
+        {
+            if (task.IsFaulted || task.IsCanceled)
+            {
+                onFailed?.Invoke(TranslateError(task.Exception));
+                return;
+            }
+            CacheUser(task.Result.User);
+            onSuccess?.Invoke();
+        });
+    }
+
     // ---- メール＋パスワードログイン ----
 
     public static void Login(string email, string password, Action onSuccess, Action<string> onFailed)
@@ -165,6 +203,10 @@ public static class AuthManager
 
         if (msg.Contains("badly formatted"))
             return "メールアドレスの形式が正しくありません";
+        if (msg.Contains("already associated") || msg.Contains("already linked"))
+            return "このメールアドレスは既に別のアカウントで使用されています";
+        if (msg.Contains("operation is not allowed") || msg.Contains("OPERATION_NOT_ALLOWED"))
+            return "メール認証が現在利用できません";
         if (msg.Contains("already in use"))
             return "このメールアドレスは既に使用されています";
         if (msg.Contains("wrong password") || msg.Contains("password is invalid"))

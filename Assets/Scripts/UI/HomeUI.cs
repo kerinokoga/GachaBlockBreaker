@@ -913,7 +913,7 @@ public class HomeUI : MonoBehaviour
         var drt = dialog.GetComponent<RectTransform>();
         drt.anchorMin = drt.anchorMax = new Vector2(0.5f, 0.5f);
         drt.anchoredPosition = Vector2.zero;
-        drt.sizeDelta = new Vector2(800f, 550f);
+        drt.sizeDelta = new Vector2(800f, 780f);
 
         // ダイアログ内側
         var dInner = new GameObject("Inner");
@@ -925,7 +925,7 @@ public class HomeUI : MonoBehaviour
 
         // タイトル
         var titleT = MakeText(dialog.transform, "アカウント連携", 40,
-            new Color(1f, 0.85f, 0.1f), new Vector2(0.5f, 0.88f), new Vector2(700f, 60f));
+            new Color(1f, 0.85f, 0.1f), new Vector2(0.5f, 0.92f), new Vector2(700f, 60f));
         AddShadow(titleT.gameObject);
 
         // 現在のアカウント情報
@@ -934,36 +934,142 @@ public class HomeUI : MonoBehaviour
         string accountType = AuthManager.IsGuest() ? "ゲスト" : "メール認証済み";
         var infoT = MakeText(dialog.transform,
             $"アカウント: {accountType}\nID: {shortId}",
-            24, new Color(0.7f, 0.8f, 0.9f), new Vector2(0.5f, 0.72f), new Vector2(700f, 70f));
+            24, new Color(0.7f, 0.8f, 0.9f), new Vector2(0.5f, 0.83f), new Vector2(700f, 70f));
         infoT.lineSpacing = 1.3f;
 
-        // 説明
-        var descT = MakeText(dialog.transform,
-            "アカウントを連携すると、機種変更時に\nデータを引き継ぐことができます。\n\n（Google連携は今後のアップデートで対応予定）",
-            24, new Color(0.6f, 0.6f, 0.7f), new Vector2(0.5f, 0.50f), new Vector2(700f, 140f));
-        descT.lineSpacing = 1.3f;
+        if (!AuthManager.IsGuest())
+        {
+            // ===== 連携済み表示 =====
+            var doneT = MakeText(dialog.transform,
+                "✓ メール連携済み\n\n機種変更の際は、同じメールアドレスと\nパスワードでデータを引き継げます。",
+                26, new Color(0.5f, 1f, 0.6f), new Vector2(0.5f, 0.50f), new Vector2(700f, 160f));
+            doneT.lineSpacing = 1.3f;
+        }
+        else
+        {
+            // ===== ゲスト: メール連携フォーム =====
+            var descT = MakeText(dialog.transform,
+                "メールアドレスを登録すると、機種変更時に\nデータを引き継げるようになります。\n（Google連携は今後のアップデートで対応予定）",
+                24, new Color(0.6f, 0.6f, 0.7f), new Vector2(0.5f, 0.73f), new Vector2(700f, 90f));
+            descT.lineSpacing = 1.3f;
 
-        // Google連携ボタン（準備中）
-        var googleGo = new GameObject("GoogleBtn");
-        googleGo.transform.SetParent(dialog.transform, false);
-        googleGo.AddComponent<Image>().color = new Color(0.3f, 0.3f, 0.35f, 0.5f);
-        var googleRT = googleGo.GetComponent<RectTransform>();
-        googleRT.anchorMin = googleRT.anchorMax = new Vector2(0.5f, 0.26f);
-        googleRT.anchoredPosition = Vector2.zero;
-        googleRT.sizeDelta = new Vector2(500f, 75f);
+            var emailInput = MakeLinkInputField(dialog.transform, "メールアドレス",
+                new Vector2(0.5f, 0.615f), false);
+            var passInput = MakeLinkInputField(dialog.transform, "パスワード（6文字以上）",
+                new Vector2(0.5f, 0.505f), true);
 
-        var googleInner = new GameObject("Inner");
-        googleInner.transform.SetParent(googleGo.transform, false);
-        googleInner.AddComponent<Image>().color = new Color(0.2f, 0.2f, 0.25f, 0.9f);
-        var giRt = googleInner.GetComponent<RectTransform>();
-        giRt.anchorMin = Vector2.zero; giRt.anchorMax = Vector2.one;
-        giRt.offsetMin = new Vector2(3f, 3f); giRt.offsetMax = new Vector2(-3f, -3f);
+            // 結果表示テキスト
+            var statusT = MakeText(dialog.transform, "", 24, Color.white,
+                new Vector2(0.5f, 0.30f), new Vector2(700f, 44f));
 
-        var googleTxt = MakeText(googleGo.transform, "Google連携（準備中）", 28,
-            new Color(0.5f, 0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(480f, 60f));
-        var grt = googleTxt.GetComponent<RectTransform>();
-        grt.anchorMin = Vector2.zero; grt.anchorMax = Vector2.one;
-        grt.offsetMin = grt.offsetMax = Vector2.zero;
+            // 連携するボタン
+            var linkGo2 = new GameObject("DoLinkBtn");
+            linkGo2.transform.SetParent(dialog.transform, false);
+            linkGo2.AddComponent<Image>().color = new Color(0.3f, 0.8f, 0.5f, 0.6f);
+            var linkBtn2 = linkGo2.AddComponent<Button>();
+            var lrt2 = linkGo2.GetComponent<RectTransform>();
+            lrt2.anchorMin = lrt2.anchorMax = new Vector2(0.5f, 0.395f);
+            lrt2.anchoredPosition = Vector2.zero;
+            lrt2.sizeDelta = new Vector2(340f, 78f);
+
+            var linkInner2 = new GameObject("Inner");
+            linkInner2.transform.SetParent(linkGo2.transform, false);
+            linkInner2.AddComponent<Image>().color = new Color(0.12f, 0.5f, 0.28f, 0.95f);
+            var liRt2 = linkInner2.GetComponent<RectTransform>();
+            liRt2.anchorMin = Vector2.zero; liRt2.anchorMax = Vector2.one;
+            liRt2.offsetMin = new Vector2(3f, 3f); liRt2.offsetMax = new Vector2(-3f, -3f);
+
+            var linkTxt2 = MakeText(linkGo2.transform, "連携する", 32, Color.white,
+                new Vector2(0.5f, 0.5f), new Vector2(320f, 60f));
+            var cherryLink = Resources.Load<Font>("Fonts/CherryBombOne-Regular");
+            if (cherryLink != null) linkTxt2.font = cherryLink;
+            linkTxt2.horizontalOverflow = HorizontalWrapMode.Overflow;
+            linkTxt2.verticalOverflow = VerticalWrapMode.Overflow;
+            var ltrt2 = linkTxt2.GetComponent<RectTransform>();
+            ltrt2.anchorMin = Vector2.zero; ltrt2.anchorMax = Vector2.one;
+            ltrt2.offsetMin = ltrt2.offsetMax = Vector2.zero;
+
+            linkBtn2.onClick.AddListener(() =>
+            {
+                statusT.color = new Color(0.8f, 0.8f, 1f);
+                statusT.text = "連携中...";
+                linkBtn2.interactable = false;
+
+                AuthManager.LinkWithEmail(emailInput.text.Trim(), passInput.text,
+                    onSuccess: () =>
+                    {
+                        if (overlay == null) return; // ポップアップが閉じられていたら無視
+                        statusT.color = new Color(0.5f, 1f, 0.6f);
+                        statusT.text = "連携しました！これで機種変更しても安心です";
+                        infoT.text = $"アカウント: メール認証済み\nID: {shortId}";
+                        emailInput.interactable = false;
+                        passInput.interactable = false;
+                        // 連携直後の状態をクラウドへ即バックアップ
+                        CloudSaveManager.Save();
+                    },
+                    onFailed: (error) =>
+                    {
+                        if (overlay == null) return;
+                        statusT.color = new Color(1f, 0.4f, 0.4f);
+                        statusT.text = error;
+                        linkBtn2.interactable = true;
+                    });
+            });
+
+            // ===== 引き継ぎログイン（機種変更で連携済みアカウントを受け取る側の入口） =====
+            var recvGo = new GameObject("ReceiveBtn");
+            recvGo.transform.SetParent(dialog.transform, false);
+            var recvBg = recvGo.AddComponent<Image>();
+            recvBg.color = new Color(0f, 0f, 0f, 0f); // 透明（テキストボタン）
+            var recvBtn = recvGo.AddComponent<Button>();
+            var rrt = recvGo.GetComponent<RectTransform>();
+            rrt.anchorMin = rrt.anchorMax = new Vector2(0.5f, 0.215f);
+            rrt.anchoredPosition = Vector2.zero;
+            rrt.sizeDelta = new Vector2(700f, 44f);
+
+            var recvTxt = MakeText(recvGo.transform, "▶ 機種変更の引き継ぎはこちら（登録済みメールでログイン）",
+                22, new Color(0.5f, 0.8f, 1f), new Vector2(0.5f, 0.5f), new Vector2(700f, 40f));
+            var rtrt = recvTxt.GetComponent<RectTransform>();
+            rtrt.anchorMin = Vector2.zero; rtrt.anchorMax = Vector2.one;
+            rtrt.offsetMin = rtrt.offsetMax = Vector2.zero;
+
+            recvBtn.onClick.AddListener(() =>
+            {
+                string email = emailInput.text.Trim();
+                string pass = passInput.text;
+                if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(pass))
+                {
+                    statusT.color = new Color(1f, 0.8f, 0.4f);
+                    statusT.text = "上の欄にメールとパスワードを入力してから押してください";
+                    return;
+                }
+
+                statusT.color = new Color(0.8f, 0.8f, 1f);
+                statusT.text = "ログイン中...";
+                recvBtn.interactable = false;
+                linkBtn2.interactable = false;
+
+                AuthManager.Login(email, pass,
+                    onSuccess: () =>
+                    {
+                        if (overlay == null) return;
+                        statusT.text = "データを引き継いでいます...";
+                        // ログインしたアカウントのクラウドデータで上書き復元 → ホーム再読込
+                        CloudSaveManager.Load(_ =>
+                        {
+                            SceneManager.LoadScene("HomeScene");
+                        });
+                    },
+                    onFailed: (error) =>
+                    {
+                        if (overlay == null) return;
+                        statusT.color = new Color(1f, 0.4f, 0.4f);
+                        statusT.text = error;
+                        recvBtn.interactable = true;
+                        linkBtn2.interactable = true;
+                    });
+            });
+        }
 
         // 閉じるボタン
         var closeGo = new GameObject("CloseBtn");
@@ -972,7 +1078,7 @@ public class HomeUI : MonoBehaviour
         closeImg.color = new Color(0.6f, 0.25f, 0.8f, 0.6f);
         var closeBtn = closeGo.AddComponent<Button>();
         var crt = closeGo.GetComponent<RectTransform>();
-        crt.anchorMin = crt.anchorMax = new Vector2(0.5f, 0.08f);
+        crt.anchorMin = crt.anchorMax = new Vector2(0.5f, 0.10f);
         crt.anchoredPosition = Vector2.zero;
         crt.sizeDelta = new Vector2(260f, 70f);
         closeBtn.onClick.AddListener(() => Destroy(overlay));
@@ -993,6 +1099,58 @@ public class HomeUI : MonoBehaviour
         var clrt = closeTxt.GetComponent<RectTransform>();
         clrt.anchorMin = Vector2.zero; clrt.anchorMax = Vector2.one;
         clrt.offsetMin = clrt.offsetMax = Vector2.zero;
+    }
+
+    /// <summary>
+    /// アカウント連携用の入力フィールドを生成（メール / パスワード）。
+    /// モバイルではタップでソフトキーボードが自動表示される。
+    /// </summary>
+    InputField MakeLinkInputField(Transform parent, string placeholder, Vector2 anchor, bool isPassword)
+    {
+        var go = new GameObject(isPassword ? "PasswordInput" : "EmailInput");
+        go.transform.SetParent(parent, false);
+        var bg = go.AddComponent<Image>();
+        bg.color = new Color(0.12f, 0.10f, 0.28f, 1f);
+        var rt = go.GetComponent<RectTransform>();
+        rt.anchorMin = rt.anchorMax = anchor;
+        rt.anchoredPosition = Vector2.zero;
+        rt.sizeDelta = new Vector2(620f, 72f);
+
+        var input = go.AddComponent<InputField>();
+
+        // プレースホルダー
+        var phGo = new GameObject("Placeholder");
+        phGo.transform.SetParent(go.transform, false);
+        var ph = phGo.AddComponent<Text>();
+        ph.text = placeholder;
+        ph.fontSize = 26;
+        ph.color = new Color(0.5f, 0.5f, 0.62f);
+        ph.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        ph.alignment = TextAnchor.MiddleLeft;
+        var phRt = phGo.GetComponent<RectTransform>();
+        phRt.anchorMin = Vector2.zero; phRt.anchorMax = Vector2.one;
+        phRt.offsetMin = new Vector2(20f, 6f); phRt.offsetMax = new Vector2(-20f, -6f);
+
+        // 入力テキスト
+        var txtGo = new GameObject("Text");
+        txtGo.transform.SetParent(go.transform, false);
+        var txt = txtGo.AddComponent<Text>();
+        txt.fontSize = 28;
+        txt.color = Color.white;
+        txt.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        txt.alignment = TextAnchor.MiddleLeft;
+        txt.supportRichText = false;
+        var txtRt = txtGo.GetComponent<RectTransform>();
+        txtRt.anchorMin = Vector2.zero; txtRt.anchorMax = Vector2.one;
+        txtRt.offsetMin = new Vector2(20f, 6f); txtRt.offsetMax = new Vector2(-20f, -6f);
+
+        input.textComponent = txt;
+        input.placeholder = ph;
+        input.characterLimit = 64;
+        input.contentType = isPassword
+            ? InputField.ContentType.Password
+            : InputField.ContentType.EmailAddress;
+        return input;
     }
 
     // ---- 音量設定ポップアップ ----

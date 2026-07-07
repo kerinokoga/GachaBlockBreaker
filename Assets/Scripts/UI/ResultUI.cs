@@ -126,9 +126,10 @@ public class ResultUI : MonoBehaviour
         if (isClear)
         {
             string playerName = AuthManager.GetName();
-            if (string.IsNullOrEmpty(playerName))
+            // 表示名なし、またはメールアドレスの場合は仮名を使う
+            // （メール連携後は GetName がメールを返すため、公開ランキングへの漏洩防止）
+            if (string.IsNullOrEmpty(playerName) || playerName.Contains("@"))
             {
-                // ゲスト（匿名ログイン）は表示名が無いため UID から仮名を生成
                 string uid = AuthManager.GetUID();
                 playerName = "ゲスト" + (uid != null && uid.Length >= 4 ? uid.Substring(0, 4) : "????");
             }
