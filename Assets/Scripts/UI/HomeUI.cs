@@ -939,10 +939,13 @@ public class HomeUI : MonoBehaviour
 
         if (!AuthManager.IsGuest())
         {
-            // ===== 連携済み表示 =====
+            // ===== 連携済み表示（登録アドレスを見せて打ち間違いに気づけるように） =====
+            string linkedEmail = AuthManager.GetEmail();
+            if (string.IsNullOrEmpty(linkedEmail) && AuthManager.GetName().Contains("@"))
+                linkedEmail = AuthManager.GetName();
             var doneT = MakeText(dialog.transform,
-                "✓ メール連携済み\n\n機種変更の際は、同じメールアドレスと\nパスワードでデータを引き継げます。",
-                26, new Color(0.5f, 1f, 0.6f), new Vector2(0.5f, 0.50f), new Vector2(700f, 160f));
+                $"✓ メール連携済み\n{linkedEmail}\n\n機種変更の際は、上記メールアドレスと\nパスワードでデータを引き継げます。",
+                26, new Color(0.5f, 1f, 0.6f), new Vector2(0.5f, 0.50f), new Vector2(700f, 200f));
             doneT.lineSpacing = 1.3f;
         }
         else
@@ -1000,10 +1003,12 @@ public class HomeUI : MonoBehaviour
                     {
                         if (overlay == null) return; // ポップアップが閉じられていたら無視
                         statusT.color = new Color(0.5f, 1f, 0.6f);
-                        statusT.text = "連携しました！これで機種変更しても安心です";
+                        statusT.text = "連携しました！確認メールを送信しました";
                         infoT.text = $"アカウント: メール認証済み\nID: {shortId}";
                         emailInput.interactable = false;
                         passInput.interactable = false;
+                        // 登録控えの確認メール（届かない場合はアドレス打ち間違いに気づける）
+                        AuthManager.SendVerificationEmail();
                         // 連携直後の状態をクラウドへ即バックアップ
                         CloudSaveManager.Save();
                     },
@@ -1023,7 +1028,7 @@ public class HomeUI : MonoBehaviour
             recvBg.color = new Color(0f, 0f, 0f, 0f); // 透明（テキストボタン）
             var recvBtn = recvGo.AddComponent<Button>();
             var rrt = recvGo.GetComponent<RectTransform>();
-            rrt.anchorMin = rrt.anchorMax = new Vector2(0.5f, 0.215f);
+            rrt.anchorMin = rrt.anchorMax = new Vector2(0.5f, 0.225f);
             rrt.anchoredPosition = Vector2.zero;
             rrt.sizeDelta = new Vector2(700f, 44f);
 
@@ -1069,6 +1074,50 @@ public class HomeUI : MonoBehaviour
                         linkBtn2.interactable = true;
                     });
             });
+
+            // ===== パスワード再設定（忘れた場合の救済） =====
+            var resetGo = new GameObject("ResetBtn");
+            resetGo.transform.SetParent(dialog.transform, false);
+            var resetBg = resetGo.AddComponent<Image>();
+            resetBg.color = new Color(0f, 0f, 0f, 0f); // 透明（テキストボタン）
+            var resetBtn = resetGo.AddComponent<Button>();
+            var resetRt = resetGo.GetComponent<RectTransform>();
+            resetRt.anchorMin = resetRt.anchorMax = new Vector2(0.5f, 0.163f);
+            resetRt.anchoredPosition = Vector2.zero;
+            resetRt.sizeDelta = new Vector2(700f, 40f);
+
+            var resetTxt = MakeText(resetGo.transform, "パスワードを忘れた方はこちら（再設定メールを送信）",
+                20, new Color(0.75f, 0.65f, 0.9f), new Vector2(0.5f, 0.5f), new Vector2(700f, 36f));
+            var resetTrt = resetTxt.GetComponent<RectTransform>();
+            resetTrt.anchorMin = Vector2.zero; resetTrt.anchorMax = Vector2.one;
+            resetTrt.offsetMin = resetTrt.offsetMax = Vector2.zero;
+
+            resetBtn.onClick.AddListener(() =>
+            {
+                string email = emailInput.text.Trim();
+                if (string.IsNullOrEmpty(email))
+                {
+                    statusT.color = new Color(1f, 0.8f, 0.4f);
+                    statusT.text = "上のメール欄に登録済みアドレスを入力してから押してください";
+                    return;
+                }
+
+                statusT.color = new Color(0.8f, 0.8f, 1f);
+                statusT.text = "送信中...";
+                AuthManager.SendPasswordReset(email,
+                    onSuccess: () =>
+                    {
+                        if (overlay == null) return;
+                        statusT.color = new Color(0.5f, 1f, 0.6f);
+                        statusT.text = "再設定メールを送信しました。メールをご確認ください";
+                    },
+                    onFailed: (error) =>
+                    {
+                        if (overlay == null) return;
+                        statusT.color = new Color(1f, 0.4f, 0.4f);
+                        statusT.text = error;
+                    });
+            });
         }
 
         // 閉じるボタン
@@ -1078,7 +1127,7 @@ public class HomeUI : MonoBehaviour
         closeImg.color = new Color(0.6f, 0.25f, 0.8f, 0.6f);
         var closeBtn = closeGo.AddComponent<Button>();
         var crt = closeGo.GetComponent<RectTransform>();
-        crt.anchorMin = crt.anchorMax = new Vector2(0.5f, 0.10f);
+        crt.anchorMin = crt.anchorMax = new Vector2(0.5f, 0.085f);
         crt.anchoredPosition = Vector2.zero;
         crt.sizeDelta = new Vector2(260f, 70f);
         closeBtn.onClick.AddListener(() => Destroy(overlay));

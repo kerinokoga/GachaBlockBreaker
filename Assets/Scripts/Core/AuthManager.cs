@@ -138,10 +138,73 @@ public static class AuthManager
         {
             if (task.IsFaulted || task.IsCanceled)
             {
+                // サーバー側でユーザーが削除・無効化された古いセッションの場合、
+                // 匿名ログインをやり直して復旧させる（そのままでは連携も保存も全て失敗するため）
+                if (IsInvalidSession(RawMessage(task.Exception)))
+                {
+                    auth.SignOut();
+                    auth.SignInAnonymouslyAsync().ContinueWithOnMainThread(t2 =>
+                    {
+                        if (!t2.IsFaulted && !t2.IsCanceled) CacheUser(t2.Result.User);
+                        onFailed?.Invoke("ログイン情報をリセットしました。もう一度「連携する」を押してください");
+                    });
+                    return;
+                }
                 onFailed?.Invoke(TranslateError(task.Exception));
                 return;
             }
             CacheUser(task.Result.User);
+            onSuccess?.Invoke();
+        });
+    }
+
+    /// <summary>連携済みのメールアドレスを返す（未連携・未初期化なら空文字）</summary>
+    public static string GetEmail()
+    {
+        try { return auth?.CurrentUser?.Email ?? ""; }
+        catch { return ""; }
+    }
+
+    /// <summary>
+    /// 確認メールを送信する（登録控え・アドレス打ち間違い検知用）。
+    /// 認証は強制しないため、失敗してもログを残すのみでゲームに影響しない。
+    /// </summary>
+    public static void SendVerificationEmail()
+    {
+        try
+        {
+            var user = auth?.CurrentUser;
+            if (user == null || string.IsNullOrEmpty(user.Email)) return;
+            user.SendEmailVerificationAsync().ContinueWithOnMainThread(task =>
+            {
+                if (task.IsFaulted || task.IsCanceled)
+                    Debug.LogWarning($"[Auth] 確認メール送信失敗: {task.Exception?.GetBaseException().Message}");
+                else
+                    Debug.Log("[Auth] 確認メールを送信しました");
+            });
+        }
+        catch (Exception e)
+        {
+            Debug.LogWarning($"[Auth] 確認メール送信例外: {e.Message}");
+        }
+    }
+
+    /// <summary>パスワード再設定メールを送信する</summary>
+    public static void SendPasswordReset(string email, Action onSuccess, Action<string> onFailed)
+    {
+        if (auth == null) { onFailed?.Invoke("Firebase 未初期化"); return; }
+        if (string.IsNullOrEmpty(email) || !email.Contains("@"))
+        {
+            onFailed?.Invoke("有効なメールアドレスを入力してください");
+            return;
+        }
+        auth.SendPasswordResetEmailAsync(email).ContinueWithOnMainThread(task =>
+        {
+            if (task.IsFaulted || task.IsCanceled)
+            {
+                onFailed?.Invoke(TranslateError(task.Exception));
+                return;
+            }
             onSuccess?.Invoke();
         });
     }
@@ -193,14 +256,29 @@ public static class AuthManager
         PlayerPrefs.Save();
     }
 
+    static string RawMessage(AggregateException ex)
+    {
+        try { return ex?.GetBaseException()?.Message ?? ""; }
+        catch { return ""; }
+    }
+
+    /// <summary>サーバー側で削除・無効化された等、セッション自体が使えないエラーか</summary>
+    static bool IsInvalidSession(string msg)
+    {
+        return msg.Contains("credential isn't valid")
+            || msg.Contains("no longer valid")
+            || msg.Contains("token has been tampered")
+            || msg.Contains("has been disabled");
+    }
+
     static string TranslateError(AggregateException ex)
     {
-        string msg = "";
-        if (ex?.InnerExceptions != null && ex.InnerExceptions.Count > 0)
-            msg = ex.InnerExceptions[0].Message;
-        else
+        string msg = RawMessage(ex);
+        if (string.IsNullOrEmpty(msg))
             return "不明なエラー";
 
+        if (IsInvalidSession(msg))
+            return "ログイン情報が無効になっています。アプリを再起動してください";
         if (msg.Contains("badly formatted"))
             return "メールアドレスの形式が正しくありません";
         if (msg.Contains("already associated") || msg.Contains("already linked"))
