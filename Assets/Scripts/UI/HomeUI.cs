@@ -945,8 +945,14 @@ public class HomeUI : MonoBehaviour
                 linkedEmail = AuthManager.GetName();
             var doneT = MakeText(dialog.transform,
                 $"✓ メール連携済み\n{linkedEmail}\n\n機種変更の際は、上記メールアドレスと\nパスワードでデータを引き継げます。",
-                26, new Color(0.5f, 1f, 0.6f), new Vector2(0.5f, 0.50f), new Vector2(700f, 200f));
+                26, new Color(0.5f, 1f, 0.6f), new Vector2(0.5f, 0.54f), new Vector2(700f, 200f));
             doneT.lineSpacing = 1.3f;
+
+            // 複数端末同時プレイの注意書き（問い合わせ予防）
+            var cautionT = MakeText(dialog.transform,
+                "※複数端末での同時プレイはサポート外です\n（最後にプレイした端末のデータが保存されます）",
+                22, new Color(0.6f, 0.6f, 0.7f), new Vector2(0.5f, 0.33f), new Vector2(700f, 80f));
+            cautionT.lineSpacing = 1.3f;
         }
         else
         {
@@ -961,9 +967,9 @@ public class HomeUI : MonoBehaviour
             var passInput = MakeLinkInputField(dialog.transform, "パスワード（6文字以上）",
                 new Vector2(0.5f, 0.505f), true);
 
-            // 結果表示テキスト
-            var statusT = MakeText(dialog.transform, "", 24, Color.white,
-                new Vector2(0.5f, 0.30f), new Vector2(700f, 44f));
+            // 結果表示テキスト（初期表示は同時プレイの注意書き。操作すると結果に置き換わる）
+            var statusT = MakeText(dialog.transform, "※複数端末での同時利用はサポート外です",
+                22, new Color(0.6f, 0.6f, 0.7f), new Vector2(0.5f, 0.30f), new Vector2(700f, 44f));
 
             // 連携するボタン
             var linkGo2 = new GameObject("DoLinkBtn");
