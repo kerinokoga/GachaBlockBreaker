@@ -15,7 +15,8 @@ using Firebase.Extensions;
 /// </summary>
 public static class CloudSaveManager
 {
-    static FirebaseFirestore Db => FirebaseFirestore.DefaultInstance;
+    // ローカル永続化を無効にした共有インスタンス（キャッシュ破損クラッシュ対策）
+    static FirebaseFirestore Db => FirestoreProvider.Db;
 
     /// <summary>
     /// 現在の認証済み UID（Firebase Auth の実状態から取得）。
@@ -54,14 +55,18 @@ public static class CloudSaveManager
             return;
         }
 
-        var data = CollectSaveData();
         string uid = CurrentUid;
 
         // Firestore の初期化自体が失敗する端末でも必ずコールバックを返す
         System.Threading.Tasks.Task setTask;
         try
         {
-            setTask = Db.Collection("users").Document(uid).SetAsync(data);
+            // 重要: CollectSaveData 内の FieldValue.ServerTimestamp は
+            // Firestore インスタンス生成前に呼ぶとネイティブクラッシュ(SIGSEGV)する。
+            // 必ず Db（インスタンス生成）を先に触ってからデータを作ること。
+            var docRef = Db.Collection("users").Document(uid);
+            var data = CollectSaveData();
+            setTask = docRef.SetAsync(data);
         }
         catch (Exception e)
         {
@@ -148,7 +153,11 @@ public static class CloudSaveManager
     /// </summary>
     public static void LoadIfFreshDevice(Action<bool> onDone)
     {
+        // 「初期状態の端末」判定。
+        // スキップ選択済みも「プレイ意思を示した端末」なので初期扱いしない
+        // （古いクラウドデータがスキップフラグを上書きして intro が再表示されるバグの防止）
         bool isFresh = PlayerPrefs.GetInt("Tutorial_Completed", 0) == 0
+                    && PlayerPrefs.GetInt("Tutorial_Skipped", 0) == 0
                     && ProgressManager.GetMaxUnlocked() <= 1;
         if (!isFresh || !CanUseCloud)
         {

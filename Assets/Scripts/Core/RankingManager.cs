@@ -13,7 +13,8 @@ using Firebase.Extensions;
 /// </summary>
 public static class RankingManager
 {
-    static FirebaseFirestore Db => FirebaseFirestore.DefaultInstance;
+    // ローカル永続化を無効にした共有インスタンス（キャッシュ破損クラッシュ対策）
+    static FirebaseFirestore Db => FirestoreProvider.Db;
 
     static CollectionReference StageEntries(int stage) =>
         Db.Collection("rankings").Document($"stage_{stage}").Collection("entries");

@@ -22,6 +22,12 @@ public class LoginUI : MonoBehaviour
         // スプラッシュ2秒 + Firebase初期化を並行
         StartCoroutine(SplashTimer());
 
+        // Firestore のローカルキャッシュを起動時に必ず削除する。
+        // 一部 Android 端末でキャッシュ(SQLite/LevelDB)破損が起動時
+        // ネイティブクラッシュ(SIGSEGV)を引き起こす既知問題への恒久対策。
+        // 永続化は無効運用(FirestoreProvider)のため削除しても失うものは無い。
+        PurgeFirestoreLocalCache();
+
         // Firebase 初期化（同期例外で止まらないようガード。
         // Android のネイティブ初期化失敗はここで throw されることがある）
         try
@@ -36,6 +42,58 @@ public class LoginUI : MonoBehaviour
 
         // 認証が一定時間終わらなくてもオフラインで必ず先へ進むフォールバック
         StartCoroutine(LoginWatchdog());
+    }
+
+    /// <summary>
+    /// Firestore がアプリ内部領域に作るローカルDB（firestore フォルダ）を削除する。
+    /// Firebase 初期化前（＝どのマネージャーも Firestore に触る前）に呼ぶこと。
+    /// </summary>
+    static void PurgeFirestoreLocalCache()
+    {
+        try
+        {
+#if UNITY_ANDROID && !UNITY_EDITOR
+            // Android の内部ストレージ (Context.getFilesDir) 配下に作られる
+            using (var unityPlayer = new UnityEngine.AndroidJavaClass("com.unity3d.player.UnityPlayer"))
+            using (var activity = unityPlayer.GetStatic<UnityEngine.AndroidJavaObject>("currentActivity"))
+            using (var filesDir = activity.Call<UnityEngine.AndroidJavaObject>("getFilesDir"))
+            {
+                string basePath = filesDir.Call<string>("getAbsolutePath");
+
+                // 診断: filesDir 直下の一覧をログ（Firestore の実フォルダ名特定用）
+                try
+                {
+                    var entries = System.IO.Directory.GetFileSystemEntries(basePath);
+                    Debug.Log($"[Login] filesDir={basePath} 内容: {string.Join(", ", System.Array.ConvertAll(entries, System.IO.Path.GetFileName))}");
+                }
+                catch (System.Exception le) { Debug.LogWarning($"[Login] filesDir一覧失敗: {le.Message}"); }
+
+                string fsPath = System.IO.Path.Combine(basePath, "firestore");
+                if (System.IO.Directory.Exists(fsPath))
+                {
+                    System.IO.Directory.Delete(fsPath, true);
+                    Debug.Log("[Login] Firestore ローカルキャッシュを削除しました");
+                }
+                else
+                {
+                    Debug.Log("[Login] firestore フォルダは存在しませんでした");
+                }
+            }
+#else
+            // PC/Editor では persistentDataPath 配下
+            string fsPathDesktop = System.IO.Path.Combine(Application.persistentDataPath, "firestore");
+            if (System.IO.Directory.Exists(fsPathDesktop))
+            {
+                System.IO.Directory.Delete(fsPathDesktop, true);
+                Debug.Log("[Login] Firestore ローカルキャッシュを削除しました");
+            }
+#endif
+        }
+        catch (System.Exception e)
+        {
+            // 削除失敗してもゲーム進行は妨げない
+            Debug.LogWarning($"[Login] Firestore キャッシュ削除に失敗: {e.Message}");
+        }
     }
 
     /// <summary>

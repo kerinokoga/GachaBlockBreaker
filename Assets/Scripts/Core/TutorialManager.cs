@@ -83,6 +83,9 @@ public class TutorialManager : MonoBehaviour
         PlayerPrefs.SetInt(KeySkipped, 1);
         PlayerPrefs.Save();
         Debug.Log("[Tutorial] スキップされました（永続）");
+        // クラウド側の「未スキップ」状態を即上書き
+        // （次回起動の復元でスキップが打ち消され intro が再表示されるのを防ぐ）
+        CloudSaveManager.Save();
     }
 
     /// <summary>全ステップ完了</summary>
@@ -92,6 +95,8 @@ public class TutorialManager : MonoBehaviour
         PlayerPrefs.SetInt(KeyCompleted, 1);
         PlayerPrefs.Save();
         Debug.Log("[Tutorial] 完了しました");
+        // 完了状態も即クラウドへ反映
+        CloudSaveManager.Save();
     }
 
     /// <summary>デバッグ用：チュートリアル状態をリセット</summary>
