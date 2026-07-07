@@ -802,35 +802,25 @@ public class GameUI : MonoBehaviour
         safeRt.offsetMin = safeRt.offsetMax = Vector2.zero;
         root = safeGo.transform; // 以降の HUD はセーフエリア内に生成
 
-        // ---- ライフ表示（左上：Unicode ハート♥ をテキストで表示）----
-        // 旧: CreateHeartSprite() で生成した Image を使用していたが、上下反転で
-        // 形が崩れていたため Unicode ♥ をテキスト描画に切替。
+        // ---- ライフ表示（左上：コード生成ハートスプライト）----
+        // Unicode「♥」は Android のフォントに字形が無く表示されないため、
+        // フォント非依存のスプライト方式（上下反転バグは修正済み）を使用。
+        if (heartSprite == null) heartSprite = CreateHeartSprite();
         for (int i = 0; i < MaxStockDisplay; i++)
         {
-            var heartGo = new GameObject($"Heart{i}");
-            heartGo.transform.SetParent(root, false);
-            var t = heartGo.AddComponent<Text>();
-            t.text = "♥";
-            t.fontSize = 56;
-            t.color = new Color(1f, 0.4f, 0.6f);
-            t.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-            t.fontStyle = FontStyle.Bold;
-            t.alignment = TextAnchor.MiddleCenter;
-            t.horizontalOverflow = HorizontalWrapMode.Overflow;
-            t.verticalOverflow = VerticalWrapMode.Overflow;
-            t.raycastTarget = false;
-            var rt = heartGo.GetComponent<RectTransform>();
-            rt.anchorMin = rt.anchorMax = new Vector2(0f, 1f);
-            rt.pivot = new Vector2(0f, 1f);
-            rt.anchoredPosition = new Vector2(20f + i * 48f, -28f);
-            rt.sizeDelta = new Vector2(40f, 40f);
-            stockHearts[i] = t;
-            heartGo.SetActive(false);
+            var heart = MakeImage(root, new Color(1f, 0.4f, 0.6f),
+                new Vector2(0f, 1f), new Vector2(0f, 1f),
+                new Vector2(20f + i * 48f, -42f), new Vector2(40f, 40f),
+                new Vector2(0f, 1f));
+            heart.sprite = heartSprite;
+            heart.preserveAspect = true;
+            stockHearts[i] = heart;
+            heart.gameObject.SetActive(false);
         }
 
         // ---- ダメージ表示（ライフの下）----
         damageText = MakeText(root, "ヒットダメージ：1", 44, new Color(1f, 0.7f, 0.3f),
-            new Vector2(0f, 1f), new Vector2(20f, -70f), new Vector2(550f, 60f),
+            new Vector2(0f, 1f), new Vector2(20f, -84f), new Vector2(550f, 60f),
             new Vector2(0f, 1f), TextAnchor.UpperLeft);
 
         // ---- 破壊率（右上）----
@@ -1538,25 +1528,47 @@ public class GameUI : MonoBehaviour
     /// <summary>コードでハート型スプライトを生成する</summary>
     static Sprite CreateHeartSprite()
     {
-        int size = 64;
+        // 「上部の円2つ + 下部の逆三角形」による古典的なハート構成。
+        // 数式カーブより形が安定し、誰が見てもハートに見える。
+        // 2x2 スーパーサンプリングで縁を滑らかにする。
+        int size = 128;
         var tex = new Texture2D(size, size, TextureFormat.RGBA32, false);
-        Color clear = new Color(0, 0, 0, 0);
-        float cx = size / 2f;
-        float cy = size / 2f;
+
+        Vector2 c1 = new Vector2(0.32f, 0.62f);   // 左の円（正規化 0-1、y は上向き）
+        Vector2 c2 = new Vector2(0.68f, 0.62f);   // 右の円
+        float r = 0.235f;
+        Vector2 tipA = new Vector2(0.5f, 0.04f);  // 下の尖り
+        Vector2 tipB = new Vector2(0.085f, 0.62f);
+        Vector2 tipC = new Vector2(0.915f, 0.62f);
+
+        bool InHeart(float px, float py)
+        {
+            // 円判定
+            if ((px - c1.x) * (px - c1.x) + (py - c1.y) * (py - c1.y) <= r * r) return true;
+            if ((px - c2.x) * (px - c2.x) + (py - c2.y) * (py - c2.y) <= r * r) return true;
+            // 三角形判定（符号付き面積の向きが3辺で一致するか）
+            float d1 = (px - tipB.x) * (tipA.y - tipB.y) - (tipA.x - tipB.x) * (py - tipB.y);
+            float d2 = (px - tipA.x) * (tipC.y - tipA.y) - (tipC.x - tipA.x) * (py - tipA.y);
+            float d3 = (px - tipC.x) * (tipB.y - tipC.y) - (tipB.x - tipC.x) * (py - tipC.y);
+            bool hasNeg = (d1 < 0) || (d2 < 0) || (d3 < 0);
+            bool hasPos = (d1 > 0) || (d2 > 0) || (d3 > 0);
+            return !(hasNeg && hasPos);
+        }
 
         for (int y = 0; y < size; y++)
         {
             for (int x = 0; x < size; x++)
             {
-                // 正規化座標 (-1〜1)
-                float nx = (x - cx) / cx;
-                float ny = (y - cy) / cy;
-
-                // ハート関数: (x^2 + y^2 - 1)^3 - x^2 * y^3 < 0
-                float hx = nx;
-                float hy = -ny + 0.1f; // 少し上にずらして中央に
-                float val = Mathf.Pow(hx * hx + hy * hy - 1f, 3f) - hx * hx * hy * hy * hy;
-                tex.SetPixel(x, y, val < 0f ? Color.white : clear);
+                // 2x2 サブサンプルで滑らかなアルファを作る
+                int hit = 0;
+                for (int sy = 0; sy < 2; sy++)
+                for (int sx = 0; sx < 2; sx++)
+                {
+                    float px = (x + 0.25f + sx * 0.5f) / size;
+                    float py = (y + 0.25f + sy * 0.5f) / size;
+                    if (InHeart(px, py)) hit++;
+                }
+                tex.SetPixel(x, y, new Color(1f, 1f, 1f, hit / 4f));
             }
         }
         tex.Apply();
