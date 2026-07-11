@@ -496,7 +496,7 @@ public class GachaUI : MonoBehaviour
             StartCoroutine(ShowInsufficientOrbs());
             return;
         }
-        AudioManager.Instance?.PlayGachaSE();
+        StartCoroutine(PlayGachaSEDelayed(1.5f));
         DailyMissionManager.ReportGachaDraw();
         RefreshOrbDisplay();
 
@@ -518,7 +518,7 @@ public class GachaUI : MonoBehaviour
             StartCoroutine(ShowInsufficientOrbs());
             return;
         }
-        AudioManager.Instance?.PlayGachaSE();
+        StartCoroutine(PlayGachaSEDelayed(1.5f));
         DailyMissionManager.ReportGachaDraw();
 
         if (pool == null || allChars == null || allChars.Length == 0)
@@ -534,12 +534,37 @@ public class GachaUI : MonoBehaviour
 
     // ---- 結果演出（フル本格化 / Phase D）----
 
+    /// <summary>ガチャSEを遅延再生（ムービーの魔法陣にタイミングを合わせる）。スキップ済みなら鳴らさない</summary>
+    IEnumerator PlayGachaSEDelayed(float delay)
+    {
+        yield return new WaitForSecondsRealtime(delay);
+        if (!isSkipping) AudioManager.Instance?.PlayGachaSE();
+    }
+
+    // ---- 演出中の BGM 制御（引いた瞬間に停止、演出終了 or スキップで復帰） ----
+
+    bool gachaBgmStopped;
+
+    void StopBgmForGacha()
+    {
+        gachaBgmStopped = true;
+        AudioManager.Instance?.StopBGM();
+    }
+
+    void ResumeBgmAfterGacha()
+    {
+        if (!gachaBgmStopped) return; // 二重再生防止（スキップ時と演出終了時の両方から呼ばれる）
+        gachaBgmStopped = false;
+        AudioManager.Instance?.PlayBGMForScene("GachaScene");
+    }
+
     IEnumerator ShowSingleResult(GachaResult result)
     {
         SetButtonsInteractable(false);
         ClearResultPanel();
         resultPanel.SetActive(true);
         isSkipping = false;
+        StopBgmForGacha();
         shakeTarget = canvasRoot as RectTransform;
         if (shakeTarget != null) shakeBaseAnchor = shakeTarget.anchoredPosition;
 
@@ -592,6 +617,7 @@ public class GachaUI : MonoBehaviour
         yield return StartCoroutine(WaitForTapToProceed());
 
         // クリーンアップ
+        ResumeBgmAfterGacha();
         if (partHolder != null) Destroy(partHolder);
         if (stars != null) Destroy(stars);
         if (bgDim != null) Destroy(bgDim);
@@ -607,6 +633,7 @@ public class GachaUI : MonoBehaviour
         ClearResultPanel();
         resultPanel.SetActive(true);
         isSkipping = false;
+        StopBgmForGacha();
         shakeTarget = canvasRoot as RectTransform;
         if (shakeTarget != null) shakeBaseAnchor = shakeTarget.anchoredPosition;
 
@@ -713,6 +740,7 @@ public class GachaUI : MonoBehaviour
         DestroySkipButton();
         yield return StartCoroutine(WaitForTapToProceed());
 
+        ResumeBgmAfterGacha();
         if (partHolder != null) Destroy(partHolder);
         if (stars != null) Destroy(stars);
         if (bgDim != null) Destroy(bgDim);
@@ -871,7 +899,11 @@ public class GachaUI : MonoBehaviour
         var img = skipButton.AddComponent<Image>();
         img.color = new Color(0.95f, 0.25f, 0.55f, 0.95f); // 目立つピンク（ムービー上でも視認できる色）
         var btn = skipButton.AddComponent<Button>();
-        btn.onClick.AddListener(() => isSkipping = true);
+        btn.onClick.AddListener(() =>
+        {
+            isSkipping = true;
+            ResumeBgmAfterGacha(); // スキップした瞬間にBGM復帰
+        });
         var rt = skipButton.GetComponent<RectTransform>();
         rt.anchorMin = rt.anchorMax = new Vector2(0.9f, 0.96f);
         rt.anchoredPosition = Vector2.zero;
