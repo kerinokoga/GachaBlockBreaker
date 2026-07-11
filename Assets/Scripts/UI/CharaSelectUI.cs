@@ -145,10 +145,10 @@ public class CharaSelectUI : MonoBehaviour
         overlay.SetMessageAlignment(TextAnchor.MiddleLeft);
         overlay.SetMessage(
             "ここがキャラ選択画面よ\n" +
-            "下のキャラを長押ししてから、\n" +
+            "下のキャラをタップすると\n" +
+            "能力が表示されるから見ておきなさい\n" +
+            "使うキャラは長押ししてから、\n" +
             "上のスロットにドラッグして入れるのよ\n" +
-            "スロットをタップすると\n" +
-            "キャラの能力が表示されるから見ておきなさい\n" +
             "ちゃんと理解できた？？");
 
         // 専用ボイス（Tutorial/chara.wav）
@@ -656,12 +656,13 @@ public class CharaSelectUI : MonoBehaviour
 
     /// <summary>
     /// 短いタップ時の動作。
-    /// 仕様: タップでは割り当てない。スロットへの追加はロングプレス→ドラッグ専用。
-    /// （何もしない。誤タップを防ぎ、ドラッグへ誘導する）
+    /// 仕様: タップでは割り当てず、詳細パネルにそのキャラの能力を表示する。
+    /// スロットへの追加はロングプレス→ドラッグ専用（誤タップで編成が変わらない）。
     /// </summary>
     public void OnCardTap(int charIdx)
     {
-        // 意図的に no-op
+        if (charIdx < 0 || charIdx >= ownedChars.Length) return;
+        ShowDetailOf(ownedChars[charIdx]);
     }
 
     /// <summary>ロングプレス発火時：スロットを薄いハイライトで候補表示</summary>
@@ -841,11 +842,17 @@ public class CharaSelectUI : MonoBehaviour
 
     void RefreshDetail()
     {
-        var cd = slotChars[activeSlot];
+        ShowDetailOf(slotChars[activeSlot]);
+    }
+
+    /// <summary>\u8a73\u7d30\u30d1\u30cd\u30eb\u306b\u6307\u5b9a\u30ad\u30e3\u30e9\u306e\u80fd\u529b\u3092\u8868\u793a\uff08null \u306a\u3089\u64cd\u4f5c\u30d2\u30f3\u30c8\u3092\u8868\u793a\uff09</summary>
+    void ShowDetailOf(CharacterData cd)
+    {
         if (cd == null)
         {
             detailName.text = "(\u672a\u9078\u629e)";
-            detailRarity.text = detailPassive.text = detailUlt.text = detailDesc.text = "";
+            detailRarity.text = detailPassive.text = detailUlt.text = "";
+            detailDesc.text = "\u4e00\u89a7\u306e\u30ad\u30e3\u30e9\u3092\u30bf\u30c3\u30d7\u3067\u80fd\u529b\u3092\u78ba\u8a8d\n\u9577\u62bc\u3057\u2192\u30c9\u30e9\u30c3\u30b0\u3067\u30b9\u30ed\u30c3\u30c8\u306b\u30bb\u30c3\u30c8";
             return;
         }
         detailName.text    = cd.characterName;
