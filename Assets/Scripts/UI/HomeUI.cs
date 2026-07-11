@@ -16,6 +16,10 @@ public class HomeUI : MonoBehaviour
         // 初回起動時にスターターオーブ 1000 をプレゼントボックスへ付与
         PresentBoxManager.EnsureStarterOrbs();
         PresentBoxManager.CheckLoginBonus();
+        // マンスリーパス有効中なら本日分の特典を付与
+        MonthlyPassManager.CheckDailyGrant();
+        // デイリーミッションの日付リセット判定
+        DailyMissionManager.CheckReset();
         // 進行状況をクラウドへバックアップ（ホーム到達ごと・非同期）
         CloudSaveManager.Save();
         BuildUI();
@@ -556,6 +560,11 @@ public class HomeUI : MonoBehaviour
         // プレゼントボックスボタン（バッジ付き）
         // ランキングボタン非公開に伴い 0.20 → 0.29 に詰めた
         MakePresentButton(cGo.transform, 0.29f);
+
+        // デイリーミッションボタン
+        MakeMenuButton(cGo.transform, "ミッション",
+            new Color(0.15f, 0.5f, 0.6f), new Color(0.3f, 0.7f, 0.8f),
+            0.20f, "♡", () => ShowMissionPopup());
 
         // アカウント連携ボタン（左上）
         var linkGo = new GameObject("LinkBtn");
@@ -1134,6 +1143,116 @@ public class HomeUI : MonoBehaviour
         var closeBtn = closeGo.AddComponent<Button>();
         var crt = closeGo.GetComponent<RectTransform>();
         crt.anchorMin = crt.anchorMax = new Vector2(0.5f, 0.085f);
+        crt.anchoredPosition = Vector2.zero;
+        crt.sizeDelta = new Vector2(260f, 70f);
+        closeBtn.onClick.AddListener(() => Destroy(overlay));
+
+        var closeInner = new GameObject("Inner");
+        closeInner.transform.SetParent(closeGo.transform, false);
+        closeInner.AddComponent<Image>().color = new Color(0.15f, 0.1f, 0.3f, 0.95f);
+        var ciRt = closeInner.GetComponent<RectTransform>();
+        ciRt.anchorMin = Vector2.zero; ciRt.anchorMax = Vector2.one;
+        ciRt.offsetMin = new Vector2(3f, 3f); ciRt.offsetMax = new Vector2(-3f, -3f);
+
+        var closeTxt = MakeText(closeGo.transform, "とじる", 34, Color.white,
+            new Vector2(0.5f, 0.5f), new Vector2(240f, 60f));
+        var cherryClose = Resources.Load<Font>("Fonts/CherryBombOne-Regular");
+        if (cherryClose != null) closeTxt.font = cherryClose;
+        closeTxt.horizontalOverflow = HorizontalWrapMode.Overflow;
+        closeTxt.verticalOverflow = VerticalWrapMode.Overflow;
+        var clrt = closeTxt.GetComponent<RectTransform>();
+        clrt.anchorMin = Vector2.zero; clrt.anchorMax = Vector2.one;
+        clrt.offsetMin = clrt.offsetMax = Vector2.zero;
+    }
+
+    /// <summary>
+    /// デイリーミッション進捗ポップアップ。
+    /// 報酬はミッション達成の瞬間にプレゼントボックスへ自動付与されるため、
+    /// ここは進捗の確認のみ（受け取り操作はない）。
+    /// </summary>
+    void ShowMissionPopup()
+    {
+        var overlay = new GameObject("MissionOverlay");
+        overlay.transform.SetParent(canvasRoot, false);
+        overlay.AddComponent<Image>().color = new Color(0f, 0f, 0f, 0.7f);
+        var ort = overlay.GetComponent<RectTransform>();
+        ort.anchorMin = Vector2.zero; ort.anchorMax = Vector2.one;
+        ort.offsetMin = ort.offsetMax = Vector2.zero;
+
+        // ダイアログ外枠
+        var dialog = new GameObject("Dialog");
+        dialog.transform.SetParent(overlay.transform, false);
+        dialog.AddComponent<Image>().color = new Color(0.15f, 0.5f, 0.6f, 0.5f);
+        var drt = dialog.GetComponent<RectTransform>();
+        drt.anchorMin = drt.anchorMax = new Vector2(0.5f, 0.5f);
+        drt.anchoredPosition = Vector2.zero;
+        drt.sizeDelta = new Vector2(800f, 640f);
+
+        // ダイアログ内側
+        var dInner = new GameObject("Inner");
+        dInner.transform.SetParent(dialog.transform, false);
+        dInner.AddComponent<Image>().color = new Color(0.06f, 0.04f, 0.15f, 0.97f);
+        var diRt = dInner.GetComponent<RectTransform>();
+        diRt.anchorMin = Vector2.zero; diRt.anchorMax = Vector2.one;
+        diRt.offsetMin = new Vector2(4f, 4f); diRt.offsetMax = new Vector2(-4f, -4f);
+
+        var titleT = MakeText(dialog.transform, "デイリーミッション", 40,
+            new Color(1f, 0.85f, 0.1f), new Vector2(0.5f, 0.90f), new Vector2(700f, 60f));
+        AddShadow(titleT.gameObject);
+
+        MakeText(dialog.transform, "毎日 午前4:00 リセット", 22,
+            new Color(0.6f, 0.6f, 0.7f), new Vector2(0.5f, 0.81f), new Vector2(700f, 30f));
+
+        // ミッション3行
+        var missions = DailyMissionManager.GetMissions();
+        float[] rowYs = { 0.70f, 0.58f, 0.46f };
+        for (int i = 0; i < missions.Length && i < rowYs.Length; i++)
+        {
+            var m = missions[i];
+
+            var rowGo = new GameObject($"MissionRow{i}");
+            rowGo.transform.SetParent(dialog.transform, false);
+            rowGo.AddComponent<Image>().color = m.granted
+                ? new Color(0.1f, 0.35f, 0.2f, 0.85f)   // 達成済み: 緑背景
+                : new Color(0.12f, 0.1f, 0.28f, 0.85f);
+            var rowRt = rowGo.GetComponent<RectTransform>();
+            rowRt.anchorMin = rowRt.anchorMax = new Vector2(0.5f, rowYs[i]);
+            rowRt.anchoredPosition = Vector2.zero;
+            rowRt.sizeDelta = new Vector2(700f, 64f);
+
+            var tT = MakeText(rowGo.transform, m.title, 26, Color.white,
+                new Vector2(0.32f, 0.5f), new Vector2(400f, 40f));
+            tT.alignment = TextAnchor.MiddleLeft;
+
+            string right = m.granted ? "達成 ✓" : $"{m.current}/{m.target}";
+            MakeText(rowGo.transform, right, 26,
+                m.granted ? new Color(0.5f, 1f, 0.6f) : new Color(0.8f, 0.85f, 1f),
+                new Vector2(0.76f, 0.5f), new Vector2(160f, 40f));
+
+            MakeText(rowGo.transform, $"+{m.reward}", 24, new Color(0.4f, 0.9f, 1f),
+                new Vector2(0.92f, 0.5f), new Vector2(100f, 40f));
+        }
+
+        // 全達成ボーナス行
+        bool allDone = DailyMissionManager.AllCompleted();
+        var bonusT = MakeText(dialog.transform,
+            allDone
+                ? $"全達成ボーナス +{DailyMissionManager.RewardAll}オーブ  達成 ✓"
+                : $"全達成ボーナス +{DailyMissionManager.RewardAll}オーブ",
+            26, allDone ? new Color(0.5f, 1f, 0.6f) : new Color(1f, 0.85f, 0.3f),
+            new Vector2(0.5f, 0.34f), new Vector2(700f, 40f));
+        AddShadow(bonusT.gameObject);
+
+        MakeText(dialog.transform, "達成した報酬はプレゼントボックスに届きます", 22,
+            new Color(0.6f, 0.6f, 0.7f), new Vector2(0.5f, 0.25f), new Vector2(700f, 30f));
+
+        // とじるボタン
+        var closeGo = new GameObject("CloseBtn");
+        closeGo.transform.SetParent(dialog.transform, false);
+        closeGo.AddComponent<Image>().color = new Color(0.6f, 0.25f, 0.8f, 0.6f);
+        var closeBtn = closeGo.AddComponent<Button>();
+        var crt = closeGo.GetComponent<RectTransform>();
+        crt.anchorMin = crt.anchorMax = new Vector2(0.5f, 0.11f);
         crt.anchoredPosition = Vector2.zero;
         crt.sizeDelta = new Vector2(260f, 70f);
         closeBtn.onClick.AddListener(() => Destroy(overlay));

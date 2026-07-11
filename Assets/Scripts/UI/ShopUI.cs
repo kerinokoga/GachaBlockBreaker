@@ -106,8 +106,11 @@ public class ShopUI : MonoBehaviour
         messageText = MakeText(root, "", 26, new Color(0.4f, 1f, 0.4f),
             new Vector2(0.5f, msgY), new Vector2(700f, 36f));
 
+        // ===== 特別商品（初心者パック・マンスリーパス） =====
+        BuildSpecialCards(root, 0.740f);
+
         // ===== 商品カード =====
-        float[] ys = { 0.72f, 0.61f, 0.50f, 0.39f, 0.28f, 0.17f };
+        float[] ys = { 0.655f, 0.555f, 0.455f, 0.355f, 0.255f, 0.155f };
         Color[] colors = {
             new Color(0.2f, 0.4f, 0.6f),
             new Color(0.2f, 0.5f, 0.5f),
@@ -117,10 +120,14 @@ public class ShopUI : MonoBehaviour
             new Color(0.7f, 0.55f, 0.1f), // 最上位はゴールド系
         };
 
-        for (int i = 0; i < IAPManager.Products.Length; i++)
+        int cardIdx = 0;
+        foreach (var p in IAPManager.Products)
         {
-            var p = IAPManager.Products[i];
-            BuildProductCard(root, p, ys[i], colors[i]);
+            // 特別商品は専用カードで表示済みなのでオーブ一覧からは除外
+            if (p.id == IAPManager.StarterPackId || p.id == IAPManager.MonthlyPassId) continue;
+            if (cardIdx >= ys.Length) break;
+            BuildProductCard(root, p, ys[cardIdx], colors[cardIdx]);
+            cardIdx++;
         }
 
         // ===== HOME ボタン（左寄せ） =====
@@ -134,6 +141,80 @@ public class ShopUI : MonoBehaviour
             new Color(0.7f, 0.3f, 0.7f),
             new Vector2(0.7f, 0.05f), new Vector2(300f, 70f),
             () => SceneManager.LoadScene("GachaScene"));
+    }
+
+    /// <summary>
+    /// 特別商品カード（左: 初心者パック、右: マンスリーパス）。
+    /// 初心者パックは購入済みなら非表示。パスは有効中なら残り日数表示＋購入不可。
+    /// </summary>
+    void BuildSpecialCards(Transform parent, float y)
+    {
+        // ---- 初心者パック（1回限定・購入済みなら出さない） ----
+        if (!IAPManager.StarterPackBought)
+        {
+            BuildSpecialCard(parent, new Vector2(0.26f, y),
+                new Color(0.85f, 0.3f, 0.5f), // ピンク系（目玉商品）
+                "初心者パック(1回のみ購入可能)",
+                $"1000オーブ  {IAPManager.GetStorePrice(IAPManager.StarterPackId)}",
+                "通常¥1,350の52%OFF!",
+                true,
+                () => OnPurchase(IAPManager.StarterPackId, 1000));
+        }
+
+        // ---- マンスリーパス ----
+        bool passActive = MonthlyPassManager.IsActive;
+        BuildSpecialCard(parent, new Vector2(0.74f, y),
+            new Color(0.25f, 0.45f, 0.85f), // ブルー系
+            "マンスリーパス",
+            passActive
+                ? $"有効中  残り{MonthlyPassManager.RemainingDays}日"
+                : "購入時400オーブ+30日間毎日80オーブ",
+            passActive
+                ? "毎日80オーブお届け中♡"
+                : $"(合計2800)  {IAPManager.GetStorePrice(IAPManager.MonthlyPassId)}",
+            !passActive,
+            () => OnPurchase(IAPManager.MonthlyPassId, 400));
+    }
+
+    void BuildSpecialCard(Transform parent, Vector2 anchor, Color bgCol,
+        string title, string body, string badge, bool interactable, UnityEngine.Events.UnityAction onClick)
+    {
+        var go = new GameObject($"Special_{title}");
+        go.transform.SetParent(parent, false);
+        go.AddComponent<Image>().color = new Color(bgCol.r * 1.4f, bgCol.g * 1.4f, bgCol.b * 1.4f, 0.6f);
+        var btn = go.AddComponent<Button>();
+        btn.interactable = interactable;
+        var rt = go.GetComponent<RectTransform>();
+        rt.anchorMin = rt.anchorMax = anchor;
+        rt.anchoredPosition = Vector2.zero;
+        rt.sizeDelta = new Vector2(500f, 150f);
+        if (interactable) btn.onClick.AddListener(onClick);
+
+        // 内側背景
+        var innerGo = new GameObject("Inner");
+        innerGo.transform.SetParent(go.transform, false);
+        innerGo.AddComponent<Image>().color = new Color(bgCol.r * 0.55f, bgCol.g * 0.55f, bgCol.b * 0.55f, 0.94f);
+        var innerRt = innerGo.GetComponent<RectTransform>();
+        innerRt.anchorMin = Vector2.zero; innerRt.anchorMax = Vector2.one;
+        innerRt.offsetMin = new Vector2(3f, 3f); innerRt.offsetMax = new Vector2(-3f, -3f);
+
+        // タイトル（上段）
+        var titleT = MakeText(go.transform, title, 25, new Color(1f, 0.95f, 0.6f),
+            new Vector2(0.5f, 0.78f), new Vector2(484f, 32f));
+        AddShadow(titleT.gameObject);
+
+        // 内容（中段）
+        var bodyT = MakeText(go.transform, body, 21, Color.white,
+            new Vector2(0.5f, 0.48f), new Vector2(484f, 28f));
+        AddShadow(bodyT.gameObject);
+
+        // 価格・お得アピール（下段）
+        var badgeT = MakeText(go.transform, badge, 21, new Color(1f, 0.85f, 0.2f),
+            new Vector2(0.5f, 0.18f), new Vector2(484f, 28f));
+        AddShadow(badgeT.gameObject);
+        var ol = badgeT.gameObject.AddComponent<Outline>();
+        ol.effectColor = new Color(0.4f, 0.15f, 0f, 0.9f);
+        ol.effectDistance = new Vector2(1.2f, -1.2f);
     }
 
     void BuildProductCard(Transform parent, IAPManager.ProductDef product, float y, Color bgCol)
@@ -232,7 +313,10 @@ public class ShopUI : MonoBehaviour
             {
                 orbText.text = $"◆ 所持オーブ: {OrbManager.GetOrbs()}";
                 messageText.color = new Color(0.4f, 1f, 0.4f);
-                StartCoroutine(ShowMessage($"+{amount} オーブ!"));
+                string doneMsg = $"+{amount} オーブ!";
+                if (productId == IAPManager.StarterPackId) doneMsg = "初心者パック獲得! +1000オーブ";
+                else if (productId == IAPManager.MonthlyPassId) doneMsg = "マンスリーパス開始! +400オーブ";
+                StartCoroutine(ShowMessage(doneMsg));
                 // 画面をリビルドして残額を更新
                 StartCoroutine(RebuildAfterDelay());
             }

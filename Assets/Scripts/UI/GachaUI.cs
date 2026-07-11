@@ -496,6 +496,7 @@ public class GachaUI : MonoBehaviour
             return;
         }
         AudioManager.Instance?.PlayGachaSE();
+        DailyMissionManager.ReportGachaDraw();
         RefreshOrbDisplay();
 
         if (pool == null || allChars == null || allChars.Length == 0)
@@ -517,6 +518,7 @@ public class GachaUI : MonoBehaviour
             return;
         }
         AudioManager.Instance?.PlayGachaSE();
+        DailyMissionManager.ReportGachaDraw();
 
         if (pool == null || allChars == null || allChars.Length == 0)
         {

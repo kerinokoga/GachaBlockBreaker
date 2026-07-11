@@ -26,7 +26,19 @@ public static class IAPManager
         new ProductDef("orb_3000", 3000, "¥3,900",  3900),
         new ProductDef("orb_5000", 5000, "¥6,400",  6400),
         new ProductDef("orb_8000", 8000, "¥10,000", 10000),
+        // 特別商品（ShopUI では専用カードで表示され、オーブカードの一覧からは除外される）
+        new ProductDef(StarterPackId, 1000, "¥650", 650),  // 初心者パック（1人1回限定）
+        new ProductDef(MonthlyPassId, 400,  "¥800", 800),  // マンスリーパス（即時400＋毎日80×30日）
     };
+
+    // ---- 特別商品 ----
+
+    public const string StarterPackId = "starter_pack";
+    public const string MonthlyPassId = "monthly_pass";
+    const string KeyStarterPackBought = "GachaBlock_StarterPackBought";
+
+    /// <summary>初心者パック購入済みか（1人1回限定の判定。クラウドセーブにも保存される）</summary>
+    public static bool StarterPackBought => PlayerPrefs.GetInt(KeyStarterPackBought, 0) == 1;
 
     /// <summary>商品定義（UnityEngine.Purchasing.Product と名前衝突しないよう ProductDef）</summary>
     public struct ProductDef
@@ -111,6 +123,13 @@ public static class IAPManager
             return;
         }
 
+        // 初心者パックは1人1回限定（ShopUI 側でも非表示にしているが二重ガード）
+        if (productId == StarterPackId && StarterPackBought)
+        {
+            onComplete?.Invoke(false, "初心者パックは購入済みです");
+            return;
+        }
+
         if (!IsReady)
         {
             Initialize(); // 未初期化なら開始しておく
@@ -136,6 +155,12 @@ public static class IAPManager
 
         // オーブ付与
         OrbManager.AddOrbs(def.Value.orbAmount);
+
+        // 特別商品の追加効果
+        if (productId == StarterPackId)
+            PlayerPrefs.SetInt(KeyStarterPackBought, 1); // 以後は購入不可（クラウドにも保存）
+        else if (productId == MonthlyPassId)
+            MonthlyPassManager.Activate(MonthlyPassManager.PassDays);
 
         // 課金額を記録（年齢別の月額上限管理用）
         AgeVerificationManager.AddSpent(def.Value.priceYen);

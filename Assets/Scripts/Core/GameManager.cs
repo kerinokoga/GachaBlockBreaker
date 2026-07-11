@@ -498,6 +498,9 @@ public class GameManager : MonoBehaviour
         // Phase 3: 進行保存
         ProgressManager.SaveClear(ResultData.StageNumber, 1f);
 
+        // デイリーミッション（ステージクリア）
+        DailyMissionManager.ReportStageClear();
+
         // 裏ステージクリアなら全イラスト解放を保存
         if (stageManager != null && stageManager.IsTrueStage)
             ProgressManager.SaveTrueStageClear(ResultData.StageNumber);
@@ -680,6 +683,9 @@ public class GameManager : MonoBehaviour
 
         // Phase 2: 奥義ゲージ更新
         CharacterManager.Instance?.OnBlockDestroyed();
+
+        // デイリーミッション（ブロック破壊カウント）
+        DailyMissionManager.ReportBlockDestroyed();
 
         if (stageManager.IsAllCleared())
         {
