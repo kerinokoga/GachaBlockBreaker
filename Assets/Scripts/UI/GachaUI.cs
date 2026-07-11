@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
+using UnityEngine.Video;
 using System.Collections;
 using System.Collections.Generic;
 
@@ -553,15 +554,23 @@ public class GachaUI : MonoBehaviour
         // 継続パーティクル開始（バックグラウンドで動かす）
         var partHolder = CreateContinuousParticles();
 
-        // Act 1: 魔法陣 + 光柱 + オーブ収束
-        var magicCircle = CreateMagicCircle();
-        yield return RunActOrSkip(PlayAct1_Summon(magicCircle));
+        // Act 1+2: ムービー演出（イントロ→レア度別爆発）。ムービーが無ければ従来演出
+        if (HasGachaMovies)
+        {
+            yield return StartCoroutine(PlayMovieAct(result.chara.rarity));
+        }
+        else
+        {
+            // Act 1: 魔法陣 + 光柱 + オーブ収束
+            var magicCircle = CreateMagicCircle();
+            yield return RunActOrSkip(PlayAct1_Summon(magicCircle));
 
-        // Act 2: レアリティ判定（光線放射）+ SSR虹フラッシュ
-        yield return RunActOrSkip(PlayAct2_RarityBeam(result.chara.rarity));
+            // Act 2: レアリティ判定（光線放射）+ SSR虹フラッシュ
+            yield return RunActOrSkip(PlayAct2_RarityBeam(result.chara.rarity));
 
-        // 魔法陣を爆発フェードアウト
-        StartCoroutine(FadeOutAndDestroy(magicCircle, 0.4f));
+            // 魔法陣を爆発フェードアウト
+            StartCoroutine(FadeOutAndDestroy(magicCircle, 0.4f));
+        }
 
         // Act 3: キャラ降臨（シルエット → フルカラー）
         yield return RunActOrSkip(PlayAct3_CharacterReveal(result.chara));
@@ -620,14 +629,22 @@ public class GachaUI : MonoBehaviour
             if (topChar == null || r.chara.rarity > topChar.rarity) topChar = r.chara;
         }
 
-        // Act 1: 召喚（オーブ多め）
-        var magicCircle = CreateMagicCircle();
-        yield return RunActOrSkip(PlayAct1_Summon(magicCircle, orbCount: 15));
+        // Act 1+2: ムービー演出（最高レアの色で爆発）。ムービーが無ければ従来演出
+        if (HasGachaMovies)
+        {
+            yield return StartCoroutine(PlayMovieAct(highest));
+        }
+        else
+        {
+            // Act 1: 召喚（オーブ多め）
+            var magicCircle = CreateMagicCircle();
+            yield return RunActOrSkip(PlayAct1_Summon(magicCircle, orbCount: 15));
 
-        // Act 2: 最高レアでの判定
-        yield return RunActOrSkip(PlayAct2_RarityBeam(highest));
+            // Act 2: 最高レアでの判定
+            yield return RunActOrSkip(PlayAct2_RarityBeam(highest));
 
-        StartCoroutine(FadeOutAndDestroy(magicCircle, 0.4f));
+            StartCoroutine(FadeOutAndDestroy(magicCircle, 0.4f));
+        }
 
         // Act 3: 最高レアキャラのみシルエット→フル降臨
         if (topChar != null)
@@ -706,6 +723,133 @@ public class GachaUI : MonoBehaviour
     }
 
     // ============================================================
+    // ガチャムービー演出（Kling生成 / レア度別の爆発クリップ1本構成）
+    // クリップ自体が「青白の溜め→色変化→爆発」を含むため、爆発までレア度が分からない
+    // ============================================================
+
+    VideoClip movieBlue, movieGold, movieRainbow;
+    bool moviesLoadTried;
+
+    void LoadGachaMovies()
+    {
+        if (moviesLoadTried) return;
+        moviesLoadTried = true;
+        movieBlue    = Resources.Load<VideoClip>("Movies/gacha_burst_blue");
+        movieGold    = Resources.Load<VideoClip>("Movies/gacha_burst_gold");
+        movieRainbow = Resources.Load<VideoClip>("Movies/gacha_burst_rainbow");
+    }
+
+    /// <summary>3本すべて読み込めた場合のみムービー演出を使う（欠けていれば従来演出へ）</summary>
+    bool HasGachaMovies
+    {
+        get
+        {
+            LoadGachaMovies();
+            return movieBlue != null && movieGold != null && movieRainbow != null;
+        }
+    }
+
+    /// <summary>
+    /// ムービー演出本体。レア度に応じた爆発クリップを再生し、
+    /// 白フラッシュで既存のキャラ降臨（Act 3）へ繋ぐ。
+    /// スキップ対応（isSkipping で即中断・後片付けもここで行う）。
+    /// </summary>
+    IEnumerator PlayMovieAct(Rarity rarity)
+    {
+        VideoClip clip = rarity == Rarity.SSR ? movieRainbow
+                       : rarity == Rarity.SR  ? movieGold
+                       : movieBlue;
+
+        // フルスクリーンの表示面（準備中は黒）
+        // resultPanel は画面中央の枠なので、全画面表示のため canvasRoot 直下に置く
+        var go = new GameObject("GachaMovie");
+        go.transform.SetParent(canvasRoot, false);
+        var raw = go.AddComponent<RawImage>();
+        raw.color = Color.black;
+        raw.raycastTarget = false;
+        var mrt = go.GetComponent<RectTransform>();
+        mrt.anchorMin = Vector2.zero; mrt.anchorMax = Vector2.one;
+        mrt.offsetMin = mrt.offsetMax = Vector2.zero;
+
+        // ムービーより手前にスキップボタンを出す
+        if (skipButton != null) skipButton.transform.SetAsLastSibling();
+
+        var rtex = new RenderTexture(720, 1280, 0);
+        var vp = go.AddComponent<VideoPlayer>();
+        vp.playOnAwake = false;
+        vp.renderMode = VideoRenderMode.RenderTexture;
+        vp.targetTexture = rtex;
+        vp.audioOutputMode = VideoAudioOutputMode.None; // 音はゲーム側SEを使用
+        vp.isLooping = false;
+        vp.clip = clip;
+        vp.Prepare();
+
+        // 準備待ち（保険で5秒タイムアウト）
+        float pt = 0f;
+        while (!vp.isPrepared && pt < 5f && !isSkipping)
+        {
+            pt += Time.deltaTime;
+            yield return null;
+        }
+
+        if (!isSkipping)
+        {
+            raw.texture = rtex;
+            raw.color = Color.white;
+
+            bool ended = false;
+            VideoPlayer.EventHandler onEnd = _ => ended = true;
+            vp.loopPointReached += onEnd;
+            vp.Play();
+
+            // クリップ後半（爆発のタイミング）で画面を揺らして迫力を出す（SSRは強め）
+            bool shakeFired = false;
+            double shakeAt = clip.length * 0.45;
+
+            while (!ended && !isSkipping)
+            {
+                if (!shakeFired && vp.time >= shakeAt)
+                {
+                    shakeFired = true;
+                    StartCoroutine(ShakeCanvas(rarity == Rarity.SSR ? 1.0f : 0.5f,
+                                               rarity == Rarity.SSR ? 20f : 10f));
+                }
+                yield return null;
+            }
+            vp.loopPointReached -= onEnd;
+            vp.Stop();
+        }
+
+        // 後片付け
+        Destroy(go);
+        rtex.Release();
+        Destroy(rtex);
+
+        // 白フラッシュで既存演出へブリッジ（ムービー終端の白フラッシュから自然に繋がる）
+        if (!isSkipping)
+        {
+            var flash = new GameObject("MovieEndFlash");
+            flash.transform.SetParent(canvasRoot, false);
+            var fImg = flash.AddComponent<Image>();
+            fImg.color = Color.white;
+            fImg.raycastTarget = false;
+            var frt = flash.GetComponent<RectTransform>();
+            frt.anchorMin = Vector2.zero; frt.anchorMax = Vector2.one;
+            frt.offsetMin = frt.offsetMax = Vector2.zero;
+            float ft = 0f;
+            const float flashDur = 0.45f;
+            while (ft < flashDur)
+            {
+                ft += Time.deltaTime;
+                if (fImg != null)
+                    fImg.color = new Color(1f, 1f, 1f, 1f - ft / flashDur);
+                yield return null;
+            }
+            Destroy(flash);
+        }
+    }
+
+    // ============================================================
     // Phase D: フル本格化ガチャ演出メソッド群
     // ============================================================
 
@@ -725,7 +869,7 @@ public class GachaUI : MonoBehaviour
         skipButton = new GameObject("SkipBtn");
         skipButton.transform.SetParent(canvasRoot, false);
         var img = skipButton.AddComponent<Image>();
-        img.color = new Color(0.3f, 0.15f, 0.4f, 0.85f);
+        img.color = new Color(0.95f, 0.25f, 0.55f, 0.95f); // 目立つピンク（ムービー上でも視認できる色）
         var btn = skipButton.AddComponent<Button>();
         btn.onClick.AddListener(() => isSkipping = true);
         var rt = skipButton.GetComponent<RectTransform>();
