@@ -30,6 +30,7 @@ public class CharaSelectUI : MonoBehaviour
     Image[] slotIcons   = new Image[3];
     Image[] slotIconBgs = new Image[3];
     Text staminaText;
+    Text totalDamageText;
     Transform canvasRoot;
     ScrollRect charScrollRect;  // キャラ一覧のスクロール（ドラッグハンドラに渡す）
     Button backBtn;             // 「もどる」ボタン（チュートリアル中に無効化するため参照保持）
@@ -322,6 +323,12 @@ public class CharaSelectUI : MonoBehaviour
         AddShadow(staminaText.gameObject);
         staminaText.gameObject.AddComponent<Outline>().effectColor = new Color(0f, 0f, 0f, 0.7f);
         RefreshStaminaText();
+
+        // 合計ヒットダメージ表示（左上、スタミナと対になる位置）
+        totalDamageText = MakeText(root, "", 28, new Color(1f, 0.55f, 0.35f),
+            new Vector2(0.18f, 0.895f), new Vector2(320f, 36f));
+        AddShadow(totalDamageText.gameObject);
+        totalDamageText.gameObject.AddComponent<Outline>().effectColor = new Color(0f, 0f, 0f, 0.7f);
 
         // ---- キャラアイコンプレビュー（スロットの上） ----
         float[] slotXs = { 0.18f, 0.50f, 0.82f };
@@ -838,6 +845,43 @@ public class CharaSelectUI : MonoBehaviour
                     ? new Color(0.12f, 0.08f, 0.3f, 0.95f)
                     : new Color(0.08f, 0.06f, 0.2f, 0.95f);
         }
+
+        RefreshTotalDamage();
+    }
+
+    /// <summary>
+    /// スロット3体の合計ヒットダメージを表示。
+    /// CharacterManager.Initialize / GetCurrentDamage と同じ式で、
+    /// パワー合計（1 + 0.2×Lv + 覚醒ボーナス）＋ExtraDamage に BallDamageUp 倍率を掛けて切り上げ。
+    /// </summary>
+    void RefreshTotalDamage()
+    {
+        if (totalDamageText == null) return;
+
+        float powerSum = 0f;
+        int bonus = 0;
+        float mult = 1f;
+        foreach (var cd in slotChars)
+        {
+            if (cd == null) continue;
+            int lvl = OrbManager.GetEnhanceLevel(cd.characterName);
+            bool awakened = OrbManager.IsAwakened(cd.characterName);
+            powerSum += 1f + 0.2f * lvl + (awakened ? OrbManager.AwakenBonusMultiplier : 0f);
+
+            AccumulateDamagePassive(cd.passiveType, cd.passiveValue, ref bonus, ref mult);
+            if (cd.passiveType2 != PassiveEffectType.None)
+                AccumulateDamagePassive(cd.passiveType2, cd.passiveValue2, ref bonus, ref mult);
+        }
+
+        float baseDmg = Mathf.Max(powerSum, 1f) + bonus;
+        int dmg = (int)System.Math.Ceiling(baseDmg * mult);
+        totalDamageText.text = $"ヒットダメージ: {dmg}";
+    }
+
+    static void AccumulateDamagePassive(PassiveEffectType type, float value, ref int bonus, ref float mult)
+    {
+        if (type == PassiveEffectType.ExtraDamage)     bonus += (int)value;
+        if (type == PassiveEffectType.BallDamageUp)    mult  *= value;
     }
 
     void RefreshDetail()
