@@ -29,7 +29,7 @@ public class GameManager : MonoBehaviour
 
     // ---- マルチボール管理 ----
     private List<BallController> activeBalls = new List<BallController>();
-    private bool waitingForSplitLaunch = false; // Ready状態で分裂ULT使用フラグ
+    private int pendingSplitCount = 0; // Ready状態で使った分裂ULTの回数（発射時に 2^n 個発射）
 
     // ---- 破壊率トリガー ----
     private bool triggered30 = false;
@@ -189,19 +189,22 @@ public class GameManager : MonoBehaviour
     {
         CurrentState = GameState.Playing;
 
-        if (waitingForSplitLaunch)
+        if (pendingSplitCount > 0)
         {
-            // Ready状態で分裂ULTを使った場合：2個同時発射
-            waitingForSplitLaunch = false;
+            // Ready状態で分裂ULTを使った場合：1回=2個、2回=4個（2^n 個）を同時発射
+            int total = 1 << pendingSplitCount;
+            pendingSplitCount = 0;
+
             ball?.Launch();
-            var clone = CreateCloneBall(ball);
-            if (clone != null)
+            float origAngle = Mathf.Atan2(ball.GetComponent<Rigidbody2D>().velocity.y,
+                                           ball.GetComponent<Rigidbody2D>().velocity.x) * Mathf.Rad2Deg;
+            for (int i = 1; i < total; i++)
             {
-                // オリジナルと逆方向に発射
-                float origAngle = Mathf.Atan2(ball.GetComponent<Rigidbody2D>().velocity.y,
-                                               ball.GetComponent<Rigidbody2D>().velocity.x) * Mathf.Rad2Deg;
-                float mirrorAngle = 180f - origAngle;
-                clone.LaunchAt(mirrorAngle);
+                var clone = CreateCloneBall(ball);
+                if (clone == null) continue;
+                // オリジナルを中心に左右交互 ±30°刻みの扇状に発射（重なり防止）
+                float offset = Mathf.CeilToInt(i / 2f) * 30f * (i % 2 == 1 ? 1f : -1f);
+                clone.LaunchAt(origAngle + offset);
             }
         }
         else
@@ -218,7 +221,7 @@ public class GameManager : MonoBehaviour
     {
         if (CurrentState == GameState.Ready)
         {
-            waitingForSplitLaunch = true;
+            pendingSplitCount++;
             return;
         }
 
@@ -410,7 +413,7 @@ public class GameManager : MonoBehaviour
         ball.SetPaddle(paddle.transform);
         activeBalls.Clear();
         activeBalls.Add(ball);
-        waitingForSplitLaunch = false;
+        pendingSplitCount = 0;
     }
 
     /// <summary>パドルヒット時にボスターンを消費</summary>
@@ -643,7 +646,7 @@ public class GameManager : MonoBehaviour
             ball.SetPaddle(paddle.transform);
             activeBalls.Add(ball);
         }
-        waitingForSplitLaunch = false;
+        pendingSplitCount = 0;
 
         // BGM 再開（ピッチ 1.2 倍で緊迫感を演出）
         AudioManager.Instance?.PlayStageBGM(ResultData.StageNumber);

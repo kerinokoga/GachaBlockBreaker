@@ -874,6 +874,20 @@ public class GameUI : MonoBehaviour
             PlayerPrefs.GetFloat("VoiceVolume", 1f),
             v => { PlayerPrefs.SetFloat("VoiceVolume", v); AudioManager.Instance?.SetVoiceVolume(v); });
 
+        // 奥義アニメ ON/OFF トグル
+        // 注意: この下の [2] インデックス参照（あそびかたボタン）より後に追加すること
+        var ultAnimGo = MakeButton(pauseMenuPanel.transform,
+            $"奥義アニメ: {(UltAnimationManager.Enabled ? "ON" : "OFF")}", 30,
+            new Color(0.4f, 0.3f, 0.65f),
+            new Vector2(0.5f, 0.04f), Vector2.zero, new Vector2(360f, 64f));
+        var ultAnimTxt = ultAnimGo.GetComponentInChildren<Text>();
+        ultAnimGo.GetComponent<Button>().onClick.AddListener(() =>
+        {
+            UltAnimationManager.Enabled = !UltAnimationManager.Enabled;
+            if (ultAnimTxt != null)
+                ultAnimTxt.text = $"奥義アニメ: {(UltAnimationManager.Enabled ? "ON" : "OFF")}";
+        });
+
         // リタイヤ確認ダイアログ
         var retireConfirm = MakePanel(root, new Color(0f, 0f, 0f, 0.92f));
         MakeText(retireConfirm.transform, "あきらめますか？", 40, Color.white,

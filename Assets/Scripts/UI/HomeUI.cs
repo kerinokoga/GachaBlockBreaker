@@ -654,17 +654,32 @@ public class HomeUI : MonoBehaviour
         lineRt.sizeDelta = new Vector2(680f, 3f);
 
         // ---- 音量設定ボタン ----
-        MakeSettingsItem(dialog.transform, "音量設定", 0.68f,
+        MakeSettingsItem(dialog.transform, "音量設定", 0.71f,
             new Color(0.2f, 0.35f, 0.6f), new Color(0.35f, 0.55f, 0.9f, 0.6f),
             () => { Destroy(overlay); ShowVolumePopup(); });
 
         // ---- あそびかたボタン ----
-        MakeSettingsItem(dialog.transform, "あそびかた", 0.50f,
+        MakeSettingsItem(dialog.transform, "あそびかた", 0.56f,
             new Color(0.15f, 0.5f, 0.35f), new Color(0.3f, 0.75f, 0.5f, 0.6f),
             () => { Destroy(overlay); ShowHowToPlayPopup(); });
 
+        // ---- 奥義アニメ ON/OFF トグル ----
+        Text ultAnimTxt = null;
+        MakeSettingsItem(dialog.transform, $"奥義アニメ: {(UltAnimationManager.Enabled ? "ON" : "OFF")}", 0.41f,
+            new Color(0.35f, 0.25f, 0.55f), new Color(0.55f, 0.4f, 0.85f, 0.6f),
+            () =>
+            {
+                UltAnimationManager.Enabled = !UltAnimationManager.Enabled;
+                if (ultAnimTxt != null)
+                    ultAnimTxt.text = $"奥義アニメ: {(UltAnimationManager.Enabled ? "ON" : "OFF")}";
+            });
+        // MakeSettingsItem が生成したラベルを取得（トグルで文言を書き換えるため）
+        var ultAnimBtnGo = dialog.transform.Find($"奥義アニメ: {(UltAnimationManager.Enabled ? "ON" : "OFF")}Btn");
+        if (ultAnimBtnGo != null)
+            ultAnimTxt = ultAnimBtnGo.GetComponentInChildren<Text>();
+
         // ---- 利用規約・プライバシーポリシーボタン ----
-        MakeSettingsItem(dialog.transform, "利用規約・プライバシーポリシー", 0.32f,
+        MakeSettingsItem(dialog.transform, "利用規約・プライバシーポリシー", 0.26f,
             new Color(0.45f, 0.2f, 0.25f), new Color(0.7f, 0.35f, 0.45f, 0.6f),
             () => Application.OpenURL("https://kerinokoga.github.io/GachaBlockBreaker/legal.html"));
 

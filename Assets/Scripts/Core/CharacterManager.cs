@@ -1,4 +1,6 @@
 using UnityEngine;
+using UnityEngine.UI;
+using UnityEngine.Video;
 using System.Collections;
 
 /// <summary>
@@ -227,6 +229,24 @@ public class CharacterManager : MonoBehaviour
         OnGaugeChanged?.Invoke(slotIndex, 0f);
         AudioManager.Instance?.PlayUltSE();
 
+        // 奥義ボイスは発動の瞬間に再生（アニメ中も聞こえるように）— High優先度で他ボイスから保護
+        if (cd.voiceUlt != null)
+            AudioManager.Instance?.PlayVoice(cd.voiceUlt, cd.voiceVolumeMultiplier, AudioManager.VoicePriority.High);
+
+        // 奥義アニメ（ON かつ 動画がある場合のみ）：ゲームを一時停止して再生後に効果適用
+        var animClip = UltAnimationManager.Enabled ? UltAnimationManager.GetClipFor(cd) : null;
+        if (animClip != null)
+        {
+            StartCoroutine(PlayUltAnimationThenApply(cd, slotIndex, animClip));
+            return;
+        }
+
+        ApplyUltimate(cd, slotIndex);
+    }
+
+    /// <summary>奥義効果の適用本体（アニメなし時は即時、アニメあり時は再生後に呼ばれる）</summary>
+    void ApplyUltimate(CharacterData cd, int slotIndex)
+    {
         switch (cd.ultimateType)
         {
             case UltimateSkillType.PowerBurst:
@@ -257,14 +277,102 @@ public class CharacterManager : MonoBehaviour
                 break;
         }
 
-        // 奥義ボイス再生（SE は switch 前に再生済み）— High優先度で他ボイスから保護
-        if (cd.voiceUlt != null)
-            AudioManager.Instance?.PlayVoice(cd.voiceUlt, cd.voiceVolumeMultiplier, AudioManager.VoicePriority.High);
-
         Debug.Log($"[CharacterManager] 奥義発動: {cd.characterName} - {cd.ultimateType}");
 
         // チュートリアル用に発動を通知
         OnUltUsed?.Invoke(slotIndex);
+    }
+
+    /// <summary>
+    /// 奥義アニメーション再生コルーチン。
+    /// ゲームを一時停止（Paused 中はボール落下がミス扱いされない）→ 全画面で動画再生
+    /// → タップ or 再生終了で復帰し、奥義効果を適用する。
+    /// </summary>
+    IEnumerator PlayUltAnimationThenApply(CharacterData cd, int slotIndex, VideoClip clip)
+    {
+        // Playing 中のみポーズ（Ready 中はボールが動いていないのでそのまま）
+        bool paused = false;
+        if (GameManager.Instance != null
+            && GameManager.Instance.CurrentState == GameManager.GameState.Playing)
+        {
+            GameManager.Instance.Pause();
+            paused = true;
+        }
+
+        // 専用オーバーレイ Canvas（既存UIより手前・入力もここで受ける）
+        var canvasGo = new GameObject("UltAnimCanvas");
+        var canvas = canvasGo.AddComponent<Canvas>();
+        canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+        canvas.sortingOrder = 500;
+        canvasGo.AddComponent<GraphicRaycaster>();
+
+        // 動画表示面（準備中は黒）＋ 全面タップでスキップ
+        var movieGo = new GameObject("Movie");
+        movieGo.transform.SetParent(canvasGo.transform, false);
+        var raw = movieGo.AddComponent<RawImage>();
+        raw.color = Color.black;
+        var rrt = movieGo.GetComponent<RectTransform>();
+        rrt.anchorMin = Vector2.zero; rrt.anchorMax = Vector2.one;
+        rrt.offsetMin = rrt.offsetMax = Vector2.zero;
+
+        bool skipped = false;
+        var skipBtn = movieGo.AddComponent<Button>();
+        skipBtn.transition = Selectable.Transition.None;
+        skipBtn.onClick.AddListener(() => skipped = true);
+
+        // スキップ案内
+        var hintGo = new GameObject("SkipHint");
+        hintGo.transform.SetParent(canvasGo.transform, false);
+        var hint = hintGo.AddComponent<Text>();
+        hint.text = "タップでスキップ";
+        hint.fontSize = 26;
+        hint.color = new Color(1f, 1f, 1f, 0.6f);
+        hint.alignment = TextAnchor.MiddleCenter;
+        hint.font = Font.CreateDynamicFontFromOSFont("Arial", 26);
+        hint.raycastTarget = false;
+        var hrt = hintGo.GetComponent<RectTransform>();
+        hrt.anchorMin = hrt.anchorMax = new Vector2(0.5f, 0.05f);
+        hrt.anchoredPosition = Vector2.zero;
+        hrt.sizeDelta = new Vector2(400f, 40f);
+
+        var rtex = new RenderTexture(720, 1280, 0);
+        var vp = canvasGo.AddComponent<VideoPlayer>();
+        vp.playOnAwake = false;
+        vp.renderMode = VideoRenderMode.RenderTexture;
+        vp.targetTexture = rtex;
+        vp.audioOutputMode = VideoAudioOutputMode.None;
+        vp.isLooping = false;
+        vp.clip = clip;
+        vp.Prepare();
+
+        // 準備待ち（保険で5秒タイムアウト。timeScale=0 でも進むよう unscaled 時間）
+        float pt = 0f;
+        while (!vp.isPrepared && pt < 5f && !skipped)
+        {
+            pt += Time.unscaledDeltaTime;
+            yield return null;
+        }
+
+        if (vp.isPrepared && !skipped)
+        {
+            raw.texture = rtex;
+            raw.color = Color.white;
+
+            bool ended = false;
+            VideoPlayer.EventHandler onEnd = _ => ended = true;
+            vp.loopPointReached += onEnd;
+            vp.Play();
+            while (!ended && !skipped) yield return null;
+            vp.loopPointReached -= onEnd;
+            vp.Stop();
+        }
+
+        Destroy(canvasGo);
+        rtex.Release();
+        Destroy(rtex);
+
+        if (paused) GameManager.Instance?.Resume();
+        ApplyUltimate(cd, slotIndex);
     }
 
     /// <summary>
