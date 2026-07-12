@@ -306,19 +306,32 @@ public class CharacterManager : MonoBehaviour
         canvas.sortingOrder = 500;
         canvasGo.AddComponent<GraphicRaycaster>();
 
-        // 動画表示面（準備中は黒）＋ 全面タップでスキップ
+        // 黒背景（全画面。縦長端末での黒帯＋タップスキップの判定を兼ねる）
+        var bgGo = new GameObject("MovieBg");
+        bgGo.transform.SetParent(canvasGo.transform, false);
+        var bgImg = bgGo.AddComponent<Image>();
+        bgImg.color = Color.black;
+        var bgRt = bgGo.GetComponent<RectTransform>();
+        bgRt.anchorMin = Vector2.zero; bgRt.anchorMax = Vector2.one;
+        bgRt.offsetMin = bgRt.offsetMax = Vector2.zero;
+
+        bool skipped = false;
+        var skipBtn = bgGo.AddComponent<Button>();
+        skipBtn.transition = Selectable.Transition.None;
+        skipBtn.onClick.AddListener(() => skipped = true);
+
+        // 動画表示面（アスペクト比を維持。9:16より縦長の画面では上下が黒帯になる）
         var movieGo = new GameObject("Movie");
         movieGo.transform.SetParent(canvasGo.transform, false);
         var raw = movieGo.AddComponent<RawImage>();
         raw.color = Color.black;
+        raw.raycastTarget = false;
         var rrt = movieGo.GetComponent<RectTransform>();
         rrt.anchorMin = Vector2.zero; rrt.anchorMax = Vector2.one;
         rrt.offsetMin = rrt.offsetMax = Vector2.zero;
-
-        bool skipped = false;
-        var skipBtn = movieGo.AddComponent<Button>();
-        skipBtn.transition = Selectable.Transition.None;
-        skipBtn.onClick.AddListener(() => skipped = true);
+        var fitter = movieGo.AddComponent<AspectRatioFitter>();
+        fitter.aspectMode = AspectRatioFitter.AspectMode.FitInParent;
+        fitter.aspectRatio = (float)clip.width / clip.height;
 
         // スキップ案内
         var hintGo = new GameObject("SkipHint");

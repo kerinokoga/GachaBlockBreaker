@@ -788,16 +788,27 @@ public class GachaUI : MonoBehaviour
                        : rarity == Rarity.SR  ? movieGold
                        : movieBlue;
 
-        // フルスクリーンの表示面（準備中は黒）
+        // 黒背景（全画面。縦長端末での黒帯用）
         // resultPanel は画面中央の枠なので、全画面表示のため canvasRoot 直下に置く
         var go = new GameObject("GachaMovie");
         go.transform.SetParent(canvasRoot, false);
-        var raw = go.AddComponent<RawImage>();
-        raw.color = Color.black;
-        raw.raycastTarget = false;
+        go.AddComponent<Image>().color = Color.black;
         var mrt = go.GetComponent<RectTransform>();
         mrt.anchorMin = Vector2.zero; mrt.anchorMax = Vector2.one;
         mrt.offsetMin = mrt.offsetMax = Vector2.zero;
+
+        // 動画表示面（アスペクト比を維持。9:16より縦長の画面では上下が黒帯になる）
+        var movieGo = new GameObject("Movie");
+        movieGo.transform.SetParent(go.transform, false);
+        var raw = movieGo.AddComponent<RawImage>();
+        raw.color = Color.black;
+        raw.raycastTarget = false;
+        var rawRt = movieGo.GetComponent<RectTransform>();
+        rawRt.anchorMin = Vector2.zero; rawRt.anchorMax = Vector2.one;
+        rawRt.offsetMin = rawRt.offsetMax = Vector2.zero;
+        var fitter = movieGo.AddComponent<AspectRatioFitter>();
+        fitter.aspectMode = AspectRatioFitter.AspectMode.FitInParent;
+        fitter.aspectRatio = (float)clip.width / clip.height;
 
         // ムービーより手前にスキップボタンを出す
         if (skipButton != null) skipButton.transform.SetAsLastSibling();
