@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
+using UnityEngine.Video;
 using System.Collections;
 using System.Collections.Generic;
 
@@ -450,6 +451,10 @@ public class HomeUI : MonoBehaviour
             bgrt.offsetMin = bgrt.offsetMax = Vector2.zero;
         }
 
+        // 背景アニメ（Resources/Movies/home_bg があれば静止背景の上に重ねる）
+        // 入場時に1回再生 → 最終フレームで静止 → 画面の空きエリアをタップで再再生
+        SetupHomeBgMovie(cGo.transform);
+
         // 暗めオーバーレイ（グラデーション風に上下を暗く）
         // 全画面オーバーレイ（上下＋中央帯）
         var overlayTop = new GameObject("OverlayTop");
@@ -477,6 +482,26 @@ public class HomeUI : MonoBehaviour
 
         // ===== 4. 光の粒パーティクル =====
         CreateParticles(cGo.transform, 18);
+
+        // 背景アニメの再再生タップ判定（ボタン類より先に追加＝ボタンが優先して押せる）
+        if (homeBgPlayer != null)
+        {
+            var tapGo = new GameObject("BGMovieTap");
+            tapGo.transform.SetParent(cGo.transform, false);
+            var tapImg = tapGo.AddComponent<Image>();
+            tapImg.color = new Color(0f, 0f, 0f, 0f); // 透明（判定のみ）
+            var tapBtn = tapGo.AddComponent<Button>();
+            tapBtn.transition = Selectable.Transition.None;
+            var tapRt = tapGo.GetComponent<RectTransform>();
+            tapRt.anchorMin = Vector2.zero; tapRt.anchorMax = Vector2.one;
+            tapRt.offsetMin = tapRt.offsetMax = Vector2.zero;
+            tapBtn.onClick.AddListener(() =>
+            {
+                if (homeBgPlayer == null || homeBgPlayer.isPlaying) return;
+                homeBgPlayer.frame = 0;
+                homeBgPlayer.Play();
+            });
+        }
 
         // ユーザー情報（右上）
         string userName = AuthManager.GetName();
@@ -611,6 +636,65 @@ public class HomeUI : MonoBehaviour
     }
 
     // ---- 設定ポップアップ ----
+
+    // ---- ホーム背景アニメ ----
+
+    VideoPlayer homeBgPlayer;
+    RenderTexture homeBgTexture;
+
+    /// <summary>
+    /// ホーム背景アニメを構築する。動画が無ければ何もしない（静止背景のまま）。
+    /// 準備完了までは透明にして下の静止背景を見せ、黒画面のチラつきを防ぐ。
+    /// 再生終了後は最終フレームが RenderTexture に残るため、そのまま静止背景になる。
+    /// </summary>
+    void SetupHomeBgMovie(Transform parent)
+    {
+        var clip = Resources.Load<VideoClip>("Movies/home_bg");
+        if (clip == null) return;
+
+        var go = new GameObject("BGMovie");
+        go.transform.SetParent(parent, false);
+        var raw = go.AddComponent<RawImage>();
+        raw.color = new Color(1f, 1f, 1f, 0f); // 準備完了まで透明
+        raw.raycastTarget = false;
+        var rt = go.GetComponent<RectTransform>();
+        rt.anchorMin = Vector2.zero; rt.anchorMax = Vector2.one;
+        rt.offsetMin = rt.offsetMax = Vector2.zero;
+
+        // 静止背景（preserveAspect）と同じく、アスペクト比を保って画面内に収める
+        var fitter = go.AddComponent<AspectRatioFitter>();
+        fitter.aspectMode = AspectRatioFitter.AspectMode.FitInParent;
+        fitter.aspectRatio = (float)clip.width / clip.height;
+
+        homeBgTexture = new RenderTexture((int)clip.width, (int)clip.height, 0);
+        var vp = go.AddComponent<VideoPlayer>();
+        vp.playOnAwake = false;
+        vp.renderMode = VideoRenderMode.RenderTexture;
+        vp.targetTexture = homeBgTexture;
+        vp.audioOutputMode = VideoAudioOutputMode.None;
+        vp.isLooping = false;
+        vp.clip = clip;
+        vp.prepareCompleted += p =>
+        {
+            if (raw == null) return;
+            raw.texture = homeBgTexture;
+            raw.color = Color.white;
+            p.Play();
+        };
+        vp.Prepare();
+        homeBgPlayer = vp;
+    }
+
+    void OnDestroy()
+    {
+        // シーン再訪のたびに RenderTexture が積み上がらないよう明示的に解放
+        if (homeBgTexture != null)
+        {
+            homeBgTexture.Release();
+            Destroy(homeBgTexture);
+            homeBgTexture = null;
+        }
+    }
 
     void ShowSettingsPopup()
     {
