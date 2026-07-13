@@ -32,7 +32,10 @@ public class CharacterManager : MonoBehaviour
     float ultBurstBonus = 0f; // 発動中の PowerBurst の増加分（倍率-1）の合計
 
     // Penetrate 奥義中フラグ：BallController から参照される
-    public bool IsPenetrating { get; private set; } = false;
+    // 複数回発動（重ね掛け）に対応するため発動中の本数をカウントし、
+    // 最後の1本が切れたときだけ解除する（先に発動した方の時間切れに巻き込まれない）
+    public bool IsPenetrating => penetrateCasts > 0;
+    int penetrateCasts = 0;
 
     // CriticalRangeUp パッシブ：クリティカル判定範囲の追加値（デフォルト0.03に加算）
     public float CriticalRangeBonus { get; private set; } = 0f;
@@ -84,7 +87,7 @@ public class CharacterManager : MonoBehaviour
         BonusDamage = 0;
         PassiveDamageMultiplier = 1f;
         ultBurstBonus = 0f;
-        IsPenetrating = false;
+        penetrateCasts = 0;
         CriticalRangeBonus = 0f;
         foreach (var cd in selectedChars)
         {
@@ -442,7 +445,7 @@ public class CharacterManager : MonoBehaviour
             foreach (var ball in FindObjectsOfType<BallController>())
                 ball.SetPenetrate(false);
         }
-        IsPenetrating = false;
+        penetrateCasts = 0;
 
         barrierActive = false;
 
@@ -492,15 +495,23 @@ public class CharacterManager : MonoBehaviour
 
     private IEnumerator PenetrateCoroutine(float duration)
     {
-        IsPenetrating = true;
+        penetrateCasts++;
         // 全ボールに貫通を適用（分裂ボール含む）
         foreach (var ball in FindObjectsOfType<BallController>())
             ball.SetPenetrate(true);
         // Ready状態なら発射まで待つ（待機中は時間消費しない）
         yield return StartCoroutine(WaitForPlaying());
-        Debug.Log($"[CharacterManager] 貫通開始 {duration}秒");
+        Debug.Log($"[CharacterManager] 貫通開始 {duration}秒 発動中={penetrateCasts}本");
         yield return new WaitForSeconds(duration);
-        IsPenetrating = false;
+
+        penetrateCasts = Mathf.Max(0, penetrateCasts - 1);
+        // 他の貫通がまだ発動中なら解除しない（重ね掛けの巻き添え防止）
+        if (penetrateCasts > 0)
+        {
+            Debug.Log($"[CharacterManager] 貫通1本終了（残り{penetrateCasts}本は継続）");
+            yield break;
+        }
+
         // 全ボールの貫通を解除
         // ただしクリティカル中のボールはスキップ（クリティカル由来の貫通は
         // 「次のパドルヒットまで」が仕様のため、奥義の時間切れに巻き込まない）
