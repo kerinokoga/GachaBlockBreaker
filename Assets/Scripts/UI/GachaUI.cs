@@ -1572,7 +1572,8 @@ public class GachaUI : MonoBehaviour
         hOl.effectColor = new Color(0f, 0f, 0f, 0.95f);
         hOl.effectDistance = new Vector2(2f, -2f);
         var hRt = hint.gameObject.GetComponent<RectTransform>();
-        hRt.anchorMin = hRt.anchorMax = new Vector2(0.5f, 0.12f);
+        // イラストの直下・ガチャボタンの上（ボタン類は y=0.10〜0.25 にあるため被らない位置）
+        hRt.anchorMin = hRt.anchorMax = new Vector2(0.5f, 0.27f);
         hRt.anchoredPosition = Vector2.zero;
         hRt.sizeDelta = new Vector2(900f, 80f);
 
