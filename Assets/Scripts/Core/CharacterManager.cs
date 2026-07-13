@@ -386,8 +386,40 @@ public class CharacterManager : MonoBehaviour
         rtex.Release();
         Destroy(rtex);
 
-        if (paused) GameManager.Instance?.Resume();
+        if (paused)
+        {
+            GameManager.Instance?.Resume();
+            // スロー再開: アニメで目を離した後にボールを再捕捉できるよう、
+            // 0.3倍速から約1秒かけて通常速度へ戻す
+            StartCoroutine(SlowMotionResume(0.3f, 1.0f));
+        }
         ApplyUltimate(cd, slotIndex);
+    }
+
+    /// <summary>
+    /// 奥義アニメ後のスロー再開。startScale 倍速から duration 秒（実時間）で通常速度へ補間する。
+    /// 途中でポーズ等の状態変化があったら介入をやめる（Paused 以外なら等倍に戻してから抜ける）。
+    /// </summary>
+    IEnumerator SlowMotionResume(float startScale, float duration)
+    {
+        Time.timeScale = startScale;
+        float t = 0f;
+        while (t < duration)
+        {
+            if (GameManager.Instance == null
+                || GameManager.Instance.CurrentState != GameManager.GameState.Playing)
+            {
+                // ポーズなら timeScale はポーズ側の管理に任せる。それ以外（ミス等）は等倍に戻す
+                if (GameManager.Instance == null
+                    || GameManager.Instance.CurrentState != GameManager.GameState.Paused)
+                    Time.timeScale = 1f;
+                yield break;
+            }
+            t += Time.unscaledDeltaTime;
+            Time.timeScale = Mathf.Lerp(startScale, 1f, t / duration);
+            yield return null;
+        }
+        Time.timeScale = 1f;
     }
 
     /// <summary>
