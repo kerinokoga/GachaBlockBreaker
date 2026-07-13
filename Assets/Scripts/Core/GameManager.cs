@@ -101,8 +101,29 @@ public class GameManager : MonoBehaviour
         {
             var allStages = Resources.LoadAll<StageData>("Stages");
             StageData stageData = null;
-            foreach (var s in allStages)
-                if (s.stageNumber == ResultData.StageNumber) { stageData = s; break; }
+            if (ResultData.IsEndless)
+            {
+                // エンドレス: 1体目（レイアウト=ステージ10相当、キャラはランダム抽選）
+                endlessWave = 0;
+                ResultData.EndlessScore = 0;
+                endlessRng = new System.Random();
+                EndlessManager.OnChallengeStarted(); // 本日初回なら100オーブ付与
+                stageData = PickEndlessLayout(0);
+                endlessCharSource = PickEndlessCharSource(bossOnly: false); // 1体目はボスステージではない
+                if (stageData != null)
+                {
+                    // BGM は抽選キャラのステージのものを使用（毎回変化して単調にならない）
+                    ResultData.StageNumber = endlessCharSource != null
+                        ? endlessCharSource.stageNumber : stageData.stageNumber;
+                    stageManager.SetEndlessHPMultiplier(EndlessHPMulFor(0));
+                    stageManager.SetEndlessCharSource(endlessCharSource);
+                }
+            }
+            else
+            {
+                foreach (var s in allStages)
+                    if (s.stageNumber == ResultData.StageNumber) { stageData = s; break; }
+            }
 
             if (stageData != null)
             {
@@ -151,6 +172,9 @@ public class GameManager : MonoBehaviour
                 stageManager.BuildTestStage();
             }
         }
+
+        // エンドレス: 見た目（イラスト・敵ボイス）を抽選キャラへ差し替え
+        if (ResultData.IsEndless) ApplyEndlessCharVisuals();
 
         // Phase 2: キャラクターマネージャー初期化（パッシブ適用）
         CharacterManager.Instance?.Initialize(ball, this);
@@ -239,6 +263,7 @@ public class GameManager : MonoBehaviour
                 // 元ボールを+30°、クローンを-30°
                 float rad1 = (angle + 30f) * Mathf.Deg2Rad;
                 b.GetComponent<Rigidbody2D>().velocity = new Vector2(Mathf.Cos(rad1), Mathf.Sin(rad1)) * b.speed;
+                b.ApplyClampAngle(); // 回転の結果が水平に近い角度にならないよう補正
                 clone.LaunchAt(angle - 30f);
             }
         }
@@ -470,10 +495,19 @@ public class GameManager : MonoBehaviour
     private void StageClear()
     {
         // 裏ステージ未突入 + 裏ステージあり → 裏ステージへ自動突入
-        if (currentStageData != null && currentStageData.hasTrueStage
+        // エンドレスでは「5の倍数体目」のみ裏ボスあり（レイアウトが常にステージ15相当のため制限する）
+        bool allowTrueStage = !ResultData.IsEndless || ((endlessWave + 1) % 5 == 0);
+        if (currentStageData != null && currentStageData.hasTrueStage && allowTrueStage
             && stageManager != null && !stageManager.IsTrueStage)
         {
             StartCoroutine(EnterTrueStage());
+            return;
+        }
+
+        // エンドレス: リザルトへ行かず、次のウェーブを構築して続行
+        if (ResultData.IsEndless)
+        {
+            StartCoroutine(EndlessNextWave());
             return;
         }
 
@@ -612,14 +646,17 @@ public class GameManager : MonoBehaviour
         stageManager.OnBossHPRatioChanged += CheckBossHPForReveal;
 
         // revealUI の差し替え（裏イラストへ、未設定時は本イラストを流用）
+        // エンドレスでは抽選キャラのイラストを使用
         if (revealUI != null && currentStageData != null)
         {
-            Sprite s0   = currentStageData.trueIllustSprite0    ?? currentStageData.illustSprite0;
-            Sprite s30  = currentStageData.trueIllustSprite30   ?? currentStageData.illustSprite30;
-            Sprite s60  = currentStageData.trueIllustSprite60   ?? currentStageData.illustSprite60;
-            Sprite sFul = currentStageData.trueIllustSpriteFull ?? currentStageData.illustSpriteFull;
-            revealUI.SetStageData(currentStageData.illustColor30, currentStageData.illustColor60,
-                                  currentStageData.illustColorFull, currentStageData.characterName,
+            var src = (ResultData.IsEndless && endlessCharSource != null)
+                ? endlessCharSource : currentStageData;
+            Sprite s0   = src.trueIllustSprite0    ?? src.illustSprite0;
+            Sprite s30  = src.trueIllustSprite30   ?? src.illustSprite30;
+            Sprite s60  = src.trueIllustSprite60   ?? src.illustSprite60;
+            Sprite sFul = src.trueIllustSpriteFull ?? src.illustSpriteFull;
+            revealUI.SetStageData(src.illustColor30, src.illustColor60,
+                                  src.illustColorFull, src.characterName,
                                   s0, s30, s60, sFul);
             revealUI.AdvanceToState(0);
         }
@@ -664,6 +701,197 @@ public class GameManager : MonoBehaviour
         yield return new WaitForSeconds(delay);
         Time.timeScale = 1f;
         SceneManager.LoadScene("ResultScene");
+    }
+
+    // ============================================================
+    // エンドレスモード（ボスラッシュ）
+    // ============================================================
+
+    private int endlessWave = 0;             // 現在のステージ番号（0開始）
+    private System.Random endlessRng;
+    private StageData endlessCharSource;     // 出現キャラの抽選結果（イラスト・ボイス・ボスアイコン用）
+    private int lastCharStageNum = -1;       // 直前のキャラ（連続同キャラ回避用）
+
+    /// <summary>
+    /// エンドレスの HP 倍率。1〜5体目は等倍（レイアウト自体の難易度で調整）、
+    /// 6体目以降は 0.15 ずつ上昇していく。※数値は後で調整
+    /// </summary>
+    private float EndlessHPMulFor(int waveIndex)
+        => waveIndex <= 4 ? 1f : 1f + 0.15f * (waveIndex - 4);
+
+    /// <summary>
+    /// エンドレスの難易度レイアウト（ブロック配置・HP・スピードブロック）を返す。
+    /// 1体目=ステージ10相当、2体目=11、3体目=12、4体目=14、5体目以降=15相当で固定。
+    /// 出現キャラは PickEndlessCharSource で別途ランダム抽選する。
+    /// </summary>
+    private StageData PickEndlessLayout(int waveIndex)
+    {
+        int[] earlyLayouts = { 10, 11, 12, 14 };
+        int layoutNum = waveIndex < earlyLayouts.Length ? earlyLayouts[waveIndex] : 15;
+
+        var all = Resources.LoadAll<StageData>("Stages");
+        foreach (var s in all)
+            if (s.stageNumber == layoutNum) return s;
+        return null;
+    }
+
+    /// <summary>
+    /// 出現キャラをランダム抽選する（等確率・直前と同じキャラは回避）。
+    /// イラスト・敵ボイス・ボスアイコンがこのキャラに差し替わる。
+    /// bossOnly=true（5の倍数ステージ）はボスステージ出身キャラ（5/10/15/20）限定＝裏イラスト持ち。
+    /// </summary>
+    private StageData PickEndlessCharSource(bool bossOnly)
+    {
+        var all = Resources.LoadAll<StageData>("Stages");
+        var pool = new List<StageData>();
+        foreach (var s in all)
+        {
+            if (bossOnly && s.stageNumber % 5 != 0) continue;
+            pool.Add(s);
+        }
+        if (pool.Count == 0) return null;
+
+        StageData pick = pool[endlessRng.Next(pool.Count)];
+        for (int tries = 0; tries < 5 && pick.stageNumber == lastCharStageNum && pool.Count > 1; tries++)
+            pick = pool[endlessRng.Next(pool.Count)];
+
+        lastCharStageNum = pick.stageNumber;
+        return pick;
+    }
+
+    /// <summary>
+    /// 見た目（解放イラスト・敵ボイス）を抽選されたキャラへ差し替える。
+    /// レイアウト（ブロック・ターン数・難度）は PickEndlessLayout のステージのまま。
+    /// </summary>
+    private void ApplyEndlessCharVisuals()
+    {
+        if (endlessCharSource == null) return;
+        var src = endlessCharSource;
+
+        revealUI?.SetStageData(src.illustColor30, src.illustColor60, src.illustColorFull,
+                               src.characterName,
+                               src.illustSprite0, src.illustSprite30,
+                               src.illustSprite60, src.illustSpriteFull);
+
+        stageCharData = null;
+        if (!string.IsNullOrEmpty(src.characterName))
+        {
+            var allChars = Resources.LoadAll<CharacterData>("Characters");
+            foreach (var cd in allChars)
+                if (cd.characterName == src.characterName) { stageCharData = cd; break; }
+        }
+    }
+
+    /// <summary>
+    /// ウェーブクリア → スコア加算 → 次ウェーブを構築して続行。
+    /// 構築手順は EnterTrueStage と同じ流儀（演出→効果リセット→ボール消去→再構築→復帰）。
+    /// </summary>
+    private IEnumerator EndlessNextWave()
+    {
+        // スコア加算（裏ボスまで倒したステージは +2）
+        ResultData.EndlessScore += (stageManager != null && stageManager.IsTrueStage) ? 2 : 1;
+        endlessWave++;
+        Debug.Log($"[Endless] ステージ突破 スコア={ResultData.EndlessScore} 次={endlessWave + 1}体目");
+
+        CurrentState = GameState.Paused; // 演出中のミス誤判定防止
+        paddle?.SetActive(false);
+        FreezeAllBalls();
+
+        // クリア演出（白フラッシュ + SE）
+        AudioManager.Instance?.PlaySE(AudioManager.Instance.seClear);
+        StartCoroutine(ScreenFlash(new Color(1f, 1f, 0.8f, 0.6f), 0.6f));
+        yield return new WaitForSeconds(1.0f);
+
+        // 一時効果リセット（裏ステージ突入時と同じ）
+        CharacterManager.Instance?.ResetTemporaryEffects();
+        FindObjectOfType<GameUI>()?.ClearUltEffectTimers();
+        stageManager?.ResetBossAttackEffects();
+
+        // 全ボール消去（クローン破棄 + オリジナル退避）
+        for (int i = activeBalls.Count - 1; i >= 0; i--)
+        {
+            var b = activeBalls[i];
+            if (b != null)
+            {
+                b.CancelTransparency();
+                if (b.isClone)
+                {
+                    b.transform.position = new Vector3(9999f, 9999f, 0f);
+                    Destroy(b.gameObject);
+                }
+            }
+        }
+        activeBalls.Clear();
+        if (ball != null)
+        {
+            ball.CancelTransparency();
+            ball.transform.position = new Vector3(9999f, 9999f, 0f);
+            ball.gameObject.SetActive(false);
+            ball.ResetBall();
+        }
+
+        // 次のレイアウトとキャラを選出（5の倍数ステージはボスキャラ4人から抽選）
+        var next = PickEndlessLayout(endlessWave);
+        endlessCharSource = PickEndlessCharSource(bossOnly: (endlessWave + 1) % 5 == 0);
+        if (next == null)
+        {
+            Debug.LogWarning("[Endless] 次ステージの選出に失敗。リザルトへ");
+            ResultData.IsClear = false;
+            StartCoroutine(LoadResultAfterDelay(0.5f));
+            yield break;
+        }
+        currentStageData = next;
+        ResultData.StageNumber = endlessCharSource != null
+            ? endlessCharSource.stageNumber : next.stageNumber; // BGM 用
+        ResultData.IsTrueStageClear = false;
+
+        // 再構築（HP倍率・キャラ差し替えを更新してから）
+        triggered30 = false;
+        triggered60 = false;
+        stageManager.SetEndlessHPMultiplier(EndlessHPMulFor(endlessWave));
+        stageManager.SetEndlessCharSource(endlessCharSource);
+        stageManager.paddleRef = paddle;
+        stageManager.BuildStage(next);
+
+        // Boss イベントの購読やり直し
+        stageManager.OnBossTurnExpired -= OnBossTurnExpired;
+        stageManager.OnBossTurnExpired += OnBossTurnExpired;
+        stageManager.OnBossHPRatioChanged -= CheckBossHPForReveal;
+        stageManager.OnBossHPRatioChanged += CheckBossHPForReveal;
+
+        // イラスト・敵ボイスを抽選キャラへ差し替え
+        ApplyEndlessCharVisuals();
+        revealUI?.AdvanceToState(0);
+
+        // ボール復帰（1つだけ、速度リセット）
+        if (ball != null)
+        {
+            if (paddle != null)
+            {
+                Vector3 paddlePos = paddle.transform.position;
+                ball.transform.position = new Vector3(paddlePos.x, paddlePos.y + 0.4f, 0f);
+            }
+            ball.gameObject.SetActive(true);
+            var ballRb = ball.GetComponent<Rigidbody2D>();
+            if (ballRb != null)
+            {
+                ballRb.velocity = Vector2.zero;
+                ballRb.simulated = true;
+            }
+            ball.ResetBall();
+            ball.ResetSpeedToBase();
+            ball.SetPaddle(paddle.transform);
+            activeBalls.Add(ball);
+        }
+        pendingSplitCount = 0;
+
+        // BGM・敵ボイスを新ステージのものへ
+        AudioManager.Instance?.SetBGMPitch(1f);
+        AudioManager.Instance?.PlayStageBGM(next.stageNumber);
+        PlayEnemyVoice(cd => cd.voiceStageStart, AudioManager.VoicePriority.Mid);
+
+        paddle?.SetActive(true);
+        CurrentState = GameState.Ready;
     }
 
     // ---- 破壊率チェック ----

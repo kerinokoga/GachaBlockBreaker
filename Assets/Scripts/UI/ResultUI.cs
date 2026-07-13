@@ -121,10 +121,32 @@ public class ResultUI : MonoBehaviour
         bool isClear = ResultData.IsClear;
         float rate = ResultData.DestroyRate;
         int stage = ResultData.StageNumber;
+        bool isEndless = ResultData.IsEndless;
+        bool endlessNewBest = false;
 
-        // クリア時にランキング送信 + クラウドバックアップ
-        if (isClear)
+        if (isEndless)
         {
+            // エンドレス: 自己ベスト保存＋ランキング送信＋クラウドバックアップ
+            int score = ResultData.EndlessScore;
+            int prevBest = PlayerPrefs.GetInt("GachaBlock_EndlessBest", 0);
+            if (score > prevBest)
+            {
+                endlessNewBest = true;
+                PlayerPrefs.SetInt("GachaBlock_EndlessBest", score);
+                PlayerPrefs.Save();
+            }
+            string endlessName = AuthManager.GetName();
+            if (string.IsNullOrEmpty(endlessName) || endlessName.Contains("@"))
+            {
+                string uid = AuthManager.GetUID();
+                endlessName = "ゲスト" + (uid != null && uid.Length >= 4 ? uid.Substring(0, 4) : "????");
+            }
+            RankingManager.SubmitEndlessScore(endlessName, score);
+            CloudSaveManager.Save();
+        }
+        else if (isClear)
+        {
+            // クリア時にランキング送信 + クラウドバックアップ
             string playerName = AuthManager.GetName();
             // 表示名なし、またはメールアドレスの場合は仮名を使う
             // （メール連携後は GetName がメールを返すため、公開ランキングへの漏洩防止）
@@ -204,20 +226,59 @@ public class ResultUI : MonoBehaviour
             }
         }
 
-        // タイトル
-        Color titleCol = isClear ? new Color(1f, 0.9f, 0.2f) : new Color(1f, 0.3f, 0.3f);
-        MakeText(canvasRoot, isClear ? "STAGE CLEAR!" : "GAME OVER",
-            72, titleCol, new Vector2(0.5f, 0.72f), new Vector2(800f, 100f));
-
-        // ステージ番号
-        MakeText(canvasRoot, $"STAGE {stage}",
-            52, new Color(0.8f, 0.8f, 0.8f), new Vector2(0.5f, 0.64f), new Vector2(500f, 70f));
-
-        // 破壊率（ゲームオーバー時のみ表示）
-        if (!isClear)
+        if (isEndless)
         {
-            MakeText(canvasRoot, $"DESTROY: {Mathf.FloorToInt(rate * 100)}%",
-                44, Color.white, new Vector2(0.5f, 0.56f), new Vector2(500f, 65f));
+            // ---- エンドレス結果表示 ----
+            MakeText(canvasRoot, "ENDLESS RESULT",
+                64, new Color(0.85f, 0.45f, 1f), new Vector2(0.5f, 0.74f), new Vector2(800f, 90f));
+
+            MakeText(canvasRoot, $"{ResultData.EndlessScore} ステージ突破！",
+                56, new Color(1f, 0.9f, 0.2f), new Vector2(0.5f, 0.64f), new Vector2(800f, 80f));
+
+            MakeText(canvasRoot,
+                endlessNewBest
+                    ? "★ 自己ベスト更新！"
+                    : $"自己ベスト: {PlayerPrefs.GetInt("GachaBlock_EndlessBest", 0)} ステージ",
+                40,
+                endlessNewBest ? new Color(0.4f, 1f, 0.6f) : new Color(0.7f, 0.8f, 0.9f),
+                new Vector2(0.5f, 0.555f), new Vector2(700f, 60f));
+
+            // 全国順位（非同期取得）
+            var rankT = MakeText(canvasRoot, "全国順位: 取得中...",
+                36, Color.white, new Vector2(0.5f, 0.475f), new Vector2(800f, 55f));
+            RankingManager.GetEndlessMyRank(ResultData.EndlessScore, (rank, total) =>
+            {
+                if (rankT == null) return;
+                if (rank <= 0)
+                {
+                    rankT.text = "全国順位: 取得できませんでした";
+                    rankT.color = new Color(0.6f, 0.6f, 0.7f);
+                    return;
+                }
+                string totalPart = total > 0 ? $" / {total}人中" : "";
+                string pctPart = total > 0
+                    ? $"（上位 {Mathf.Clamp((float)rank / total * 100f, 0.1f, 100f):0.#}%）"
+                    : "";
+                rankT.text = $"全国 {rank}位{totalPart} {pctPart}";
+            });
+        }
+        else
+        {
+            // タイトル
+            Color titleCol = isClear ? new Color(1f, 0.9f, 0.2f) : new Color(1f, 0.3f, 0.3f);
+            MakeText(canvasRoot, isClear ? "STAGE CLEAR!" : "GAME OVER",
+                72, titleCol, new Vector2(0.5f, 0.72f), new Vector2(800f, 100f));
+
+            // ステージ番号
+            MakeText(canvasRoot, $"STAGE {stage}",
+                52, new Color(0.8f, 0.8f, 0.8f), new Vector2(0.5f, 0.64f), new Vector2(500f, 70f));
+
+            // 破壊率（ゲームオーバー時のみ表示）
+            if (!isClear)
+            {
+                MakeText(canvasRoot, $"DESTROY: {Mathf.FloorToInt(rate * 100)}%",
+                    44, Color.white, new Vector2(0.5f, 0.56f), new Vector2(500f, 65f));
+            }
         }
 
         // 初回クリア報酬

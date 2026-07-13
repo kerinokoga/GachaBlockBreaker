@@ -502,8 +502,10 @@ public class CharacterManager : MonoBehaviour
         yield return new WaitForSeconds(duration);
         IsPenetrating = false;
         // 全ボールの貫通を解除
+        // ただしクリティカル中のボールはスキップ（クリティカル由来の貫通は
+        // 「次のパドルヒットまで」が仕様のため、奥義の時間切れに巻き込まない）
         foreach (var ball in FindObjectsOfType<BallController>())
-            ball.SetPenetrate(false);
+            if (!ball.IsCritical) ball.SetPenetrate(false);
         Debug.Log("[CharacterManager] 貫通終了");
     }
 }

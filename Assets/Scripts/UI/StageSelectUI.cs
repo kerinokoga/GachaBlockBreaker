@@ -134,6 +134,10 @@ public class StageSelectUI : MonoBehaviour
 
     void BuildUI()
     {
+        // ステージセレクトに来た時点で通常モードに戻す
+        // （エンドレスのフラグはエンドレスの「挑戦する」でのみ true になる）
+        ResultData.IsEndless = false;
+
         var cGo = new GameObject("StageSelectCanvas");
         var c = cGo.AddComponent<Canvas>();
         c.renderMode = RenderMode.ScreenSpaceOverlay;

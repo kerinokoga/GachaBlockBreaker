@@ -108,6 +108,138 @@ public static class RankingManager
             });
     }
 
+    // ============================================================
+    // エンドレスモード用ランキング
+    // 構造: rankings/endless/entries/{uid} → { name, score, updatedAt }
+    // ============================================================
+
+    static CollectionReference EndlessEntries() =>
+        Db.Collection("rankings").Document("endless").Collection("entries");
+
+    /// <summary>
+    /// エンドレスのスコア（突破ウェーブ数）を送信。自己ベスト更新時のみ書き込み。
+    /// onDone(実際に更新されたか) — 表示側で「自己ベスト更新！」を出すのに使う。
+    /// </summary>
+    public static void SubmitEndlessScore(string playerName, int score, Action<bool> onDone = null)
+    {
+        string uid = null;
+        try
+        {
+            var user = Firebase.Auth.FirebaseAuth.DefaultInstance.CurrentUser;
+            if (user != null) uid = user.UserId;
+        }
+        catch { }
+
+        if (string.IsNullOrEmpty(uid) || score <= 0)
+        {
+            onDone?.Invoke(false);
+            return;
+        }
+        var docRef = EndlessEntries().Document(uid);
+
+        docRef.GetSnapshotAsync().ContinueWithOnMainThread(task =>
+        {
+            if (!task.IsCompletedSuccessfully)
+            {
+                Debug.LogWarning($"[Ranking] エンドレス既存スコア取得失敗: {task.Exception?.GetBaseException().Message}");
+                onDone?.Invoke(false);
+                return;
+            }
+
+            var snap = task.Result;
+            if (snap.Exists && snap.TryGetValue<long>("score", out var existing)
+                && (int)existing >= score)
+            {
+                onDone?.Invoke(false); // 既存の方が高い → 更新不要
+                return;
+            }
+
+            var data = new Dictionary<string, object>
+            {
+                { "name",      playerName },
+                { "score",     score },
+                { "updatedAt", FieldValue.ServerTimestamp }
+            };
+            docRef.SetAsync(data).ContinueWithOnMainThread(t2 =>
+            {
+                bool ok = t2.IsCompletedSuccessfully;
+                if (ok) Debug.Log($"[Ranking] エンドレススコア送信完了: {playerName} {score}");
+                else Debug.LogWarning($"[Ranking] エンドレススコア送信失敗: {t2.Exception?.GetBaseException().Message}");
+                onDone?.Invoke(ok);
+            });
+        });
+    }
+
+    /// <summary>エンドレスの上位 count 件を取得（スコア降順）。失敗時は空リスト。</summary>
+    public static void GetEndlessTop(int count, Action<List<EndlessEntry>> onDone)
+    {
+        EndlessEntries()
+            .OrderByDescending("score")
+            .Limit(count)
+            .GetSnapshotAsync()
+            .ContinueWithOnMainThread(task =>
+            {
+                var result = new List<EndlessEntry>();
+                if (task.IsCompletedSuccessfully)
+                {
+                    foreach (var doc in task.Result.Documents)
+                    {
+                        string name = doc.TryGetValue<string>("name", out var n) ? n : "???";
+                        int score   = doc.TryGetValue<long>("score", out var s) ? (int)s : 0;
+                        result.Add(new EndlessEntry { name = name, score = score, uid = doc.Id });
+                    }
+                }
+                else
+                {
+                    Debug.LogWarning($"[Ranking] エンドレス取得失敗: {task.Exception?.GetBaseException().Message}");
+                }
+                onDone?.Invoke(result);
+            });
+    }
+
+    /// <summary>
+    /// 自分のスコアの全国順位と全体人数を取得（Count 集計クエリ使用・読み取り課金が軽い）。
+    /// onDone(順位, 総人数)。失敗時は (-1, -1)。上位% は 順位/総人数 で計算できる。
+    /// </summary>
+    public static void GetEndlessMyRank(int myScore, Action<int, int> onDone)
+    {
+        try
+        {
+            // 自分より高いスコアの人数 → +1 が自分の順位
+            EndlessEntries().WhereGreaterThan("score", myScore).Count
+                .GetSnapshotAsync(AggregateSource.Server)
+                .ContinueWithOnMainThread(task =>
+                {
+                    if (!task.IsCompletedSuccessfully)
+                    {
+                        Debug.LogWarning($"[Ranking] 順位取得失敗: {task.Exception?.GetBaseException().Message}");
+                        onDone?.Invoke(-1, -1);
+                        return;
+                    }
+                    int rank = (int)task.Result.Count + 1;
+
+                    // 総人数
+                    EndlessEntries().Count
+                        .GetSnapshotAsync(AggregateSource.Server)
+                        .ContinueWithOnMainThread(t2 =>
+                        {
+                            if (!t2.IsCompletedSuccessfully)
+                            {
+                                Debug.LogWarning($"[Ranking] 総数取得失敗: {t2.Exception?.GetBaseException().Message}");
+                                onDone?.Invoke(rank, -1);
+                                return;
+                            }
+                            onDone?.Invoke(rank, (int)t2.Result.Count);
+                        });
+                });
+        }
+        catch (Exception e)
+        {
+            Debug.LogWarning($"[Ranking] 順位取得例外: {e.Message}");
+            onDone?.Invoke(-1, -1);
+        }
+    }
+
     // ---- データ構造 ----
 
     [System.Serializable]
@@ -116,5 +248,13 @@ public static class RankingManager
         public string name;
         public float rate;
         public string uid;  // 自分のエントリ判定用（ドキュメントID = プレイヤーUID）
+    }
+
+    [System.Serializable]
+    public class EndlessEntry
+    {
+        public string name;
+        public int score;
+        public string uid;
     }
 }

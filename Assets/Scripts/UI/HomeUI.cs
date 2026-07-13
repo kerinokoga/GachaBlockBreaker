@@ -21,6 +21,8 @@ public class HomeUI : MonoBehaviour
         MonthlyPassManager.CheckDailyGrant();
         // デイリーミッションの日付リセット判定
         DailyMissionManager.CheckReset();
+        // ホームに戻った時点で通常モードへ（エンドレスは「挑戦する」でのみ true）
+        ResultData.IsEndless = false;
         // 進行状況をクラウドへバックアップ（ホーム到達ごと・非同期）
         CloudSaveManager.Save();
         BuildUI();
@@ -134,9 +136,9 @@ public class HomeUI : MonoBehaviour
         overlay.HideCharacter();
 
         // 視覚的余白を加えてプレゼントボタンを少し外側まで囲む
-        // プレゼントボタン位置 (0.12, 0.29) size 260x78 に合わせた範囲（余白込み）
-        Vector2 pMin = new Vector2(0.0f, 0.255f);
-        Vector2 pMax = new Vector2(0.27f, 0.325f);
+        // プレゼントボタン位置 (0.12, 0.33) size 260x78 に合わせた範囲（余白込み）
+        Vector2 pMin = new Vector2(0.0f, 0.295f);
+        Vector2 pMax = new Vector2(0.27f, 0.365f);
 
         // スポットライト（プレゼントボタンのみクリック可）
         overlay.ShowSpotlight(pMin, pMax);
@@ -155,7 +157,7 @@ public class HomeUI : MonoBehaviour
             "受け取りなさい");
 
         // 矢印をプレゼントボタンの右に配置（◀ でボタンを指す）
-        overlay.AddArrowAt(new Vector2(0.32f, 0.29f), "◀");
+        overlay.AddArrowAt(new Vector2(0.32f, 0.33f), "◀");
 
         // 専用ボイス（Tutorial/present.wav）
         AudioClip presentVoice = Resources.Load<AudioClip>("Tutorial/present");
@@ -196,8 +198,9 @@ public class HomeUI : MonoBehaviour
         overlay.HideCharacter();
 
         // 視覚的余白を加えてガチャボタンを少し外側まで囲む
-        Vector2 gMin = new Vector2(0.0f, 0.615f);
-        Vector2 gMax = new Vector2(0.27f, 0.685f);
+        // ガチャボタン位置 (0.12, 0.69) size 260x78 に合わせた範囲（余白込み）
+        Vector2 gMin = new Vector2(0.0f, 0.655f);
+        Vector2 gMax = new Vector2(0.27f, 0.725f);
 
         // スポットライト（ガチャボタンのみクリック可）
         overlay.ShowSpotlight(gMin, gMax);
@@ -217,7 +220,7 @@ public class HomeUI : MonoBehaviour
             "ガチャボタンをタップよ");
 
         // 矢印をガチャボタンの右に配置（◀ でボタンを指す）
-        overlay.AddArrowAt(new Vector2(0.32f, 0.65f), "◀");
+        overlay.AddArrowAt(new Vector2(0.32f, 0.69f), "◀");
 
         // 専用ボイス（Tutorial/gacha.wav）
         AudioClip gachaVoice = Resources.Load<AudioClip>("Tutorial/gacha");
@@ -315,28 +318,27 @@ public class HomeUI : MonoBehaviour
         overlay.HideCharacter();
 
         // スタートボタン位置:
-        //   anchor (0.12, 0.74), sizeDelta (260, 78), canvas 1080x1920
-        //   x: -0.4 〜 259.6 px (= 0.000 〜 0.240 normalized)
-        //   y: 1381.8 〜 1459.8 px (= 0.720 〜 0.760 normalized)
+        //   anchor (0.12, 0.78), sizeDelta (260, 78), canvas 1080x1920
+        //   y: 0.760 〜 0.800 normalized
         // 視覚的余白を加えてスポットライト範囲を確保
         overlay.ShowSpotlight(
-            new Vector2(0.0f,  0.705f),
-            new Vector2(0.28f, 0.775f));
+            new Vector2(0.0f,  0.745f),
+            new Vector2(0.28f, 0.815f));
 
         // 強調表示：スポットライト境界に脈動する黄金色フレーム
         overlay.AddHighlightFrame(
-            new Vector2(0.0f,  0.705f),
-            new Vector2(0.28f, 0.775f),
+            new Vector2(0.0f,  0.745f),
+            new Vector2(0.28f, 0.815f),
             new Color(1f, 0.9f, 0.2f), // 黄金色
             10f);
 
         // 吹き出しを画面上部に配置
-        overlay.SetBubbleAnchor(new Vector2(0.05f, 0.82f), new Vector2(0.95f, 0.92f));
+        overlay.SetBubbleAnchor(new Vector2(0.05f, 0.87f), new Vector2(0.95f, 0.97f));
         overlay.SetMessageAlignment(TextAnchor.MiddleLeft);
         overlay.SetMessage("まずはスタートを押しなさいよ！");
 
-        // 矢印をスタートボタン真上に配置（x=0.12, y=0.80）
-        overlay.AddArrowAt(new Vector2(0.12f, 0.80f), "▼");
+        // 矢印をスタートボタン真上に配置（x=0.12, y=0.835）
+        overlay.AddArrowAt(new Vector2(0.12f, 0.835f), "▼");
 
         overlay.ShowSkipButton(() =>
         {
@@ -556,40 +558,55 @@ public class HomeUI : MonoBehaviour
         }
 
         // ===== 3. ボタン（フェードイン付き） =====
+        // 8ボタン構成。全体バランスのため 0.78〜0.15 に等間隔配置
         MakeMenuButton(cGo.transform, "スタート",
             new Color(0.1f, 0.4f, 0.8f), new Color(0.2f, 0.6f, 1f),
-            0.74f, "♡", () => SceneManager.LoadScene("StageSelectScene"));
+            0.78f, "♡", () => SceneManager.LoadScene("StageSelectScene"));
 
         MakeMenuButton(cGo.transform, "ガチャ",
             new Color(0.55f, 0.15f, 0.8f), new Color(0.75f, 0.35f, 1f),
-            0.65f, "♡", () => SceneManager.LoadScene("GachaScene"));
+            0.69f, "♡", () => SceneManager.LoadScene("GachaScene"));
 
         MakeMenuButton(cGo.transform, "オーブ購入",
             new Color(0.75f, 0.45f, 0.1f), new Color(0.95f, 0.65f, 0.2f),
-            0.56f, "♡", () => SceneManager.LoadScene("ShopScene"));
+            0.60f, "♡", () => SceneManager.LoadScene("ShopScene"));
 
         MakeMenuButton(cGo.transform, "キャラ管理",
             new Color(0.1f, 0.45f, 0.35f), new Color(0.2f, 0.65f, 0.5f),
-            0.47f, "♡", () => SceneManager.LoadScene("CharaManageScene"));
+            0.51f, "♡", () => SceneManager.LoadScene("CharaManageScene"));
 
         MakeMenuButton(cGo.transform, "コレクション",
             new Color(0.7f, 0.15f, 0.4f), new Color(0.9f, 0.35f, 0.55f),
-            0.38f, "♡", () => SceneManager.LoadScene("CollectionScene"));
-
-        // ランキング機能は一旦非公開（バックエンドのスコア送信は継続中）
-        // 再公開する場合は以下のコメントを外すだけ
-        // MakeMenuButton(cGo.transform, "ランキング",
-        //     new Color(0.15f, 0.3f, 0.55f), new Color(0.3f, 0.5f, 0.8f),
-        //     0.29f, "▷", () => SceneManager.LoadScene("RankingScene"));
+            0.42f, "♡", () => SceneManager.LoadScene("CollectionScene"));
 
         // プレゼントボックスボタン（バッジ付き）
-        // ランキングボタン非公開に伴い 0.20 → 0.29 に詰めた
-        MakePresentButton(cGo.transform, 0.29f);
+        MakePresentButton(cGo.transform, 0.33f);
 
         // デイリーミッションボタン
         MakeMenuButton(cGo.transform, "ミッション",
             new Color(0.15f, 0.5f, 0.6f), new Color(0.3f, 0.7f, 0.8f),
-            0.20f, "♡", () => ShowMissionPopup());
+            0.24f, "♡", () => ShowMissionPopup());
+
+        // エンドレスモードボタン（ステージ5クリアで解放）
+        bool endlessUnlocked = EndlessManager.IsUnlocked;
+        MakeMenuButton(cGo.transform, "エンドレスモード",
+            endlessUnlocked ? new Color(0.55f, 0.15f, 0.55f) : new Color(0.2f, 0.2f, 0.25f),
+            endlessUnlocked ? new Color(0.85f, 0.35f, 0.85f) : new Color(0.35f, 0.35f, 0.4f),
+            0.15f, "♡", () => ShowEndlessPopup());
+
+        // エンドレス初回チャレンジ報酬の告知（解放済み＆本日未挑戦の日のみ）
+        // 画面最下部中央（背景キャラの顔と被らない位置）
+        if (EndlessManager.IsUnlocked && !EndlessManager.HasChallengedToday)
+        {
+            var endlessNotice = MakeText(cGo.transform,
+                $"エンドレス初回挑戦で{EndlessManager.DailyFirstReward}オーブGET！",
+                28, new Color(1f, 0.85f, 0.2f),
+                new Vector2(0.5f, 0.035f), new Vector2(800f, 40f));
+            AddShadow(endlessNotice.gameObject);
+            var noticeOl = endlessNotice.gameObject.AddComponent<Outline>();
+            noticeOl.effectColor = new Color(0f, 0f, 0f, 0.8f);
+            noticeOl.effectDistance = new Vector2(1.5f, -1.5f);
+        }
 
         // アカウント連携ボタン（左上）
         var linkGo = new GameObject("LinkBtn");
@@ -1264,6 +1281,238 @@ public class HomeUI : MonoBehaviour
         clrt.offsetMin = clrt.offsetMax = Vector2.zero;
     }
 
+    // ============================================================
+    // エンドレスモード（案内・ランキング）
+    // ============================================================
+
+    /// <summary>
+    /// エンドレスモードの案内画面。ルール・本日の報酬状態・自己ベスト・全国ランクを表示し、
+    /// 挑戦する / ランキングを見る / とじる のボタンを持つ。
+    /// </summary>
+    void ShowEndlessPopup()
+    {
+        var overlay = new GameObject("EndlessOverlay");
+        overlay.transform.SetParent(canvasRoot, false);
+        overlay.AddComponent<Image>().color = new Color(0f, 0f, 0f, 0.75f);
+        var ort = overlay.GetComponent<RectTransform>();
+        ort.anchorMin = Vector2.zero; ort.anchorMax = Vector2.one;
+        ort.offsetMin = ort.offsetMax = Vector2.zero;
+
+        // 未解放: 案内のみ
+        if (!EndlessManager.IsUnlocked)
+        {
+            var lockT = MakeText(overlay.transform,
+                $"エンドレスモードは\nステージ{EndlessManager.UnlockStage}をクリアすると解放されます",
+                34, Color.white, new Vector2(0.5f, 0.55f), new Vector2(900f, 140f));
+            lockT.lineSpacing = 1.3f;
+            AddShadow(lockT.gameObject);
+
+            MakeSettingsItem(overlay.transform, "とじる", 0.40f,
+                new Color(0.25f, 0.25f, 0.35f), new Color(0.45f, 0.45f, 0.6f, 0.6f),
+                () => Destroy(overlay));
+            return;
+        }
+
+        // ダイアログ外枠
+        var dialog = new GameObject("Dialog");
+        dialog.transform.SetParent(overlay.transform, false);
+        dialog.AddComponent<Image>().color = new Color(0.55f, 0.15f, 0.55f, 0.55f);
+        var drt = dialog.GetComponent<RectTransform>();
+        drt.anchorMin = drt.anchorMax = new Vector2(0.5f, 0.5f);
+        drt.anchoredPosition = Vector2.zero;
+        drt.sizeDelta = new Vector2(880f, 1150f);
+
+        var dInner = new GameObject("Inner");
+        dInner.transform.SetParent(dialog.transform, false);
+        dInner.AddComponent<Image>().color = new Color(0.06f, 0.04f, 0.15f, 0.97f);
+        var diRt = dInner.GetComponent<RectTransform>();
+        diRt.anchorMin = Vector2.zero; diRt.anchorMax = Vector2.one;
+        diRt.offsetMin = new Vector2(4f, 4f); diRt.offsetMax = new Vector2(-4f, -4f);
+
+        // タイトル
+        var titleT = MakeText(dialog.transform, "✦ エンドレスモード ✦", 42,
+            new Color(1f, 0.85f, 0.1f), new Vector2(0.5f, 0.935f), new Vector2(800f, 60f));
+        AddShadow(titleT.gameObject);
+
+        // ルール説明
+        var ruleT = MakeText(dialog.transform,
+            "襲いくる敵を何ステージ突破できるか挑戦！\n" +
+            "進むほど敵が強くなっていく\n" +
+            "5の倍数ステージはボス（裏ボスあり・突破で+2）\n" +
+            "ストック3、全ロストでスコア確定",
+            26, new Color(0.85f, 0.85f, 0.95f), new Vector2(0.5f, 0.81f), new Vector2(820f, 160f));
+        ruleT.lineSpacing = 1.4f;
+
+        // 本日の報酬状態
+        bool rewarded = EndlessManager.HasChallengedToday;
+        var rewardT = MakeText(dialog.transform,
+            rewarded
+                ? "本日の初回チャレンジ報酬: 獲得済み"
+                : $"本日の初回チャレンジ報酬: {EndlessManager.DailyFirstReward}オーブ",
+            28, rewarded ? new Color(0.6f, 0.6f, 0.7f) : new Color(0.4f, 0.95f, 0.6f),
+            new Vector2(0.5f, 0.675f), new Vector2(820f, 40f));
+        AddShadow(rewardT.gameObject);
+
+        // 自己ベスト・全国ランク
+        int best = PlayerPrefs.GetInt("GachaBlock_EndlessBest", 0);
+        MakeText(dialog.transform,
+            best > 0 ? $"自己ベスト: {best} ステージ" : "自己ベスト: ---",
+            30, new Color(0.4f, 0.9f, 1f), new Vector2(0.5f, 0.615f), new Vector2(820f, 44f));
+
+        var myRankT = MakeText(dialog.transform,
+            best > 0 ? "全国ランク: 取得中..." : "全国ランク: ---",
+            30, new Color(1f, 0.75f, 0.3f), new Vector2(0.5f, 0.555f), new Vector2(820f, 44f));
+        if (best > 0)
+        {
+            RankingManager.GetEndlessMyRank(best, (rank, total) =>
+            {
+                if (myRankT == null) return;
+                if (rank <= 0) { myRankT.text = "全国ランク: 取得できませんでした"; return; }
+                string totalPart = total > 0 ? $" / {total}人中" : "";
+                string pctPart = total > 0
+                    ? $"（上位 {Mathf.Clamp((float)rank / total * 100f, 0.1f, 100f):0.#}%）" : "";
+                myRankT.text = $"全国ランク: {rank}位{totalPart} {pctPart}";
+            });
+        }
+
+        // 挑戦するボタン
+        MakeSettingsItem(dialog.transform, "挑戦する", 0.43f,
+            new Color(0.7f, 0.3f, 0.1f), new Color(1f, 0.55f, 0.2f, 0.6f),
+            () =>
+            {
+                ResultData.IsEndless = true;
+                SceneManager.LoadScene("CharaSelectScene");
+            });
+        MakeText(dialog.transform, $"（スタミナ{EndlessManager.StaminaCost}消費）", 22,
+            new Color(0.6f, 0.6f, 0.7f), new Vector2(0.5f, 0.365f), new Vector2(400f, 30f));
+
+        // ランキングを見るボタン
+        MakeSettingsItem(dialog.transform, "ランキングを見る", 0.27f,
+            new Color(0.15f, 0.3f, 0.55f), new Color(0.3f, 0.5f, 0.8f, 0.6f),
+            () => ShowEndlessRankingPopup());
+
+        // とじるボタン
+        MakeSettingsItem(dialog.transform, "とじる", 0.12f,
+            new Color(0.25f, 0.25f, 0.35f), new Color(0.45f, 0.45f, 0.6f, 0.6f),
+            () => Destroy(overlay));
+    }
+
+    /// <summary>エンドレスの全国ランキング（TOP10＋自分の順位）ポップアップ</summary>
+    void ShowEndlessRankingPopup()
+    {
+        var overlay = new GameObject("EndlessRankOverlay");
+        overlay.transform.SetParent(canvasRoot, false);
+        overlay.AddComponent<Image>().color = new Color(0f, 0f, 0f, 0.8f);
+        var ort = overlay.GetComponent<RectTransform>();
+        ort.anchorMin = Vector2.zero; ort.anchorMax = Vector2.one;
+        ort.offsetMin = ort.offsetMax = Vector2.zero;
+
+        var dialog = new GameObject("Dialog");
+        dialog.transform.SetParent(overlay.transform, false);
+        dialog.AddComponent<Image>().color = new Color(0.15f, 0.3f, 0.55f, 0.55f);
+        var drt = dialog.GetComponent<RectTransform>();
+        drt.anchorMin = drt.anchorMax = new Vector2(0.5f, 0.5f);
+        drt.anchoredPosition = Vector2.zero;
+        drt.sizeDelta = new Vector2(880f, 1200f);
+
+        var dInner = new GameObject("Inner");
+        dInner.transform.SetParent(dialog.transform, false);
+        dInner.AddComponent<Image>().color = new Color(0.06f, 0.04f, 0.15f, 0.97f);
+        var diRt = dInner.GetComponent<RectTransform>();
+        diRt.anchorMin = Vector2.zero; diRt.anchorMax = Vector2.one;
+        diRt.offsetMin = new Vector2(4f, 4f); diRt.offsetMax = new Vector2(-4f, -4f);
+
+        var titleT = MakeText(dialog.transform, "全国ランキング TOP30", 40,
+            new Color(1f, 0.85f, 0.1f), new Vector2(0.5f, 0.94f), new Vector2(800f, 60f));
+        AddShadow(titleT.gameObject);
+
+        // TOP30 リスト（スクロール対応・非同期取得）
+        var scrollGo = new GameObject("RankScroll");
+        scrollGo.transform.SetParent(dialog.transform, false);
+        scrollGo.AddComponent<Image>().color = new Color(0f, 0f, 0f, 0.01f); // ドラッグ入力受付用
+        var scroll = scrollGo.AddComponent<ScrollRect>();
+        scroll.horizontal = false;
+        scroll.vertical = true;
+        scroll.scrollSensitivity = 30f;
+        var srt = scrollGo.GetComponent<RectTransform>();
+        srt.anchorMin = new Vector2(0.06f, 0.24f);
+        srt.anchorMax = new Vector2(0.94f, 0.885f);
+        srt.offsetMin = srt.offsetMax = Vector2.zero;
+
+        var vpGo = new GameObject("Viewport");
+        vpGo.transform.SetParent(scrollGo.transform, false);
+        vpGo.AddComponent<Image>().color = new Color(0f, 0f, 0f, 0.01f);
+        vpGo.AddComponent<Mask>().showMaskGraphic = false;
+        var vpRt = vpGo.GetComponent<RectTransform>();
+        vpRt.anchorMin = Vector2.zero; vpRt.anchorMax = Vector2.one;
+        vpRt.offsetMin = vpRt.offsetMax = Vector2.zero;
+
+        var contentGo = new GameObject("Content");
+        contentGo.transform.SetParent(vpGo.transform, false);
+        var contentRt = contentGo.AddComponent<RectTransform>();
+        contentRt.anchorMin = new Vector2(0f, 1f);
+        contentRt.anchorMax = new Vector2(1f, 1f);
+        contentRt.pivot = new Vector2(0.5f, 1f);
+        contentRt.anchoredPosition = Vector2.zero;
+        contentRt.sizeDelta = new Vector2(0f, 200f);
+        scroll.content = contentRt;
+        scroll.viewport = vpRt;
+
+        var listT = contentGo.AddComponent<Text>();
+        listT.text = "読み込み中...";
+        listT.fontSize = 28;
+        listT.color = new Color(0.9f, 0.9f, 0.95f);
+        listT.alignment = TextAnchor.UpperCenter;
+        listT.font = Font.CreateDynamicFontFromOSFont("Arial", 28);
+        listT.lineSpacing = 1.45f;
+        listT.supportRichText = true;
+        listT.raycastTarget = false;
+
+        string myUid = AuthManager.GetUID();
+        RankingManager.GetEndlessTop(30, entries =>
+        {
+            if (listT == null) return;
+            if (entries == null || entries.Count == 0)
+            {
+                listT.text = "まだ記録がありません。\n最初の挑戦者になろう！";
+                return;
+            }
+            var sb = new System.Text.StringBuilder();
+            for (int i = 0; i < entries.Count; i++)
+            {
+                var e = entries[i];
+                string line = $"{i + 1}位  {e.name}   {e.score}体撃破";
+                if (!string.IsNullOrEmpty(myUid) && e.uid == myUid)
+                    line = $"<color=#66FF99>{line} ★</color>";
+                sb.AppendLine(line);
+            }
+            listT.text = sb.ToString();
+            // 行数に合わせてスクロール範囲を更新
+            if (contentRt != null)
+                contentRt.sizeDelta = new Vector2(0f, entries.Count * 42f + 30f);
+        });
+
+        // 自分の順位（非同期取得）
+        int best = PlayerPrefs.GetInt("GachaBlock_EndlessBest", 0);
+        var myT = MakeText(dialog.transform,
+            best > 0 ? "あなた: 取得中..." : "あなた: 記録なし",
+            30, new Color(0.4f, 1f, 0.6f), new Vector2(0.5f, 0.185f), new Vector2(800f, 44f));
+        if (best > 0)
+        {
+            RankingManager.GetEndlessMyRank(best, (rank, total) =>
+            {
+                if (myT == null) return;
+                if (rank <= 0) { myT.text = $"あなた: ベスト{best}体撃破（順位取得失敗）"; return; }
+                string totalPart = total > 0 ? $" / {total}人中" : "";
+                myT.text = $"あなた: {rank}位{totalPart}  ベスト {best}体撃破";
+            });
+        }
+
+        MakeSettingsItem(dialog.transform, "とじる", 0.075f,
+            new Color(0.25f, 0.25f, 0.35f), new Color(0.45f, 0.45f, 0.6f, 0.6f),
+            () => Destroy(overlay));
+    }
+
     /// <summary>
     /// デイリーミッション進捗ポップアップ。
     /// 報酬はミッション達成の瞬間にプレゼントボックスへ自動付与されるため、
@@ -1697,7 +1946,10 @@ public class HomeUI : MonoBehaviour
         var txtGo = new GameObject("Txt");
         txtGo.transform.SetParent(go.transform, false);
         var t = txtGo.AddComponent<Text>();
-        t.text = label; t.fontSize = 28; t.color = Color.white;
+        t.text = label;
+        // 長いラベルはボタン幅（左右の♡アイコンの内側）に収まるよう縮小
+        t.fontSize = label.Length >= 7 ? 22 : 28;
+        t.color = Color.white;
         t.alignment = TextAnchor.MiddleCenter;
         var cherry = Resources.Load<Font>("Fonts/CherryBombOne-Regular");
         t.font = cherry != null ? cherry : Font.CreateDynamicFontFromOSFont("Arial", 28);

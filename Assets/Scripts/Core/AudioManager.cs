@@ -337,7 +337,7 @@ public class AudioManager : MonoBehaviour
     /// CharacterData.voiceVolumeMultiplier を volumeScale に渡すことでキャラ別補正可能。
     /// </summary>
     /// <summary>全ボイス共通の底上げ倍率（BGMに対して聞き取りやすくする）</summary>
-    const float VoiceBoost = 1.5f;
+    const float VoiceBoost = 2.0f;
 
     public void PlayVoice(AudioClip clip, float volumeScale, VoicePriority priority)
     {

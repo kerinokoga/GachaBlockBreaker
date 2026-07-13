@@ -14,6 +14,9 @@ public static class StaminaManager
     /// <summary>ステージ番号に応じたスタミナ消費量</summary>
     public static int GetCost(int stageNumber)
     {
+        // エンドレスモードは固定コスト（キャラ選択の表示・消費フローが共通で使える）
+        if (ResultData.IsEndless) return EndlessManager.StaminaCost;
+
         if (stageNumber <= 3)  return 1;
         if (stageNumber <= 5)  return 2;
         if (stageNumber <= 8)  return 3;

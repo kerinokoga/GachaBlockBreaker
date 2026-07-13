@@ -141,6 +141,9 @@ public static class CloudSaveManager
         data["starterPackBought"] = PlayerPrefs.GetInt("GachaBlock_StarterPackBought", 0);
         data["passExpiry"]        = MonthlyPassManager.GetExpiryString();
 
+        // エンドレス自己ベスト
+        data["endlessBest"] = PlayerPrefs.GetInt("GachaBlock_EndlessBest", 0);
+
         // 保存日時（サーバー時刻）
         data["updatedAt"] = FieldValue.ServerTimestamp;
 
@@ -268,6 +271,10 @@ public static class CloudSaveManager
             PlayerPrefs.SetInt("GachaBlock_StarterPackBought", (int)starter);
         if (snap.TryGetValue<string>("passExpiry", out var passExpiry))
             MonthlyPassManager.SetExpiryString(passExpiry);
+
+        // エンドレス自己ベスト
+        if (snap.TryGetValue<long>("endlessBest", out var endlessBest))
+            PlayerPrefs.SetInt("GachaBlock_EndlessBest", (int)endlessBest);
 
         // 所持キャラ
         if (snap.TryGetValue<List<object>>("ownedChars", out var chars))

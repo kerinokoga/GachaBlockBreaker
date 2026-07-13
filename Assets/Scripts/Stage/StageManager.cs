@@ -60,6 +60,26 @@ public class StageManager : MonoBehaviour
 
     public bool IsAllCleared() => destroyedBlockCount >= totalBlockCount && totalBlockCount > 0;
 
+    // ---- エンドレス用 HP 倍率 ----
+
+    float endlessHPMul = 1f;
+
+    /// <summary>
+    /// エンドレスモード用: 以降の BuildStage で耐久ブロック・ボスの HP に掛ける倍率を設定する。
+    /// 通常ステージでは 1.0 のまま（GameManager が設定しない限り影響なし）。
+    /// </summary>
+    public void SetEndlessHPMultiplier(float mul) => endlessHPMul = Mathf.Max(0.1f, mul);
+
+    // ---- エンドレス用 出現キャラ差し替え ----
+
+    StageData charSourceOverride;
+
+    /// <summary>
+    /// エンドレスモード用: ボスのアイコン・ボイスを別ステージのキャラに差し替える。
+    /// null なら通常どおりレイアウト元ステージのキャラを使用。
+    /// </summary>
+    public void SetEndlessCharSource(StageData src) => charSourceOverride = src;
+
     // ---- ステージ構築 ----
 
     public void BuildStage(StageData data = null)
@@ -153,7 +173,7 @@ public class StageManager : MonoBehaviour
             {
                 // DurableBlock は HP を外部から設定できるよう公開している
                 if (block is DurableBlock durable)
-                    durable.SetHP(blockData.hp);
+                    durable.SetHP(Mathf.Max(1, Mathf.RoundToInt(blockData.hp * endlessHPMul)));
 
                 // SpeedBlock は速度倍率を設定
                 if (block is SpeedBlock speedBlock)
@@ -166,17 +186,22 @@ public class StageManager : MonoBehaviour
                     int bossHP = blockData.hp;
                     if (isTrueStage && stageData.hasTrueStage)
                         bossHP = Mathf.Max(1, Mathf.RoundToInt(bossHP * stageData.trueBossHPMul));
+                    // エンドレスのスケーリング倍率を適用
+                    bossHP = Mathf.Max(1, Mathf.RoundToInt(bossHP * endlessHPMul));
                     boss.SetHP(bossHP);
                     boss.difficulty = (stageData.stageNumber - 1) / 5 + 1; // 1~4
                     boss.OnBossAttack += HandleBossAttack;
 
                     // キャラアイコン + ボスキャラデータを設定
-                    if (!string.IsNullOrEmpty(stageData.characterName))
+                    // （エンドレスでは抽選キャラに差し替え）
+                    string bossCharName = charSourceOverride != null
+                        ? charSourceOverride.characterName : stageData.characterName;
+                    if (!string.IsNullOrEmpty(bossCharName))
                     {
                         var allChars = Resources.LoadAll<CharacterData>("Characters");
                         foreach (var cd in allChars)
                         {
-                            if (cd.characterName == stageData.characterName)
+                            if (cd.characterName == bossCharName)
                             {
                                 bossCharData = cd;
                                 if (cd.icon != null) boss.SetIcon(cd.icon);

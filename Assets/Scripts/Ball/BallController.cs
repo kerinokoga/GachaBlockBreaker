@@ -356,14 +356,35 @@ public class BallController : MonoBehaviour
                 return;
             }
 
+            // 他のボールとは干渉しない（分裂ボール同士が空中で跳ね返り合うのを防止）
+            if (other.GetComponent<BallController>() != null)
+                return;
+
             // 壁は反射させる
             Vector2 vel = rb.velocity;
             Vector2 cp = other.ClosestPoint(transform.position);
             Vector2 normal = ((Vector2)transform.position - cp).normalized;
             if (normal.sqrMagnitude < 0.01f)
-                normal = Vector2.up;
-            rb.velocity = Vector2.Reflect(vel, normal);
-            ClampAngle();
+            {
+                // ボール中心が壁コライダーに深くめり込むと ClosestPoint が自身の位置を返し
+                // 法線がゼロになる。従来はここで「上向き」固定だったため、側壁でも上に
+                // 反射してボールが永遠に落ちてこないバグがあった。
+                // → 壁の中心からの相対位置で法線の向きを推定する
+                Vector2 toBall = (Vector2)transform.position - (Vector2)other.bounds.center;
+                Vector2 ext = other.bounds.extents;
+                float nx = ext.x > 0.001f ? toBall.x / ext.x : 0f;
+                float ny = ext.y > 0.001f ? toBall.y / ext.y : 0f;
+                normal = Mathf.Abs(nx) >= Mathf.Abs(ny)
+                    ? new Vector2(Mathf.Sign(nx), 0f)
+                    : new Vector2(0f, Mathf.Sign(ny));
+            }
+
+            // 壁から離れる方向に動いている場合は反射しない（めり込み中の二重反射防止）
+            if (Vector2.Dot(vel, normal) < 0f)
+            {
+                rb.velocity = Vector2.Reflect(vel, normal);
+                ClampAngle();
+            }
         }
     }
 
@@ -396,6 +417,11 @@ public class BallController : MonoBehaviour
         SetPenetrate(true);
         if (sr != null) sr.color = Color.yellow;
     }
+
+    /// <summary>
+    /// 外部から角度補正を適用する（分裂直後など、速度を直接書き換えた後に呼ぶ）
+    /// </summary>
+    public void ApplyClampAngle() => ClampAngle();
 
     /// <summary>
     /// originalColor の外部参照用（分裂クローンの状態継承に使用）
