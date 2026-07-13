@@ -1279,10 +1279,10 @@ public class CharaSelectUI : MonoBehaviour
     {
         switch (type)
         {
-            case PassiveEffectType.BallDamageUp:    return $"ダメージ ×{val:F1}";
+            case PassiveEffectType.BallDamageUp:    return $"ダメージ +{(val - 1f) * 100f:0}%";
             case PassiveEffectType.ExtraDamage:     return $"追加ダメージ +{(int)val}";
             case PassiveEffectType.ExtraStock:      return $"開始時ストック +{(int)val}";
-            case PassiveEffectType.UltGaugeBoost:   return $"奥義ゲージ増加量 ×{val:F1}";
+            case PassiveEffectType.UltGaugeBoost:   return $"奥義ゲージ増加量 +{(val - 1f) * 100f:0}%";
             case PassiveEffectType.CriticalRangeUp: return $"クリティカル範囲 +{(int)val}%";
             default: return "なし";
         }
@@ -1292,7 +1292,7 @@ public class CharaSelectUI : MonoBehaviour
     {
         switch (cd.ultimateType)
         {
-            case UltimateSkillType.PowerBurst:   return $"{cd.ultimateDuration:F0}\u79d2\u9593\u3001\u30c0\u30e1\u30fc\u30b8 \u00d7{cd.ultimateValue:F1}";
+            case UltimateSkillType.PowerBurst:   return $"{cd.ultimateDuration:F0}\u79d2\u9593\u3001\u30c0\u30e1\u30fc\u30b8 +{(cd.ultimateValue - 1f) * 100f:0}%";
             case UltimateSkillType.MassDestroy:  return $"\u5168\u30d6\u30ed\u30c3\u30af\u306b {(int)cd.ultimateValue} \u30c0\u30e1\u30fc\u30b8";
             case UltimateSkillType.StockRecover: return $"\u30b9\u30c8\u30c3\u30af\u56de\u5fa9 +{(int)cd.ultimateValue}";
             case UltimateSkillType.BarrierShot:  return "\u6b21\u306e1\u30df\u30b9\u3092\u30ad\u30e3\u30f3\u30bb\u30eb";

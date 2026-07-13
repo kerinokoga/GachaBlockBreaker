@@ -218,6 +218,8 @@ public class BallController : MonoBehaviour
         float rad = angle * Mathf.Deg2Rad;
         Vector2 dir = new Vector2(Mathf.Cos(rad), Mathf.Sin(rad));
         rb.velocity = dir * speed;
+
+        ApplyUltPenetrateIfActive();
     }
 
     /// <summary>
@@ -229,6 +231,19 @@ public class BallController : MonoBehaviour
         float rad = angleDeg * Mathf.Deg2Rad;
         rb.velocity = new Vector2(Mathf.Cos(rad), Mathf.Sin(rad)) * speed;
         ClampAngle();
+
+        ApplyUltPenetrateIfActive();
+    }
+
+    /// <summary>
+    /// 貫通奥義の効果中なら貫通状態を付け直す。
+    /// 奥義発動時に存在しなかったボール（ミス後のリスポーン、効果中に生まれた分裂クローン）にも
+    /// 発射の瞬間に貫通が付くように、発射処理の共通経路で呼ぶ。
+    /// </summary>
+    void ApplyUltPenetrateIfActive()
+    {
+        if (CharacterManager.Instance != null && CharacterManager.Instance.IsPenetrating)
+            SetPenetrate(true);
     }
 
     /// <summary>

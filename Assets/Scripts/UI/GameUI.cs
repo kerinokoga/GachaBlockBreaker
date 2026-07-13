@@ -290,7 +290,7 @@ public class GameUI : MonoBehaviour
         if (cd.ultimateType == UltimateSkillType.PowerBurst)
         {
             StartCoroutine(UltEffectTimerCoroutine(
-                $"ダメージ×{cd.ultimateValue:0.#}倍", cd.ultimateDuration));
+                $"ダメージ+{(cd.ultimateValue - 1f) * 100f:0}%", cd.ultimateDuration));
         }
         else if (cd.ultimateType == UltimateSkillType.Penetrate)
         {
@@ -305,7 +305,7 @@ public class GameUI : MonoBehaviour
         switch (cd.ultimateType)
         {
             case UltimateSkillType.PowerBurst:
-                return $"{cd.ultimateDuration:0.#}秒間 ダメージ×{cd.ultimateValue:0.#}！";
+                return $"{cd.ultimateDuration:0.#}秒間 ダメージ+{(cd.ultimateValue - 1f) * 100f:0}%！";
             case UltimateSkillType.MassDestroy:
                 return $"全ブロックに {cd.ultimateValue:0.#} ダメージ！";
             case UltimateSkillType.StockRecover:
@@ -397,8 +397,19 @@ public class GameUI : MonoBehaviour
     /// ボスアイコン（中央上部）と被らないよう右側に配置。
     /// ゲーム内時間で減少（一時停止中は止まる）。
     /// </summary>
+    // 効果タイマーの世代番号。ClearUltEffectTimers で進めると、
+    // 古い世代のタイマー表示は次のフレームで自動的に消える
+    int ultTimerGeneration = 0;
+
+    /// <summary>効果タイマー表示を全て消す（裏ステージ突入など、効果の強制リセット時に呼ぶ）</summary>
+    public void ClearUltEffectTimers()
+    {
+        ultTimerGeneration++;
+    }
+
     System.Collections.IEnumerator UltEffectTimerCoroutine(string effectLabel, float duration)
     {
+        int gen = ultTimerGeneration;
         var go = new GameObject("UltEffectTimer");
         go.transform.SetParent(canvasRoot, false);
         go.transform.SetAsLastSibling();
@@ -424,9 +435,20 @@ public class GameUI : MonoBehaviour
         activeUltTimers.Add(rt);
         RelayoutUltTimers();
 
+        // 発射前（Ready中）に発動した場合、効果はボール発射までカウントが始まらないため
+        // 表示のカウントダウンも発射まで待つ（CharacterManager.WaitForPlaying と同期）
+        while (gen == ultTimerGeneration
+               && GameManager.Instance != null
+               && GameManager.Instance.CurrentState == GameManager.GameState.Ready)
+        {
+            t.text = $"{effectLabel}　残り {duration:0.0}秒";
+            yield return null;
+        }
+
         // ゲーム内時間でカウントダウン（奥義効果の進行と同期、pause 中は停止）
+        // 世代が進んだら（＝効果の強制リセット）即座に表示を終了する
         float remaining = duration;
-        while (remaining > 0f)
+        while (remaining > 0f && gen == ultTimerGeneration)
         {
             remaining -= Time.deltaTime;
             t.text = $"{effectLabel}　残り {Mathf.Max(remaining, 0f):0.0}秒";

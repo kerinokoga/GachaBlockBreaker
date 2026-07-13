@@ -2411,13 +2411,13 @@ public class GachaUI : MonoBehaviour
         switch (type)
         {
             case PassiveEffectType.BallDamageUp:
-                return $"・ダメージ ×{value:F1}";
+                return $"・ダメージ +{(value - 1f) * 100f:0}%";
             case PassiveEffectType.ExtraDamage:
                 return $"・追加ダメージ +{(int)value}";
             case PassiveEffectType.ExtraStock:
                 return $"・開始時ストック +{(int)value}";
             case PassiveEffectType.UltGaugeBoost:
-                return $"・奥義ゲージ増加量 ×{value:F1}";
+                return $"・奥義ゲージ増加量 +{(value - 1f) * 100f:0}%";
             case PassiveEffectType.CriticalRangeUp:
                 return $"・クリティカル範囲 +{(int)value}%";
             default:
@@ -2431,7 +2431,7 @@ public class GachaUI : MonoBehaviour
         switch (cd.ultimateType)
         {
             case UltimateSkillType.PowerBurst:
-                return $"・{cd.ultimateDuration:F0}秒間、ダメージ ×{cd.ultimateValue:F1}";
+                return $"・{cd.ultimateDuration:F0}秒間、ダメージ +{(cd.ultimateValue - 1f) * 100f:0}%";
             case UltimateSkillType.MassDestroy:
                 return $"・全ブロックに {(int)cd.ultimateValue} ダメージ";
             case UltimateSkillType.StockRecover:

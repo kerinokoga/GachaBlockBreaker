@@ -21,7 +21,7 @@ MonoBehaviour:
   passiveType2: 0
   passiveValue2: 0
   ultimateType: 1
-  ultimateValue: 2
+  ultimateValue: 2.5
   ultimateDuration: 25
   ultimateGaugeCost: 10
   voiceVolumeMultiplier: 1.5

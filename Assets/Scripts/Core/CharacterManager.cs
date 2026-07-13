@@ -27,7 +27,9 @@ public class CharacterManager : MonoBehaviour
     public float PassiveDamageMultiplier { get; private set; } = 1f;
 
     // PowerBurst 奥義中の一時的ダメージ倍率（1.0 = 等倍）
-    public float UltDamageMultiplier { get; private set; } = 1f;
+    // 複数発動時は「増加分」を加算する方式（×2 と ×2.5 → 1 + 1 + 1.5 = ×3.5）
+    public float UltDamageMultiplier => 1f + ultBurstBonus;
+    float ultBurstBonus = 0f; // 発動中の PowerBurst の増加分（倍率-1）の合計
 
     // Penetrate 奥義中フラグ：BallController から参照される
     public bool IsPenetrating { get; private set; } = false;
@@ -81,7 +83,7 @@ public class CharacterManager : MonoBehaviour
         // パッシブ適用
         BonusDamage = 0;
         PassiveDamageMultiplier = 1f;
-        UltDamageMultiplier = 1f;
+        ultBurstBonus = 0f;
         IsPenetrating = false;
         CriticalRangeBonus = 0f;
         foreach (var cd in selectedChars)
@@ -400,7 +402,7 @@ public class CharacterManager : MonoBehaviour
         // PowerBurst / Penetrate などの進行中コルーチンを全停止
         StopAllCoroutines();
 
-        UltDamageMultiplier = 1f;
+        ultBurstBonus = 0f;
 
         // 貫通中なら全ボールにも解除を反映
         if (IsPenetrating)
@@ -445,11 +447,15 @@ public class CharacterManager : MonoBehaviour
     {
         // Ready状態なら発射まで待つ（待機中は時間消費しない）
         yield return StartCoroutine(WaitForPlaying());
-        UltDamageMultiplier = multiplier;
-        Debug.Log($"[CharacterManager] PowerBurst開始 倍率={multiplier}");
+
+        // 加算スタック方式: 複数の PowerBurst が重なったら「増加分（倍率-1）」を足し合わせる
+        // （例: ×2 と ×2.5 の同時発動 = 1 + 1 + 1.5 = ×3.5。時間切れは各自が自分の増加分だけ引く）
+        float bonus = multiplier - 1f;
+        ultBurstBonus += bonus;
+        Debug.Log($"[CharacterManager] PowerBurst開始 倍率={multiplier} 合計倍率={UltDamageMultiplier}");
         yield return new WaitForSeconds(duration);
-        UltDamageMultiplier = 1f;
-        Debug.Log("[CharacterManager] PowerBurst終了");
+        ultBurstBonus = Mathf.Max(0f, ultBurstBonus - bonus);
+        Debug.Log($"[CharacterManager] PowerBurst終了 合計倍率={UltDamageMultiplier}");
     }
 
     private IEnumerator PenetrateCoroutine(float duration)

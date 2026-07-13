@@ -547,6 +547,8 @@ public class GameManager : MonoBehaviour
         // --- 一時効果を全リセット（奥義ゲージ以外） ---
         // 1) 奥義効果（PowerBurst のダメージ倍率 / Penetrate / Barrier）を解除
         CharacterManager.Instance?.ResetTemporaryEffects();
+        // 1.5) 効果タイマー表示も消す（効果は消えたのに表示だけ残るのを防ぐ）
+        FindObjectOfType<GameUI>()?.ClearUltEffectTimers();
         // 2) Boss 攻撃効果（パドル縮小・降下ブロック等）をキャンセル
         stageManager?.ResetBossAttackEffects();
 
