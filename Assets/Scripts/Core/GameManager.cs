@@ -793,6 +793,9 @@ public class GameManager : MonoBehaviour
         endlessWave++;
         Debug.Log($"[Endless] ステージ突破 スコア={ResultData.EndlessScore} 次={endlessWave + 1}体目");
 
+        // デイリーミッション（エンドレスの1ステージ突破もクリア扱い）
+        DailyMissionManager.ReportStageClear();
+
         CurrentState = GameState.Paused; // 演出中のミス誤判定防止
         paddle?.SetActive(false);
         FreezeAllBalls();

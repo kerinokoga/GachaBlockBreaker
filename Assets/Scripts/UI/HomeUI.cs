@@ -136,9 +136,9 @@ public class HomeUI : MonoBehaviour
         overlay.HideCharacter();
 
         // 視覚的余白を加えてプレゼントボタンを少し外側まで囲む
-        // プレゼントボタン位置 (0.12, 0.33) size 260x78 に合わせた範囲（余白込み）
-        Vector2 pMin = new Vector2(0.0f, 0.295f);
-        Vector2 pMax = new Vector2(0.27f, 0.365f);
+        // プレゼントボタン位置 (0.12, 0.395) size 260x78 に合わせた範囲（余白込み）
+        Vector2 pMin = new Vector2(0.0f, 0.36f);
+        Vector2 pMax = new Vector2(0.27f, 0.43f);
 
         // スポットライト（プレゼントボタンのみクリック可）
         overlay.ShowSpotlight(pMin, pMax);
@@ -157,7 +157,7 @@ public class HomeUI : MonoBehaviour
             "受け取りなさい");
 
         // 矢印をプレゼントボタンの右に配置（◀ でボタンを指す）
-        overlay.AddArrowAt(new Vector2(0.32f, 0.33f), "◀");
+        overlay.AddArrowAt(new Vector2(0.32f, 0.395f), "◀");
 
         // 専用ボイス（Tutorial/present.wav）
         AudioClip presentVoice = Resources.Load<AudioClip>("Tutorial/present");
@@ -198,9 +198,9 @@ public class HomeUI : MonoBehaviour
         overlay.HideCharacter();
 
         // 視覚的余白を加えてガチャボタンを少し外側まで囲む
-        // ガチャボタン位置 (0.12, 0.69) size 260x78 に合わせた範囲（余白込み）
-        Vector2 gMin = new Vector2(0.0f, 0.655f);
-        Vector2 gMax = new Vector2(0.27f, 0.725f);
+        // ガチャボタン位置 (0.12, 0.695) size 260x78 に合わせた範囲（余白込み）
+        Vector2 gMin = new Vector2(0.0f, 0.66f);
+        Vector2 gMax = new Vector2(0.27f, 0.73f);
 
         // スポットライト（ガチャボタンのみクリック可）
         overlay.ShowSpotlight(gMin, gMax);
@@ -220,7 +220,7 @@ public class HomeUI : MonoBehaviour
             "ガチャボタンをタップよ");
 
         // 矢印をガチャボタンの右に配置（◀ でボタンを指す）
-        overlay.AddArrowAt(new Vector2(0.32f, 0.69f), "◀");
+        overlay.AddArrowAt(new Vector2(0.32f, 0.695f), "◀");
 
         // 専用ボイス（Tutorial/gacha.wav）
         AudioClip gachaVoice = Resources.Load<AudioClip>("Tutorial/gacha");
@@ -318,27 +318,27 @@ public class HomeUI : MonoBehaviour
         overlay.HideCharacter();
 
         // スタートボタン位置:
-        //   anchor (0.12, 0.78), sizeDelta (260, 78), canvas 1080x1920
-        //   y: 0.760 〜 0.800 normalized
+        //   anchor (0.12, 0.77), sizeDelta (260, 78), canvas 1080x1920
+        //   y: 0.750 〜 0.790 normalized
         // 視覚的余白を加えてスポットライト範囲を確保
         overlay.ShowSpotlight(
-            new Vector2(0.0f,  0.745f),
-            new Vector2(0.28f, 0.815f));
+            new Vector2(0.0f,  0.735f),
+            new Vector2(0.28f, 0.805f));
 
         // 強調表示：スポットライト境界に脈動する黄金色フレーム
         overlay.AddHighlightFrame(
-            new Vector2(0.0f,  0.745f),
-            new Vector2(0.28f, 0.815f),
+            new Vector2(0.0f,  0.735f),
+            new Vector2(0.28f, 0.805f),
             new Color(1f, 0.9f, 0.2f), // 黄金色
             10f);
 
         // 吹き出しを画面上部に配置
-        overlay.SetBubbleAnchor(new Vector2(0.05f, 0.87f), new Vector2(0.95f, 0.97f));
+        overlay.SetBubbleAnchor(new Vector2(0.05f, 0.86f), new Vector2(0.95f, 0.96f));
         overlay.SetMessageAlignment(TextAnchor.MiddleLeft);
         overlay.SetMessage("まずはスタートを押しなさいよ！");
 
-        // 矢印をスタートボタン真上に配置（x=0.12, y=0.835）
-        overlay.AddArrowAt(new Vector2(0.12f, 0.835f), "▼");
+        // 矢印をスタートボタン真上に配置（x=0.12, y=0.825）
+        overlay.AddArrowAt(new Vector2(0.12f, 0.825f), "▼");
 
         overlay.ShowSkipButton(() =>
         {
@@ -558,41 +558,42 @@ public class HomeUI : MonoBehaviour
         }
 
         // ===== 3. ボタン（フェードイン付き） =====
-        // 8ボタン構成。全体バランスのため 0.78〜0.15 に等間隔配置
+        // 8ボタン構成。縦長スマホでは背景イラストが画面の約 0.20〜0.80 の帯に表示されるため、
+        // 全ボタンがイラスト内に収まるよう 0.77〜0.245（間隔0.075）に配置する
         MakeMenuButton(cGo.transform, "スタート",
             new Color(0.1f, 0.4f, 0.8f), new Color(0.2f, 0.6f, 1f),
-            0.78f, "♡", () => SceneManager.LoadScene("StageSelectScene"));
+            0.77f, "♡", () => SceneManager.LoadScene("StageSelectScene"));
 
         MakeMenuButton(cGo.transform, "ガチャ",
             new Color(0.55f, 0.15f, 0.8f), new Color(0.75f, 0.35f, 1f),
-            0.69f, "♡", () => SceneManager.LoadScene("GachaScene"));
+            0.695f, "♡", () => SceneManager.LoadScene("GachaScene"));
 
         MakeMenuButton(cGo.transform, "オーブ購入",
             new Color(0.75f, 0.45f, 0.1f), new Color(0.95f, 0.65f, 0.2f),
-            0.60f, "♡", () => SceneManager.LoadScene("ShopScene"));
+            0.62f, "♡", () => SceneManager.LoadScene("ShopScene"));
 
         MakeMenuButton(cGo.transform, "キャラ管理",
             new Color(0.1f, 0.45f, 0.35f), new Color(0.2f, 0.65f, 0.5f),
-            0.51f, "♡", () => SceneManager.LoadScene("CharaManageScene"));
+            0.545f, "♡", () => SceneManager.LoadScene("CharaManageScene"));
 
         MakeMenuButton(cGo.transform, "コレクション",
             new Color(0.7f, 0.15f, 0.4f), new Color(0.9f, 0.35f, 0.55f),
-            0.42f, "♡", () => SceneManager.LoadScene("CollectionScene"));
+            0.47f, "♡", () => SceneManager.LoadScene("CollectionScene"));
 
         // プレゼントボックスボタン（バッジ付き）
-        MakePresentButton(cGo.transform, 0.33f);
+        MakePresentButton(cGo.transform, 0.395f);
 
         // デイリーミッションボタン
         MakeMenuButton(cGo.transform, "ミッション",
             new Color(0.15f, 0.5f, 0.6f), new Color(0.3f, 0.7f, 0.8f),
-            0.24f, "♡", () => ShowMissionPopup());
+            0.32f, "♡", () => ShowMissionPopup());
 
         // エンドレスモードボタン（ステージ5クリアで解放）
         bool endlessUnlocked = EndlessManager.IsUnlocked;
         MakeMenuButton(cGo.transform, "エンドレスモード",
             endlessUnlocked ? new Color(0.55f, 0.15f, 0.55f) : new Color(0.2f, 0.2f, 0.25f),
             endlessUnlocked ? new Color(0.85f, 0.35f, 0.85f) : new Color(0.35f, 0.35f, 0.4f),
-            0.15f, "♡", () => ShowEndlessPopup());
+            0.245f, "♡", () => ShowEndlessPopup());
 
         // エンドレス初回チャレンジ報酬の告知（解放済み＆本日未挑戦の日のみ）
         // 画面最下部中央（背景キャラの顔と被らない位置）
