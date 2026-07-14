@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Kerino Game | スマートフォンゲームの開発・運営</title>
-<meta name="description" content="Kerino Game はスマートフォンゲームの開発・運営を行うゲームスタジオです。ガチャ×ブロック崩し『ぶろっくぶれいかー♡』近日リリース予定。">
+<meta name="description" content="Kerino Game はスマートフォンゲームの開発・運営を行うゲームスタジオです。美少女×ブロック崩し『ぶろっくぶれいかー♡』近日リリース予定。">
 <link rel="icon" type="image/png" href="./assets/logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -190,22 +190,39 @@
     border-radius: 999px;
   }
 
-  /* ===== キャラクター ===== */
-  .chars {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 20px;
-    margin-top: 26px;
+  /* ===== キャラクター（横スクロールギャラリー） ===== */
+  .chars-wrap { margin-top: 26px; }
+  .chars-hint {
+    color: var(--sub);
+    font-size: 0.8rem;
+    text-align: right;
+    margin-bottom: 8px;
   }
-  @media (max-width: 640px) { .chars { grid-template-columns: 1fr; } }
+  .chars {
+    display: flex;
+    gap: 16px;
+    overflow-x: auto;
+    padding-bottom: 12px;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+  }
+  .chars::-webkit-scrollbar { height: 8px; }
+  .chars::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); border-radius: 999px; }
+  .chars::-webkit-scrollbar-thumb {
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    border-radius: 999px;
+  }
   .char {
     position: relative;
     border-radius: var(--radius);
     overflow: hidden;
     border: 1px solid var(--border);
+    flex: 0 0 210px;
     aspect-ratio: 3 / 4;
     background: var(--bg2);
+    scroll-snap-align: start;
   }
+  @media (max-width: 640px) { .char { flex: 0 0 60vw; } }
   .char img {
     width: 100%; height: 100%;
     object-fit: cover;
@@ -297,19 +314,27 @@
         <div class="platform">Android（Google Play）/ 基本無料・アプリ内課金あり</div>
         <p class="desc">
           ブロックを壊すと美少女のイラストが解放！<br>
-          キャラを集めて、強化・覚醒・奥義で最強編成を作る、ガチャ×ブロック崩しゲーム。
+          キャラを集めて、強化・覚醒・奥義で最強編成を作る、美少女×ブロック崩しゲーム。
         </p>
         <div class="features">
-          <span>ガチャでキャラ収集</span>
+          <span>キャラ収集・編成</span>
           <span>強化・覚醒・奥義</span>
           <span>エンドレスモード</span>
           <span>全国ランキング</span>
           <span>ホームきせかえ</span>
         </div>
-        <div class="chars">
-          <div class="char"><img src="./assets/char_sera.jpg" alt="セラ"><div class="name">セラ</div></div>
-          <div class="char"><img src="./assets/char_akari.jpg" alt="アカリ"><div class="name">アカリ</div></div>
-          <div class="char"><img src="./assets/char_luna.jpg" alt="ルナ"><div class="name">ルナ</div></div>
+        <div class="chars-wrap">
+          <div class="chars-hint">→ スクロールでもっと見る</div>
+          <div class="chars">
+            <div class="char"><img src="./assets/char_sera.jpg" alt="セラ"><div class="name">セラ</div></div>
+            <div class="char"><img src="./assets/char_akari.jpg" alt="アカリ"><div class="name">アカリ</div></div>
+            <div class="char"><img src="./assets/char_hana.jpg" alt="ハナ"><div class="name">ハナ</div></div>
+            <div class="char"><img src="./assets/char_kana.jpg" alt="カナ"><div class="name">カナ</div></div>
+            <div class="char"><img src="./assets/char_rin.jpg" alt="リン"><div class="name">リン</div></div>
+            <div class="char"><img src="./assets/char_aria.jpg" alt="アリア"><div class="name">アリア</div></div>
+            <div class="char"><img src="./assets/char_nana.jpg" alt="ナナ"><div class="name">ナナ</div></div>
+            <div class="char"><img src="./assets/char_mei.jpg" alt="メイ"><div class="name">メイ</div></div>
+          </div>
         </div>
       </div>
     </div>
