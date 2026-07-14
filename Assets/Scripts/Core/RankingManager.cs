@@ -150,7 +150,10 @@ public static class RankingManager
             if (snap.Exists && snap.TryGetValue<long>("score", out var existing)
                 && (int)existing >= score)
             {
-                onDone?.Invoke(false); // 既存の方が高い → 更新不要
+                // スコアは更新不要だが、名前が変わっていればランキングの表示名だけ更新
+                if (snap.TryGetValue<string>("name", out var oldName) && oldName != playerName)
+                    docRef.UpdateAsync("name", playerName);
+                onDone?.Invoke(false);
                 return;
             }
 

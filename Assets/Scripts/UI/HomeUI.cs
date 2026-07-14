@@ -737,6 +737,13 @@ public class HomeUI : MonoBehaviour
             raw.color = Color.white;
             p.Play();
         };
+        // 再生終了後は最初のフレームに巻き戻して静止（立ち姿で止まる）
+        vp.loopPointReached += p =>
+        {
+            p.Pause();
+            p.frame = 0;
+            p.StepForward(); // 先頭フレームを確実にテクスチャへ描画
+        };
         vp.Prepare();
         homeBgPlayer = vp;
     }
@@ -794,18 +801,23 @@ public class HomeUI : MonoBehaviour
         lineRt.sizeDelta = new Vector2(680f, 3f);
 
         // ---- 音量設定ボタン ----
-        MakeSettingsItem(dialog.transform, "音量設定", 0.71f,
+        MakeSettingsItem(dialog.transform, "音量設定", 0.74f,
             new Color(0.2f, 0.35f, 0.6f), new Color(0.35f, 0.55f, 0.9f, 0.6f),
             () => { Destroy(overlay); ShowVolumePopup(); });
 
+        // ---- プレイヤー名変更ボタン ----
+        MakeSettingsItem(dialog.transform, "プレイヤー名の変更", 0.61f,
+            new Color(0.2f, 0.5f, 0.55f), new Color(0.35f, 0.7f, 0.75f, 0.6f),
+            () => { Destroy(overlay); ShowPlayerNamePopup(); });
+
         // ---- あそびかたボタン ----
-        MakeSettingsItem(dialog.transform, "あそびかた", 0.56f,
+        MakeSettingsItem(dialog.transform, "あそびかた", 0.48f,
             new Color(0.15f, 0.5f, 0.35f), new Color(0.3f, 0.75f, 0.5f, 0.6f),
             () => { Destroy(overlay); ShowHowToPlayPopup(); });
 
         // ---- 奥義アニメ ON/OFF トグル ----
         Text ultAnimTxt = null;
-        MakeSettingsItem(dialog.transform, $"奥義アニメ: {(UltAnimationManager.Enabled ? "ON" : "OFF")}", 0.41f,
+        MakeSettingsItem(dialog.transform, $"奥義アニメ: {(UltAnimationManager.Enabled ? "ON" : "OFF")}", 0.35f,
             new Color(0.35f, 0.25f, 0.55f), new Color(0.55f, 0.4f, 0.85f, 0.6f),
             () =>
             {
@@ -819,9 +831,9 @@ public class HomeUI : MonoBehaviour
             ultAnimTxt = ultAnimBtnGo.GetComponentInChildren<Text>();
 
         // ---- 利用規約・プライバシーポリシーボタン ----
-        MakeSettingsItem(dialog.transform, "利用規約・プライバシーポリシー", 0.26f,
+        MakeSettingsItem(dialog.transform, "利用規約・プライバシーポリシー", 0.22f,
             new Color(0.45f, 0.2f, 0.25f), new Color(0.7f, 0.35f, 0.45f, 0.6f),
-            () => Application.OpenURL("https://kerinokoga.github.io/GachaBlockBreaker/legal.html"));
+            () => Application.OpenURL("https://kerinogame.com/legal.html"));
 
         // 閉じるボタン
         var closeGo = new GameObject("CloseBtn");
@@ -1321,6 +1333,92 @@ public class HomeUI : MonoBehaviour
     }
 
     // ============================================================
+    // プレイヤー名の設定
+    // ============================================================
+
+    /// <summary>
+    /// プレイヤー名の入力ポップアップ。ランキングに表示される名前を設定する。
+    /// onDone は閉じたとき（設定完了/キャンセル問わず）に呼ばれる。
+    /// </summary>
+    void ShowPlayerNamePopup(System.Action onDone = null)
+    {
+        var overlay = new GameObject("PlayerNameOverlay");
+        overlay.transform.SetParent(canvasRoot, false);
+        overlay.AddComponent<Image>().color = new Color(0f, 0f, 0f, 0.8f);
+        var ort = overlay.GetComponent<RectTransform>();
+        ort.anchorMin = Vector2.zero; ort.anchorMax = Vector2.one;
+        ort.offsetMin = ort.offsetMax = Vector2.zero;
+
+        var dialog = new GameObject("Dialog");
+        dialog.transform.SetParent(overlay.transform, false);
+        dialog.AddComponent<Image>().color = new Color(0.2f, 0.4f, 0.7f, 0.55f);
+        var drt = dialog.GetComponent<RectTransform>();
+        drt.anchorMin = drt.anchorMax = new Vector2(0.5f, 0.5f);
+        drt.anchoredPosition = Vector2.zero;
+        drt.sizeDelta = new Vector2(820f, 620f);
+
+        var dInner = new GameObject("Inner");
+        dInner.transform.SetParent(dialog.transform, false);
+        dInner.AddComponent<Image>().color = new Color(0.06f, 0.04f, 0.15f, 0.97f);
+        var diRt = dInner.GetComponent<RectTransform>();
+        diRt.anchorMin = Vector2.zero; diRt.anchorMax = Vector2.one;
+        diRt.offsetMin = new Vector2(4f, 4f); diRt.offsetMax = new Vector2(-4f, -4f);
+
+        var titleT = MakeText(dialog.transform, "プレイヤー名", 40,
+            new Color(1f, 0.85f, 0.1f), new Vector2(0.5f, 0.88f), new Vector2(700f, 56f));
+        AddShadow(titleT.gameObject);
+
+        var descT = MakeText(dialog.transform,
+            $"ランキングに表示される名前です（{PlayerNameManager.MaxLength}文字以内）",
+            24, new Color(0.7f, 0.7f, 0.8f), new Vector2(0.5f, 0.76f), new Vector2(760f, 60f));
+        descT.lineSpacing = 1.3f;
+
+        var nameInput = MakeLinkInputField(dialog.transform, "プレイヤー名",
+            new Vector2(0.5f, 0.60f), false);
+        // メール用の入力制限を解除（日本語名を入力可能にする）
+        nameInput.contentType = InputField.ContentType.Standard;
+        nameInput.characterLimit = PlayerNameManager.MaxLength;
+        // 設定済みなら現在の名前を初期表示
+        if (PlayerNameManager.HasName) nameInput.text = PlayerNameManager.GetName();
+
+        var statusT = MakeText(dialog.transform, "", 24, Color.white,
+            new Vector2(0.5f, 0.45f), new Vector2(700f, 40f));
+
+        // 決定ボタン（サーバーで名前の重複チェック → 予約）
+        bool checking = false;
+        MakeSettingsItem(dialog.transform, "決定", 0.30f,
+            new Color(0.15f, 0.5f, 0.3f), new Color(0.3f, 0.75f, 0.5f, 0.6f),
+            () =>
+            {
+                if (checking) return; // 連打防止
+                checking = true;
+                statusT.color = new Color(0.7f, 0.85f, 1f);
+                statusT.text = "確認中...";
+
+                PlayerNameManager.TrySetNameOnline(nameInput.text,
+                    onSuccess: () =>
+                    {
+                        if (overlay == null) return;
+                        CloudSaveManager.Save(); // 名前をクラウドにも即バックアップ
+                        Destroy(overlay);
+                        onDone?.Invoke();
+                    },
+                    onFailed: error =>
+                    {
+                        checking = false;
+                        if (statusT == null) return;
+                        statusT.color = new Color(1f, 0.4f, 0.4f);
+                        statusT.text = error;
+                    });
+            });
+
+        // とじる（後で決める）
+        MakeSettingsItem(dialog.transform, "とじる", 0.12f,
+            new Color(0.25f, 0.25f, 0.35f), new Color(0.45f, 0.45f, 0.6f, 0.6f),
+            () => { Destroy(overlay); onDone?.Invoke(); });
+    }
+
+    // ============================================================
     // ホームきせかえ（背景キャラ変更）
     // ============================================================
 
@@ -1509,6 +1607,16 @@ public class HomeUI : MonoBehaviour
     /// </summary>
     void ShowEndlessPopup()
     {
+        // ランキングに載る名前が未設定なら、先に決めてもらう（初回のみ）
+        if (EndlessManager.IsUnlocked && !PlayerNameManager.HasName)
+        {
+            ShowPlayerNamePopup(() =>
+            {
+                if (PlayerNameManager.HasName) ShowEndlessPopup();
+            });
+            return;
+        }
+
         var overlay = new GameObject("EndlessOverlay");
         overlay.transform.SetParent(canvasRoot, false);
         overlay.AddComponent<Image>().color = new Color(0f, 0f, 0f, 0.75f);

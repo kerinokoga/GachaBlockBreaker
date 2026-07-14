@@ -135,27 +135,14 @@ public class ResultUI : MonoBehaviour
                 PlayerPrefs.SetInt("GachaBlock_EndlessBest", score);
                 PlayerPrefs.Save();
             }
-            string endlessName = AuthManager.GetName();
-            if (string.IsNullOrEmpty(endlessName) || endlessName.Contains("@"))
-            {
-                string uid = AuthManager.GetUID();
-                endlessName = "ゲスト" + (uid != null && uid.Length >= 4 ? uid.Substring(0, 4) : "????");
-            }
-            RankingManager.SubmitEndlessScore(endlessName, score);
+            RankingManager.SubmitEndlessScore(PlayerNameManager.GetName(), score);
             CloudSaveManager.Save();
         }
         else if (isClear)
         {
             // クリア時にランキング送信 + クラウドバックアップ
-            string playerName = AuthManager.GetName();
-            // 表示名なし、またはメールアドレスの場合は仮名を使う
-            // （メール連携後は GetName がメールを返すため、公開ランキングへの漏洩防止）
-            if (string.IsNullOrEmpty(playerName) || playerName.Contains("@"))
-            {
-                string uid = AuthManager.GetUID();
-                playerName = "ゲスト" + (uid != null && uid.Length >= 4 ? uid.Substring(0, 4) : "????");
-            }
-            RankingManager.SubmitScore(stage, playerName, rate);
+            // （PlayerNameManager が未設定時のゲスト名生成とメール漏洩防止を担う）
+            RankingManager.SubmitScore(stage, PlayerNameManager.GetName(), rate);
             CloudSaveManager.Save();
         }
 
