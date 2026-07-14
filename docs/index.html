@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kerino Game | スマートフォンゲームの開発・運営</title>
+<meta name="description" content="Kerino Game はスマートフォンゲームの開発・運営を行っています。ガチャ×ブロック崩し『ぶろっくぶれいかー♡』近日リリース予定。">
+<style>
+  :root {
+    --bg: #0f0a1e;
+    --panel: #1a1230;
+    --accent: #ff6fae;
+    --gold: #ffd84d;
+    --text: #e8e4f2;
+    --sub: #a89fc0;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Hiragino Kaku Gothic ProN", "Yu Gothic", "Meiryo", sans-serif;
+    line-height: 1.8;
+  }
+  .hero {
+    text-align: center;
+    padding: 80px 20px 60px;
+    background: linear-gradient(180deg, #241640 0%, var(--bg) 100%);
+  }
+  .hero h1 {
+    font-size: 2.4rem;
+    letter-spacing: 0.08em;
+    color: #fff;
+  }
+  .hero h1 span { color: var(--accent); }
+  .hero p {
+    margin-top: 12px;
+    color: var(--sub);
+    font-size: 1.05rem;
+  }
+  .container {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 0 20px 80px;
+  }
+  section {
+    background: var(--panel);
+    border-radius: 14px;
+    padding: 28px 30px;
+    margin-top: 28px;
+    border: 1px solid #2c2050;
+  }
+  section h2 {
+    font-size: 1.2rem;
+    color: var(--gold);
+    margin-bottom: 14px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #3a2a60;
+  }
+  .game-title {
+    font-size: 1.35rem;
+    color: var(--accent);
+    font-weight: bold;
+  }
+  .badge {
+    display: inline-block;
+    background: var(--accent);
+    color: #fff;
+    font-size: 0.8rem;
+    padding: 2px 12px;
+    border-radius: 999px;
+    margin-left: 10px;
+    vertical-align: middle;
+  }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { text-align: left; padding: 8px 4px; vertical-align: top; }
+  th { color: var(--sub); font-weight: normal; white-space: nowrap; padding-right: 18px; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  footer {
+    text-align: center;
+    color: var(--sub);
+    font-size: 0.85rem;
+    padding: 30px 20px 40px;
+    border-top: 1px solid #2c2050;
+  }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <h1>Kerino <span>Game</span></h1>
+  <p>スマートフォンゲームの開発・運営</p>
+</div>
+
+<div class="container">
+
+  <section>
+    <h2>ゲーム紹介</h2>
+    <p>
+      <span class="game-title">ぶろっくぶれいかー♡</span>
+      <span class="badge">近日リリース予定</span>
+    </p>
+    <p style="margin-top: 10px;">
+      ブロックを壊すと美少女のイラストが解放！<br>
+      キャラを集めて、強化・覚醒・奥義で最強編成を作る、ガチャ×ブロック崩しゲームです。<br>
+      Google Play にて配信予定（Android）。
+    </p>
+  </section>
+
+  <section>
+    <h2>運営者情報</h2>
+    <table>
+      <tr><th>名称</th><td>Kerino Game</td></tr>
+      <tr><th>事業内容</th><td>スマートフォンゲームの開発・運営</td></tr>
+      <tr><th>お問い合わせ</th><td><a href="mailto:info@kerinogame.com">info@kerinogame.com</a></td></tr>
+    </table>
+  </section>
+
+  <section>
+    <h2>規約・ポリシー</h2>
+    <p><a href="./legal.html">利用規約・プライバシーポリシー</a></p>
+  </section>
+
+</div>
+
+<footer>
+  &copy; 2026 Kerino Game
+</footer>
+
+</body>
+</html>
