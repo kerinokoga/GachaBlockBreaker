@@ -604,6 +604,34 @@ public class HomeUI : MonoBehaviour
             new Color(0.75f, 0.3f, 0.6f), new Color(0.95f, 0.5f, 0.8f),
             new Vector2(0.85f, 0.10f), "♡", () => ShowHomeCharPopup());
 
+        // デバッグ: オーブ付与ボタン（Development Build のみ。リリースビルドには表示されない）
+        if (Debug.isDebugBuild || Application.isEditor)
+        {
+            var dbgGo = new GameObject("DebugOrbBtn");
+            dbgGo.transform.SetParent(cGo.transform, false);
+            dbgGo.AddComponent<Image>().color = new Color(0.6f, 0.1f, 0.1f, 0.85f);
+            var dbgBtn = dbgGo.AddComponent<Button>();
+            var dbgRt = dbgGo.GetComponent<RectTransform>();
+            dbgRt.anchorMin = dbgRt.anchorMax = new Vector2(0.92f, 0.89f);
+            dbgRt.anchoredPosition = Vector2.zero;
+            dbgRt.sizeDelta = new Vector2(130f, 50f);
+            dbgBtn.onClick.AddListener(() =>
+            {
+                OrbManager.AddOrbs(10000);
+                Debug.Log("[Debug] オーブ +10000");
+                SceneManager.LoadScene("HomeScene"); // 表示更新
+            });
+            var dbgTxtGo = new GameObject("Txt");
+            dbgTxtGo.transform.SetParent(dbgGo.transform, false);
+            var dbgT = dbgTxtGo.AddComponent<Text>();
+            dbgT.text = "+オーブ"; dbgT.fontSize = 22; dbgT.color = Color.white;
+            dbgT.alignment = TextAnchor.MiddleCenter;
+            dbgT.font = Font.CreateDynamicFontFromOSFont("Arial", 22);
+            var dbgTrt = dbgTxtGo.GetComponent<RectTransform>();
+            dbgTrt.anchorMin = Vector2.zero; dbgTrt.anchorMax = Vector2.one;
+            dbgTrt.offsetMin = dbgTrt.offsetMax = Vector2.zero;
+        }
+
         // エンドレス初回チャレンジ報酬の告知（解放済み＆本日未挑戦の日のみ）
         // 画面最下部中央（背景キャラの顔と被らない位置）
         if (EndlessManager.IsUnlocked && !EndlessManager.HasChallengedToday)

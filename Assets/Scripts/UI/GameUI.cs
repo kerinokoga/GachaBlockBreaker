@@ -13,6 +13,7 @@ public class GameUI : MonoBehaviour
     private static Sprite heartSprite;
     private Slider destroyRateSlider;
     private Text destroyRateText;
+    private Text endlessScoreText;  // エンドレスの撃破数表示（エンドレス時のみ生成）
     private GameObject pauseMenuPanel;
 
     // Phase 2: 奥義UI（アイコンをタップで発動）
@@ -780,6 +781,10 @@ public class GameUI : MonoBehaviour
             damageText.text = $"ヒットダメージ：{dmg}";
         }
 
+        // エンドレスの撃破数を更新
+        if (endlessScoreText != null)
+            endlessScoreText.text = $"撃破: {ResultData.EndlessScore}体";
+
         // 赤色時の点滅
         if (bossTurnBlink && bossTurnText != null)
         {
@@ -856,6 +861,17 @@ public class GameUI : MonoBehaviour
         SetRect(sliderGo.GetComponent<RectTransform>(),
             new Vector2(1f, 1f), new Vector2(-20f, -75f), new Vector2(200f, 18f), new Vector2(1f, 1f));
         BuildSlider(destroyRateSlider, sliderGo.transform);
+
+        // ---- エンドレス撃破数（右上・破壊率バーの下）----
+        if (ResultData.IsEndless)
+        {
+            endlessScoreText = MakeText(root, "撃破: 0体", 30, new Color(1f, 0.75f, 0.2f),
+                new Vector2(1f, 1f), new Vector2(-20f, -100f), new Vector2(260f, 44f),
+                new Vector2(1f, 1f), TextAnchor.UpperRight);
+            var esOl = endlessScoreText.gameObject.AddComponent<Outline>();
+            esOl.effectColor = new Color(0f, 0f, 0f, 0.85f);
+            esOl.effectDistance = new Vector2(2f, -2f);
+        }
 
         // ---- ポーズボタン（右上寄り）----
         var pauseBtn = MakeButton(root, "ポーズ", 28, new Color(0.15f, 0.15f, 0.25f, 0.9f),
