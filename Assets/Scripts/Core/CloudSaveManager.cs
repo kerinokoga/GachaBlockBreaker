@@ -141,8 +141,10 @@ public static class CloudSaveManager
         data["starterPackBought"] = PlayerPrefs.GetInt("GachaBlock_StarterPackBought", 0);
         data["passExpiry"]        = MonthlyPassManager.GetExpiryString();
 
-        // エンドレス自己ベスト
-        data["endlessBest"] = PlayerPrefs.GetInt("GachaBlock_EndlessBest", 0);
+        // エンドレス自己ベスト・累計撃破数・ホームきせかえ
+        data["endlessBest"]  = PlayerPrefs.GetInt("GachaBlock_EndlessBest", 0);
+        data["endlessKills"] = HomeCharManager.GetEndlessKills();
+        data["homeChar"]     = HomeCharManager.GetSelected();
 
         // 保存日時（サーバー時刻）
         data["updatedAt"] = FieldValue.ServerTimestamp;
@@ -272,9 +274,13 @@ public static class CloudSaveManager
         if (snap.TryGetValue<string>("passExpiry", out var passExpiry))
             MonthlyPassManager.SetExpiryString(passExpiry);
 
-        // エンドレス自己ベスト
+        // エンドレス自己ベスト・累計撃破数・ホームきせかえ
         if (snap.TryGetValue<long>("endlessBest", out var endlessBest))
             PlayerPrefs.SetInt("GachaBlock_EndlessBest", (int)endlessBest);
+        if (snap.TryGetValue<long>("endlessKills", out var endlessKills))
+            HomeCharManager.SetEndlessKills((int)endlessKills);
+        if (snap.TryGetValue<string>("homeChar", out var homeChar))
+            HomeCharManager.SetSelected(homeChar);
 
         // 所持キャラ
         if (snap.TryGetValue<List<object>>("ownedChars", out var chars))

@@ -438,7 +438,11 @@ public class HomeUI : MonoBehaviour
         MakeImage(cGo.transform, new Color(0.02f, 0.02f, 0.08f), Vector2.zero, Vector2.one);
 
         // 背景イラスト（Resources/Home/bg に配置）
-        var bgSprite = Resources.Load<Sprite>("Home/bg");
+        // きせかえで別キャラを選択中は表示しない
+        // （静止画はセラのため、動画準備中に一瞬セラが映ってしまうのを防ぐ。暗背景のまま動画を待つ）
+        string homeSel = HomeCharManager.GetSelected();
+        bool usingCustomChar = !string.IsNullOrEmpty(homeSel) && HomeCharManager.HasVideo(homeSel);
+        var bgSprite = usingCustomChar ? null : Resources.Load<Sprite>("Home/bg");
         if (bgSprite != null)
         {
             var bgGo = new GameObject("BGIllust");
@@ -595,6 +599,11 @@ public class HomeUI : MonoBehaviour
             endlessUnlocked ? new Color(0.85f, 0.35f, 0.85f) : new Color(0.35f, 0.35f, 0.4f),
             0.245f, "♡", () => ShowEndlessPopup());
 
+        // きせかえボタン（右下・背景イラスト帯の外。メニューボタンと同じ様式・♡付き）
+        MakeMenuButton(cGo.transform, "きせかえ",
+            new Color(0.75f, 0.3f, 0.6f), new Color(0.95f, 0.5f, 0.8f),
+            new Vector2(0.85f, 0.10f), "♡", () => ShowHomeCharPopup());
+
         // エンドレス初回チャレンジ報酬の告知（解放済み＆本日未挑戦の日のみ）
         // 画面最下部中央（背景キャラの顔と被らない位置）
         if (EndlessManager.IsUnlocked && !EndlessManager.HasChallengedToday)
@@ -667,7 +676,8 @@ public class HomeUI : MonoBehaviour
     /// </summary>
     void SetupHomeBgMovie(Transform parent)
     {
-        var clip = Resources.Load<VideoClip>("Movies/home_bg");
+        // きせかえで選択されたキャラの動画（無ければデフォルトのセラ）
+        var clip = HomeCharManager.GetHomeClip();
         if (clip == null) return;
 
         var go = new GameObject("BGMovie");
@@ -1283,6 +1293,185 @@ public class HomeUI : MonoBehaviour
     }
 
     // ============================================================
+    // ホームきせかえ（背景キャラ変更）
+    // ============================================================
+
+    /// <summary>
+    /// きせかえ選択ポップアップ。全キャラを一覧表示し、
+    /// 解放条件（覚醒／＋ステージ15／＋エンドレス累計100体）と動画の有無で選択可否を出し分ける。
+    /// </summary>
+    void ShowHomeCharPopup()
+    {
+        var overlay = new GameObject("HomeCharOverlay");
+        overlay.transform.SetParent(canvasRoot, false);
+        overlay.AddComponent<Image>().color = new Color(0f, 0f, 0f, 0.8f);
+        var ort = overlay.GetComponent<RectTransform>();
+        ort.anchorMin = Vector2.zero; ort.anchorMax = Vector2.one;
+        ort.offsetMin = ort.offsetMax = Vector2.zero;
+
+        var dialog = new GameObject("Dialog");
+        dialog.transform.SetParent(overlay.transform, false);
+        dialog.AddComponent<Image>().color = new Color(0.75f, 0.3f, 0.6f, 0.55f);
+        var drt = dialog.GetComponent<RectTransform>();
+        drt.anchorMin = drt.anchorMax = new Vector2(0.5f, 0.5f);
+        drt.anchoredPosition = Vector2.zero;
+        drt.sizeDelta = new Vector2(900f, 1450f);
+
+        var dInner = new GameObject("Inner");
+        dInner.transform.SetParent(dialog.transform, false);
+        dInner.AddComponent<Image>().color = new Color(0.06f, 0.04f, 0.15f, 0.97f);
+        var diRt = dInner.GetComponent<RectTransform>();
+        diRt.anchorMin = Vector2.zero; diRt.anchorMax = Vector2.one;
+        diRt.offsetMin = new Vector2(4f, 4f); diRt.offsetMax = new Vector2(-4f, -4f);
+
+        var titleT = MakeText(dialog.transform, "きせかえ", 42,
+            new Color(1f, 0.85f, 0.1f), new Vector2(0.5f, 0.955f), new Vector2(800f, 56f));
+        AddShadow(titleT.gameObject);
+
+        MakeText(dialog.transform, "ホーム画面のキャラを変更できます", 24,
+            new Color(0.7f, 0.7f, 0.8f), new Vector2(0.5f, 0.915f), new Vector2(800f, 32f));
+
+        // ---- スクロールリスト ----
+        var scrollGo = new GameObject("CharScroll");
+        scrollGo.transform.SetParent(dialog.transform, false);
+        scrollGo.AddComponent<Image>().color = new Color(0f, 0f, 0f, 0.01f);
+        var scroll = scrollGo.AddComponent<ScrollRect>();
+        scroll.horizontal = false;
+        scroll.vertical = true;
+        scroll.scrollSensitivity = 30f;
+        var srt = scrollGo.GetComponent<RectTransform>();
+        srt.anchorMin = new Vector2(0.04f, 0.115f);
+        srt.anchorMax = new Vector2(0.96f, 0.89f);
+        srt.offsetMin = srt.offsetMax = Vector2.zero;
+
+        var vpGo = new GameObject("Viewport");
+        vpGo.transform.SetParent(scrollGo.transform, false);
+        vpGo.AddComponent<Image>().color = new Color(0f, 0f, 0f, 0.01f);
+        vpGo.AddComponent<Mask>().showMaskGraphic = false;
+        var vpRt = vpGo.GetComponent<RectTransform>();
+        vpRt.anchorMin = Vector2.zero; vpRt.anchorMax = Vector2.one;
+        vpRt.offsetMin = vpRt.offsetMax = Vector2.zero;
+
+        var contentGo = new GameObject("Content");
+        contentGo.transform.SetParent(vpGo.transform, false);
+        var contentRt = contentGo.AddComponent<RectTransform>();
+        contentRt.anchorMin = new Vector2(0f, 1f);
+        contentRt.anchorMax = new Vector2(1f, 1f);
+        contentRt.pivot = new Vector2(0.5f, 1f);
+        contentRt.anchoredPosition = Vector2.zero;
+        scroll.content = contentRt;
+        scroll.viewport = vpRt;
+
+        // ---- 行の生成 ----
+        string selected = HomeCharManager.GetSelected();
+        float rowH = 96f, padY = 10f;
+        int rowIndex = 0;
+
+        // デフォルト（セラ）行
+        BuildHomeCharRow(contentRt, "セラ（デフォルト）", true, selected == "",
+            "", () => { HomeCharManager.SetSelected(""); SceneManager.LoadScene("HomeScene"); },
+            rowIndex++, rowH, padY);
+
+        // 全キャラ: 「選択できる（解放済み＋動画あり）」を先に、ロック中を後に。各グループ内はレア度の高い順
+        var all = new List<CharacterData>(Resources.LoadAll<CharacterData>("Characters"));
+        all.Sort((a, b) =>
+        {
+            bool aSel = OrbManager.IsOwned(a.characterName) && HomeCharManager.IsUnlocked(a)
+                        && HomeCharManager.HasVideo(a.characterName);
+            bool bSel = OrbManager.IsOwned(b.characterName) && HomeCharManager.IsUnlocked(b)
+                        && HomeCharManager.HasVideo(b.characterName);
+            if (aSel != bSel) return bSel.CompareTo(aSel); // 選択可能を前へ
+            return b.rarity.CompareTo(a.rarity);
+        });
+        foreach (var cd in all)
+        {
+            if (cd == null || cd.characterName == "セラ") continue;
+            string name = cd.characterName;
+            bool owned = OrbManager.IsOwned(name);
+            bool unlocked = owned && HomeCharManager.IsUnlocked(cd);
+            bool hasVideo = HomeCharManager.HasVideo(name);
+
+            string label;
+            bool selectable = false;
+            string sub = "";
+            if (!unlocked)
+            {
+                label = $"{name}（{cd.rarity}）";
+                sub = HomeCharManager.UnlockConditionText(cd);
+            }
+            else if (!hasVideo)
+            {
+                label = $"{name}（{cd.rarity}）";
+                sub = "アニメ準備中";
+            }
+            else
+            {
+                label = $"{name}（{cd.rarity}）";
+                selectable = true;
+            }
+
+            BuildHomeCharRow(contentRt, label, selectable, selected == name, sub,
+                () => { HomeCharManager.SetSelected(name); SceneManager.LoadScene("HomeScene"); },
+                rowIndex++, rowH, padY);
+        }
+
+        contentRt.sizeDelta = new Vector2(0f, rowIndex * (rowH + padY) + padY);
+
+        // とじる
+        MakeSettingsItem(dialog.transform, "とじる", 0.055f,
+            new Color(0.25f, 0.25f, 0.35f), new Color(0.45f, 0.45f, 0.6f, 0.6f),
+            () => Destroy(overlay));
+    }
+
+    /// <summary>きせかえ一覧の1行を生成する</summary>
+    void BuildHomeCharRow(Transform parent, string label, bool selectable, bool isSelected,
+        string subText, UnityEngine.Events.UnityAction onSelect, int index, float rowH, float padY)
+    {
+        var rowGo = new GameObject($"CharRow_{index}");
+        rowGo.transform.SetParent(parent, false);
+        var img = rowGo.AddComponent<Image>();
+        img.color = isSelected ? new Color(0.35f, 0.2f, 0.45f, 0.95f)
+                  : selectable ? new Color(0.15f, 0.12f, 0.3f, 0.9f)
+                               : new Color(0.1f, 0.1f, 0.15f, 0.85f);
+        var rt = rowGo.GetComponent<RectTransform>();
+        rt.anchorMin = new Vector2(0f, 1f);
+        rt.anchorMax = new Vector2(1f, 1f);
+        rt.pivot = new Vector2(0.5f, 1f);
+        rt.anchoredPosition = new Vector2(0f, -(padY + index * (rowH + padY)));
+        rt.sizeDelta = new Vector2(0f, rowH);
+
+        if (selectable && !isSelected)
+        {
+            var btn = rowGo.AddComponent<Button>();
+            btn.onClick.AddListener(onSelect);
+        }
+
+        // キャラ名（左寄せ）
+        var nameT = MakeText(rowGo.transform, label, 30,
+            selectable || isSelected ? Color.white : new Color(0.55f, 0.55f, 0.65f),
+            new Vector2(0.35f, string.IsNullOrEmpty(subText) ? 0.5f : 0.66f),
+            new Vector2(500f, 38f));
+        nameT.alignment = TextAnchor.MiddleLeft;
+
+        // 状態表示（右寄せ）
+        string status = isSelected ? "選択中" : (selectable ? "選択する" : "");
+        if (!string.IsNullOrEmpty(status))
+        {
+            MakeText(rowGo.transform, status, 26,
+                isSelected ? new Color(0.5f, 1f, 0.6f) : new Color(1f, 0.85f, 0.3f),
+                new Vector2(0.87f, 0.5f), new Vector2(180f, 34f));
+        }
+
+        // 条件・準備中の注記（下段・グレー）
+        if (!string.IsNullOrEmpty(subText))
+        {
+            var subT = MakeText(rowGo.transform, subText, 22,
+                new Color(0.55f, 0.6f, 0.75f), new Vector2(0.35f, 0.26f), new Vector2(500f, 28f));
+            subT.alignment = TextAnchor.MiddleLeft;
+        }
+    }
+
+    // ============================================================
     // エンドレスモード（案内・ランキング）
     // ============================================================
 
@@ -1885,6 +2074,10 @@ public class HomeUI : MonoBehaviour
 
     void MakeMenuButton(Transform parent, string label, Color baseCol, Color highlightCol,
         float y, string icon, UnityEngine.Events.UnityAction onClick)
+        => MakeMenuButton(parent, label, baseCol, highlightCol, new Vector2(0.12f, y), icon, onClick);
+
+    void MakeMenuButton(Transform parent, string label, Color baseCol, Color highlightCol,
+        Vector2 anchor, string icon, UnityEngine.Events.UnityAction onClick)
     {
         // 外枠（明るい縁取り）
         var go = new GameObject(label + "Btn");
@@ -1896,7 +2089,7 @@ public class HomeUI : MonoBehaviour
         fadeButtons.Add(cg);
 
         var rt = go.GetComponent<RectTransform>();
-        rt.anchorMin = rt.anchorMax = new Vector2(0.12f, y);
+        rt.anchorMin = rt.anchorMax = anchor;
         rt.anchoredPosition = Vector2.zero;
         rt.sizeDelta = new Vector2(260f, 78f);
         btn.onClick.AddListener(onClick);

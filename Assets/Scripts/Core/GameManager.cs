@@ -789,7 +789,9 @@ public class GameManager : MonoBehaviour
     private IEnumerator EndlessNextWave()
     {
         // スコア加算（裏ボスまで倒したステージは +2）
-        ResultData.EndlessScore += (stageManager != null && stageManager.IsTrueStage) ? 2 : 1;
+        int gained = (stageManager != null && stageManager.IsTrueStage) ? 2 : 1;
+        ResultData.EndlessScore += gained;
+        HomeCharManager.AddEndlessKills(gained); // 累計撃破数（ホームきせかえのSSR解放条件）
         endlessWave++;
         Debug.Log($"[Endless] ステージ突破 スコア={ResultData.EndlessScore} 次={endlessWave + 1}体目");
 
