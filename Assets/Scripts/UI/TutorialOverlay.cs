@@ -569,7 +569,7 @@ public class TutorialOverlay : MonoBehaviour
         var img = go.AddComponent<Image>();
         img.color = new Color(Mathf.Clamp01(baseCol.r * 1.5f),
                               Mathf.Clamp01(baseCol.g * 1.5f),
-                              Mathf.Clamp01(baseCol.b * 1.5f), 0.85f);
+                              Mathf.Clamp01(baseCol.b * 1.5f), 0.85f); UISprites.Button(img);
         var btn = go.AddComponent<Button>();
         btn.onClick.AddListener(() => onClick?.Invoke());
         var rt = go.GetComponent<RectTransform>();
@@ -579,7 +579,7 @@ public class TutorialOverlay : MonoBehaviour
 
         var inner = new GameObject("Inner");
         inner.transform.SetParent(go.transform, false);
-        inner.AddComponent<Image>().color = baseCol;
+        var innerImg = inner.AddComponent<Image>(); innerImg.color = baseCol; UISprites.Button(innerImg);
         var iRt = inner.GetComponent<RectTransform>();
         iRt.anchorMin = Vector2.zero; iRt.anchorMax = Vector2.one;
         iRt.offsetMin = new Vector2(4f, 4f); iRt.offsetMax = new Vector2(-4f, -4f);

@@ -1737,7 +1737,7 @@ public class GameUI : MonoBehaviour
     {
         var go = new GameObject(label + "Btn");
         go.transform.SetParent(parent, false);
-        go.AddComponent<Image>().color = bgCol;
+        var btnImg = go.AddComponent<Image>(); btnImg.color = bgCol; UISprites.Button(btnImg);
         var btn = go.AddComponent<Button>();
         // ボタンSEはAudioManagerの自動付与で鳴る
         var rt = go.GetComponent<RectTransform>();

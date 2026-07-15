@@ -438,7 +438,7 @@ public class CollectionUI : MonoBehaviour
         var go = new GameObject(label + "NavBtn");
         go.transform.SetParent(parent, false);
         // パープルティント付きナビボタン
-        go.AddComponent<Image>().color = new Color(0.15f, 0.1f, 0.3f, 0.75f);
+        var navImg = go.AddComponent<Image>(); navImg.color = new Color(0.15f, 0.1f, 0.3f, 0.75f); UISprites.Button(navImg);
         go.AddComponent<Button>();
         var rt = go.GetComponent<RectTransform>();
         rt.anchorMin = rt.anchorMax = anchor;
@@ -652,7 +652,7 @@ public class CollectionUI : MonoBehaviour
         // 外枠フレーム
         var frameGo = new GameObject(label + "BtnFrame");
         frameGo.transform.SetParent(parent, false);
-        frameGo.AddComponent<Image>().color = frameCol;
+        var frameImg = frameGo.AddComponent<Image>(); frameImg.color = frameCol; UISprites.Button(frameImg);
         var frt = frameGo.GetComponent<RectTransform>();
         frt.anchorMin = frt.anchorMax = anchor;
         frt.anchoredPosition = Vector2.zero;
@@ -661,7 +661,7 @@ public class CollectionUI : MonoBehaviour
         // 内側背景
         var go = new GameObject(label + "Btn");
         go.transform.SetParent(frameGo.transform, false);
-        go.AddComponent<Image>().color = bgCol;
+        var btnImg = go.AddComponent<Image>(); btnImg.color = bgCol; UISprites.Button(btnImg);
         var btn = go.AddComponent<Button>();
         var rt = go.GetComponent<RectTransform>();
         rt.anchorMin = Vector2.zero;
@@ -785,7 +785,7 @@ public class CollectionUI : MonoBehaviour
         var go = new GameObject("VoiceBtn");
         go.transform.SetParent(parent, false);
         var outerImg = go.AddComponent<Image>();
-        outerImg.color = new Color(highlightCol.r, highlightCol.g, highlightCol.b, 0.7f);
+        outerImg.color = new Color(highlightCol.r, highlightCol.g, highlightCol.b, 0.7f); UISprites.Button(outerImg);
         var btn = go.AddComponent<Button>();
         var rt = go.GetComponent<RectTransform>();
         rt.anchorMin = rt.anchorMax = anchor;
@@ -796,7 +796,7 @@ public class CollectionUI : MonoBehaviour
         // 内側背景
         var innerGo = new GameObject("Inner");
         innerGo.transform.SetParent(go.transform, false);
-        innerGo.AddComponent<Image>().color = new Color(baseCol.r, baseCol.g, baseCol.b, 0.95f);
+        var innerImg = innerGo.AddComponent<Image>(); innerImg.color = new Color(baseCol.r, baseCol.g, baseCol.b, 0.95f); UISprites.Button(innerImg);
         var innerRt = innerGo.GetComponent<RectTransform>();
         innerRt.anchorMin = Vector2.zero; innerRt.anchorMax = Vector2.one;
         innerRt.offsetMin = new Vector2(2.5f, 2.5f); innerRt.offsetMax = new Vector2(-2.5f, -2.5f);

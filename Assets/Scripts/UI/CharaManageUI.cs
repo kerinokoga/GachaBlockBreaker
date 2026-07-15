@@ -766,7 +766,7 @@ public class CharaManageUI : MonoBehaviour
     {
         var go = new GameObject(label + "Btn");
         go.transform.SetParent(parent, false);
-        go.AddComponent<Image>().color = bgCol;
+        var btnImg = go.AddComponent<Image>(); btnImg.color = bgCol; UISprites.Button(btnImg);
         var btn = go.AddComponent<Button>();
         var rt = go.GetComponent<RectTransform>();
         rt.anchorMin = rt.anchorMax = anchor;

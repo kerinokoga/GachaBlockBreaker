@@ -869,7 +869,9 @@ public class HomeUI : MonoBehaviour
     {
         var go = new GameObject(label + "Btn");
         go.transform.SetParent(parent, false);
-        go.AddComponent<Image>().color = highlightCol;
+        var outerImg = go.AddComponent<Image>();
+        outerImg.color = highlightCol;
+        UISprites.Button(outerImg);
         var btn = go.AddComponent<Button>();
         var rt = go.GetComponent<RectTransform>();
         rt.anchorMin = rt.anchorMax = new Vector2(0.5f, yAnchor);
@@ -879,17 +881,12 @@ public class HomeUI : MonoBehaviour
 
         var innerGo = new GameObject("Inner");
         innerGo.transform.SetParent(go.transform, false);
-        innerGo.AddComponent<Image>().color = new Color(baseCol.r, baseCol.g, baseCol.b, 0.92f);
+        var innerImg = innerGo.AddComponent<Image>();
+        innerImg.color = new Color(baseCol.r, baseCol.g, baseCol.b, 0.92f);
+        UISprites.Button(innerImg);
         var innerRt = innerGo.GetComponent<RectTransform>();
         innerRt.anchorMin = Vector2.zero; innerRt.anchorMax = Vector2.one;
         innerRt.offsetMin = new Vector2(3f, 3f); innerRt.offsetMax = new Vector2(-3f, -3f);
-
-        var shineGo = new GameObject("Shine");
-        shineGo.transform.SetParent(innerGo.transform, false);
-        shineGo.AddComponent<Image>().color = new Color(1f, 1f, 1f, 0.1f);
-        var shineRt = shineGo.GetComponent<RectTransform>();
-        shineRt.anchorMin = new Vector2(0f, 0.5f); shineRt.anchorMax = Vector2.one;
-        shineRt.offsetMin = shineRt.offsetMax = Vector2.zero;
 
         var txtGo = new GameObject("Txt");
         txtGo.transform.SetParent(go.transform, false);
@@ -1089,7 +1086,7 @@ public class HomeUI : MonoBehaviour
         var drt = dialog.GetComponent<RectTransform>();
         drt.anchorMin = drt.anchorMax = new Vector2(0.5f, 0.5f);
         drt.anchoredPosition = Vector2.zero;
-        drt.sizeDelta = new Vector2(800f, 780f);
+        drt.sizeDelta = new Vector2(800f, 1150f);
 
         // ダイアログ内側
         var dInner = new GameObject("Inner");
@@ -1110,7 +1107,7 @@ public class HomeUI : MonoBehaviour
         string accountType = AuthManager.IsGuest() ? "ゲスト" : "メール認証済み";
         var infoT = MakeText(dialog.transform,
             $"アカウント: {accountType}\nID: {shortId}",
-            24, new Color(0.7f, 0.8f, 0.9f), new Vector2(0.5f, 0.83f), new Vector2(700f, 70f));
+            26, new Color(0.7f, 0.8f, 0.9f), new Vector2(0.5f, 0.86f), new Vector2(700f, 80f));
         infoT.lineSpacing = 1.3f;
 
         if (!AuthManager.IsGuest())
@@ -1121,13 +1118,13 @@ public class HomeUI : MonoBehaviour
                 linkedEmail = AuthManager.GetName();
             var doneT = MakeText(dialog.transform,
                 $"✓ メール連携済み\n{linkedEmail}\n\n機種変更の際は、上記メールアドレスと\nパスワードでデータを引き継げます。",
-                26, new Color(0.5f, 1f, 0.6f), new Vector2(0.5f, 0.54f), new Vector2(700f, 200f));
+                28, new Color(0.5f, 1f, 0.6f), new Vector2(0.5f, 0.58f), new Vector2(700f, 240f));
             doneT.lineSpacing = 1.3f;
 
             // 複数端末同時プレイの注意書き（問い合わせ予防）
             var cautionT = MakeText(dialog.transform,
                 "※複数端末での同時プレイはサポート外です\n（最後にプレイした端末のデータが保存されます）",
-                22, new Color(0.6f, 0.6f, 0.7f), new Vector2(0.5f, 0.33f), new Vector2(700f, 80f));
+                24, new Color(0.6f, 0.6f, 0.7f), new Vector2(0.5f, 0.38f), new Vector2(700f, 90f));
             cautionT.lineSpacing = 1.3f;
         }
         else
@@ -1135,17 +1132,17 @@ public class HomeUI : MonoBehaviour
             // ===== ゲスト: メール連携フォーム =====
             var descT = MakeText(dialog.transform,
                 "メールアドレスを登録すると、機種変更時に\nデータを引き継げるようになります。\n（Google連携は今後のアップデートで対応予定）",
-                24, new Color(0.6f, 0.6f, 0.7f), new Vector2(0.5f, 0.73f), new Vector2(700f, 90f));
+                24, new Color(0.6f, 0.6f, 0.7f), new Vector2(0.5f, 0.775f), new Vector2(700f, 100f));
             descT.lineSpacing = 1.3f;
 
             var emailInput = MakeLinkInputField(dialog.transform, "メールアドレス",
-                new Vector2(0.5f, 0.615f), false);
+                new Vector2(0.5f, 0.675f), false);
             var passInput = MakeLinkInputField(dialog.transform, "パスワード（6文字以上）",
-                new Vector2(0.5f, 0.505f), true);
+                new Vector2(0.5f, 0.585f), true);
 
             // 結果表示テキスト（初期表示は同時プレイの注意書き。操作すると結果に置き換わる）
             var statusT = MakeText(dialog.transform, "※複数端末での同時利用はサポート外です",
-                22, new Color(0.6f, 0.6f, 0.7f), new Vector2(0.5f, 0.30f), new Vector2(700f, 44f));
+                22, new Color(0.6f, 0.6f, 0.7f), new Vector2(0.5f, 0.385f), new Vector2(700f, 48f));
 
             // 連携するボタン
             var linkGo2 = new GameObject("DoLinkBtn");
@@ -1153,7 +1150,7 @@ public class HomeUI : MonoBehaviour
             linkGo2.AddComponent<Image>().color = new Color(0.3f, 0.8f, 0.5f, 0.6f);
             var linkBtn2 = linkGo2.AddComponent<Button>();
             var lrt2 = linkGo2.GetComponent<RectTransform>();
-            lrt2.anchorMin = lrt2.anchorMax = new Vector2(0.5f, 0.395f);
+            lrt2.anchorMin = lrt2.anchorMax = new Vector2(0.5f, 0.475f);
             lrt2.anchoredPosition = Vector2.zero;
             lrt2.sizeDelta = new Vector2(340f, 78f);
 
@@ -1210,7 +1207,7 @@ public class HomeUI : MonoBehaviour
             recvBg.color = new Color(0f, 0f, 0f, 0f); // 透明（テキストボタン）
             var recvBtn = recvGo.AddComponent<Button>();
             var rrt = recvGo.GetComponent<RectTransform>();
-            rrt.anchorMin = rrt.anchorMax = new Vector2(0.5f, 0.225f);
+            rrt.anchorMin = rrt.anchorMax = new Vector2(0.5f, 0.30f);
             rrt.anchoredPosition = Vector2.zero;
             rrt.sizeDelta = new Vector2(700f, 44f);
 
@@ -1264,7 +1261,7 @@ public class HomeUI : MonoBehaviour
             resetBg.color = new Color(0f, 0f, 0f, 0f); // 透明（テキストボタン）
             var resetBtn = resetGo.AddComponent<Button>();
             var resetRt = resetGo.GetComponent<RectTransform>();
-            resetRt.anchorMin = resetRt.anchorMax = new Vector2(0.5f, 0.163f);
+            resetRt.anchorMin = resetRt.anchorMax = new Vector2(0.5f, 0.235f);
             resetRt.anchoredPosition = Vector2.zero;
             resetRt.sizeDelta = new Vector2(700f, 40f);
 
@@ -2220,6 +2217,7 @@ public class HomeUI : MonoBehaviour
         go.transform.SetParent(parent, false);
         var outerImg = go.AddComponent<Image>();
         outerImg.color = new Color(highlightCol.r, highlightCol.g, highlightCol.b, 0.6f);
+        UISprites.Button(outerImg);
         var btn = go.AddComponent<Button>();
         var cg = go.AddComponent<CanvasGroup>();
         fadeButtons.Add(cg);
@@ -2230,21 +2228,15 @@ public class HomeUI : MonoBehaviour
         rt.sizeDelta = new Vector2(260f, 78f);
         btn.onClick.AddListener(onClick);
 
-        // 内側背景（メインカラー＋グラデーション風）
+        // 内側背景（メインカラー、光沢は9スライス素材に焼き込み済み）
         var innerGo = new GameObject("Inner");
         innerGo.transform.SetParent(go.transform, false);
-        innerGo.AddComponent<Image>().color = new Color(baseCol.r, baseCol.g, baseCol.b, 0.92f);
+        var innerImg = innerGo.AddComponent<Image>();
+        innerImg.color = new Color(baseCol.r, baseCol.g, baseCol.b, 0.92f);
+        UISprites.Button(innerImg);
         var innerRt = innerGo.GetComponent<RectTransform>();
         innerRt.anchorMin = Vector2.zero; innerRt.anchorMax = Vector2.one;
         innerRt.offsetMin = new Vector2(3f, 3f); innerRt.offsetMax = new Vector2(-3f, -3f);
-
-        // 上半分ハイライト（光沢感）
-        var shineGo = new GameObject("Shine");
-        shineGo.transform.SetParent(innerGo.transform, false);
-        shineGo.AddComponent<Image>().color = new Color(1f, 1f, 1f, 0.12f);
-        var shineRt = shineGo.GetComponent<RectTransform>();
-        shineRt.anchorMin = new Vector2(0f, 0.5f); shineRt.anchorMax = Vector2.one;
-        shineRt.offsetMin = shineRt.offsetMax = Vector2.zero;
 
         // 左側装飾アイコン
         var leftIcon = new GameObject("LIcon");
@@ -2313,6 +2305,7 @@ public class HomeUI : MonoBehaviour
         go.transform.SetParent(parent, false);
         var outerImg = go.AddComponent<Image>();
         outerImg.color = new Color(highlightCol.r, highlightCol.g, highlightCol.b, 0.6f);
+        UISprites.Button(outerImg);
         var btn = go.AddComponent<Button>();
         var cg = go.AddComponent<CanvasGroup>();
         fadeButtons.Add(cg);
@@ -2323,21 +2316,15 @@ public class HomeUI : MonoBehaviour
         rt.sizeDelta = new Vector2(260f, 78f);
         btn.onClick.AddListener(() => SceneManager.LoadScene("PresentBoxScene"));
 
-        // 内側背景
+        // 内側背景（光沢は9スライス素材に焼き込み済み）
         var innerGo = new GameObject("Inner");
         innerGo.transform.SetParent(go.transform, false);
-        innerGo.AddComponent<Image>().color = new Color(baseCol.r, baseCol.g, baseCol.b, 0.92f);
+        var innerImg = innerGo.AddComponent<Image>();
+        innerImg.color = new Color(baseCol.r, baseCol.g, baseCol.b, 0.92f);
+        UISprites.Button(innerImg);
         var innerRt = innerGo.GetComponent<RectTransform>();
         innerRt.anchorMin = Vector2.zero; innerRt.anchorMax = Vector2.one;
         innerRt.offsetMin = new Vector2(3f, 3f); innerRt.offsetMax = new Vector2(-3f, -3f);
-
-        // 上半分ハイライト
-        var shineGo = new GameObject("Shine");
-        shineGo.transform.SetParent(innerGo.transform, false);
-        shineGo.AddComponent<Image>().color = new Color(1f, 1f, 1f, 0.12f);
-        var shineRt = shineGo.GetComponent<RectTransform>();
-        shineRt.anchorMin = new Vector2(0f, 0.5f); shineRt.anchorMax = Vector2.one;
-        shineRt.offsetMin = shineRt.offsetMax = Vector2.zero;
 
         // 左側アイコン（他のボタンと同じく♡で統一）
         var liGo = new GameObject("LIcon");

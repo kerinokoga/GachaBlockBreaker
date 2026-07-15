@@ -503,7 +503,7 @@ public class PresentBoxUI : MonoBehaviour
     {
         var go = new GameObject(label + "Btn");
         go.transform.SetParent(parent, false);
-        go.AddComponent<Image>().color = new Color(highlightCol.r, highlightCol.g, highlightCol.b, 0.6f);
+        var outerImg = go.AddComponent<Image>(); outerImg.color = new Color(highlightCol.r, highlightCol.g, highlightCol.b, 0.6f); UISprites.Button(outerImg);
         var btn = go.AddComponent<Button>();
         var rt = go.GetComponent<RectTransform>();
         rt.anchorMin = rt.anchorMax = anchor;
@@ -513,7 +513,7 @@ public class PresentBoxUI : MonoBehaviour
 
         var innerGo = new GameObject("Inner");
         innerGo.transform.SetParent(go.transform, false);
-        innerGo.AddComponent<Image>().color = new Color(baseCol.r, baseCol.g, baseCol.b, 0.92f);
+        var innerImg = innerGo.AddComponent<Image>(); innerImg.color = new Color(baseCol.r, baseCol.g, baseCol.b, 0.92f); UISprites.Button(innerImg);
         var innerRt = innerGo.GetComponent<RectTransform>();
         innerRt.anchorMin = Vector2.zero; innerRt.anchorMax = Vector2.one;
         innerRt.offsetMin = new Vector2(3f, 3f); innerRt.offsetMax = new Vector2(-3f, -3f);
@@ -547,7 +547,7 @@ public class PresentBoxUI : MonoBehaviour
     {
         var go = new GameObject(label + "Btn");
         go.transform.SetParent(parent, false);
-        go.AddComponent<Image>().color = new Color(highlightCol.r, highlightCol.g, highlightCol.b, 0.6f);
+        var outerImg = go.AddComponent<Image>(); outerImg.color = new Color(highlightCol.r, highlightCol.g, highlightCol.b, 0.6f); UISprites.Button(outerImg);
         var btn = go.AddComponent<Button>();
         var rt = go.GetComponent<RectTransform>();
         rt.anchorMin = rt.anchorMax = anchor;
@@ -557,7 +557,7 @@ public class PresentBoxUI : MonoBehaviour
 
         var innerGo = new GameObject("Inner");
         innerGo.transform.SetParent(go.transform, false);
-        innerGo.AddComponent<Image>().color = new Color(baseCol.r, baseCol.g, baseCol.b, 0.92f);
+        var innerImg = innerGo.AddComponent<Image>(); innerImg.color = new Color(baseCol.r, baseCol.g, baseCol.b, 0.92f); UISprites.Button(innerImg);
         var innerRt = innerGo.GetComponent<RectTransform>();
         innerRt.anchorMin = Vector2.zero; innerRt.anchorMax = Vector2.one;
         innerRt.offsetMin = new Vector2(2f, 2f); innerRt.offsetMax = new Vector2(-2f, -2f);
