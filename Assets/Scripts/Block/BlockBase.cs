@@ -28,6 +28,10 @@ public abstract class BlockBase : MonoBehaviour
     {
         currentHP = maxHP;
         baseSR = GetComponent<SpriteRenderer>();
+        // 見た目強化: 平面スプライトをベベル付きタイルに差し替え
+        // （同じ2x1ユニットなので当たり判定・配置に影響なし。ボスはキャラアイコン表示のため対象外）
+        if (baseSR != null && !(this is BossBlock) && UISprites.BlockTile != null)
+            baseSR.sprite = UISprites.BlockTile;
         // ブロックを半透明にして背面のイラストが透けて見えるようにする
         if (baseSR != null)
         {
@@ -182,7 +186,17 @@ public abstract class BlockBase : MonoBehaviour
     {
         Color col = (baseSR != null) ? baseSR.color : Color.white;
         col.a = 1f;
-        int count = 6;
+
+        // 破壊の閃光（中心で一瞬広がって消える）
+        var flash = new GameObject("BreakFlash");
+        flash.transform.position = transform.position + new Vector3(0f, 0f, -0.5f);
+        var fsr = flash.AddComponent<SpriteRenderer>();
+        fsr.sprite = CreateCircleSprite();
+        fsr.color = Color.Lerp(col, Color.white, 0.6f);
+        fsr.sortingOrder = 25;
+        flash.AddComponent<BreakFlashAnim>();
+
+        int count = 10;
 
         for (int i = 0; i < count; i++)
         {
@@ -224,6 +238,29 @@ public abstract class BlockBase : MonoBehaviour
         return _squareSprite;
     }
 
+    static Sprite _circleSprite;
+    static Sprite CreateCircleSprite()
+    {
+        if (_circleSprite != null) return _circleSprite;
+        const int S = 32;
+        var tex = new Texture2D(S, S, TextureFormat.RGBA32, false);
+        float cx = (S - 1) * 0.5f;
+        for (int x = 0; x < S; x++)
+        {
+            for (int y = 0; y < S; y++)
+            {
+                float d = Vector2.Distance(new Vector2(x, y), new Vector2(cx, cx)) / cx;
+                // 中心ほど濃く、縁に向けてなめらかに消える
+                float a = Mathf.Clamp01(1f - d);
+                a *= a;
+                tex.SetPixel(x, y, new Color(1f, 1f, 1f, a));
+            }
+        }
+        tex.Apply();
+        _circleSprite = Sprite.Create(tex, new Rect(0, 0, S, S), new Vector2(0.5f, 0.5f), S);
+        return _circleSprite;
+    }
+
     void OnCollisionEnter2D(Collision2D col)
     {
         if (col.gameObject.CompareTag("Ball"))
@@ -257,6 +294,37 @@ public abstract class BlockBase : MonoBehaviour
                     * speedRatio
                     * criticalMul;
         TakeDamage((int)System.Math.Ceiling(baseDmg * mul));
+    }
+}
+
+/// <summary>
+/// 破壊時の閃光。0.18秒で拡大しながらフェードアウトして自壊する
+/// （親ブロックは即Destroyされるため独立GameObjectで自走）
+/// </summary>
+public class BreakFlashAnim : MonoBehaviour
+{
+    SpriteRenderer sr;
+    float t;
+    const float Duration = 0.18f;
+
+    void Awake()
+    {
+        sr = GetComponent<SpriteRenderer>();
+        transform.localScale = Vector3.one * 0.4f;
+    }
+
+    void Update()
+    {
+        t += Time.deltaTime;
+        float k = Mathf.Clamp01(t / Duration);
+        transform.localScale = Vector3.one * Mathf.Lerp(0.4f, 1.7f, k);
+        if (sr != null)
+        {
+            var c = sr.color;
+            c.a = 0.85f * (1f - k);
+            sr.color = c;
+        }
+        if (t >= Duration) Destroy(gameObject);
     }
 }
 

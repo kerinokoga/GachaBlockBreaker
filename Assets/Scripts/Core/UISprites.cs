@@ -10,15 +10,23 @@ public static class UISprites
 {
     static Sprite button;
     static Sprite panel;
+    static Sprite blockTile;
     static bool loaded;
 
     static void LoadOnce()
     {
         if (loaded) return;
         loaded = true;
-        button = Resources.Load<Sprite>("UI/btn_round");
-        panel  = Resources.Load<Sprite>("UI/panel_round");
+        button    = Resources.Load<Sprite>("UI/btn_round");
+        panel     = Resources.Load<Sprite>("UI/panel_round");
+        blockTile = Resources.Load<Sprite>("Blocks/block_tile");
         if (button == null) Debug.LogWarning("[UISprites] UI/btn_round が読み込めません");
+    }
+
+    /// <summary>ブロック用のベベル付きタイル（2x1ユニット）。見つからなければ null</summary>
+    public static Sprite BlockTile
+    {
+        get { LoadOnce(); return blockTile; }
     }
 
     /// <summary>ボタン用の角丸グラデーションを適用（色は既存の img.color が乗算される）</summary>
