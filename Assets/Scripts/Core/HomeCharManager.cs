@@ -73,6 +73,9 @@ public static class HomeCharManager
             case Rarity.SR:
                 return $"覚醒＋ステージ{SRUnlockStage}クリアで解放";
             case Rarity.SSR:
+                int kills = GetEndlessKills();
+                if (kills < SSRUnlockKills)
+                    return $"覚醒＋エンドレス累計{SSRUnlockKills}体撃破で解放（あと{SSRUnlockKills - kills}体）";
                 return $"覚醒＋エンドレス累計{SSRUnlockKills}体撃破で解放";
             default:
                 return "覚醒で解放";

@@ -1589,6 +1589,10 @@ public class HomeUI : MonoBehaviour
             var subT = MakeText(rowGo.transform, subText, 22,
                 new Color(0.55f, 0.6f, 0.75f), new Vector2(0.35f, 0.26f), new Vector2(500f, 28f));
             subT.alignment = TextAnchor.MiddleLeft;
+            // 「（あとN体）」付きの長文でも1行に収まるよう自動縮小
+            subT.resizeTextForBestFit = true;
+            subT.resizeTextMinSize = 14;
+            subT.resizeTextMaxSize = 22;
         }
     }
 
