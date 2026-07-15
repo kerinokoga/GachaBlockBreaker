@@ -17,7 +17,7 @@ MonoBehaviour:
   rarityColor: {r: 1, g: 0.85, b: 0.1, a: 1}
   icon: {fileID: 21300000, guid: 9d981c89d1f287540ad2931848e1622e, type: 3}
   passiveType: 1
-  passiveValue: 2
+  passiveValue: 1.5
   passiveType2: 5
   passiveValue2: 3
   ultimateType: 6
@@ -35,4 +35,4 @@ MonoBehaviour:
   voiceDestroy60: {fileID: 8300000, guid: f7c60087380c05145a589ed9019fc3a0, type: 3}
   voiceBossDamaged: {fileID: 8300000, guid: 163f5bd8302bc3c4d94675d7b90a0f9c, type: 3}
   voiceBossAttack: {fileID: 8300000, guid: 8e2f8515bd3966d4c8e33254f9f9653b, type: 3}
-  description: "\u706F\u706B\u306E\u5DEB\u5973\u3002\u30C0\u30E1\u30FC\u30B82\u500D\uFF06\u30AF\u30EA\u30C6\u30A3\u30AB\u30EB\u7BC4\u56F2+3%\uFF06\u5965\u7FA9\u3067\u30DC\u30FC\u30EB\u5206\u88C2\uFF01\u7121\u6570\u306E\u5149\u3067\u5168\u3066\u3092\u8CAB\u304F\u3002"
+  description: "灯火の巫女。ダメージ1.5倍＆クリティカル範囲+3%＆奥義でボール分裂！無数の光で全てを貫く。"

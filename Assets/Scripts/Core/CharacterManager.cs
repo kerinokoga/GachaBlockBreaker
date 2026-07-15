@@ -11,7 +11,7 @@ public class CharacterManager : MonoBehaviour
 {
     public static CharacterManager Instance { get; private set; }
 
-    private const int MaxGauge = 10;
+    private const int MaxGauge = 15;
 
     private CharacterData[] selectedChars = new CharacterData[3];
     private float[] gauges = new float[3];

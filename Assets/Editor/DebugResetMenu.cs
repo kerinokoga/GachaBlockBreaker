@@ -42,6 +42,18 @@ public static class DebugResetMenu
             "完了しました。Play中の場合はシーンを読み込み直すと反映されます。", "OK");
     }
 
+    [MenuItem("Tools/デバッグ/ステージ20を未クリアに戻す（初回報酬テスト用）")]
+    public static void UnclearStage20()
+    {
+        PlayerPrefs.DeleteKey("GachaBlock_Cleared_20");
+        PlayerPrefs.DeleteKey("GachaBlock_Rate_20");
+        PlayerPrefs.DeleteKey("GachaBlock_TrueCleared_20");
+        PlayerPrefs.Save();
+        Debug.Log("[Debug] ステージ20を未クリア状態に戻しました（挑戦は可能なまま）");
+        EditorUtility.DisplayDialog("デバッグ",
+            "ステージ20を未クリアに戻しました。\nクリアすると初回報酬（オーブ＋コレクション）の表記が確認できます。", "OK");
+    }
+
     [MenuItem("Tools/デバッグ/セーブデータを完全初期化")]
     public static void ResetAll()
     {

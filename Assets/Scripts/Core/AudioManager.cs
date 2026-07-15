@@ -233,6 +233,7 @@ public class AudioManager : MonoBehaviour
     {
         bgmSource.Stop();
         bgmSource.pitch = 1f; // 停止時もピッチを復帰
+        SetBGMBoost(false);   // ステージ用増幅も解除
     }
 
     /// <summary>BGM のピッチ（速度）を変更する。裏ステージなどの緊迫演出に使用。</summary>
@@ -265,6 +266,8 @@ public class AudioManager : MonoBehaviour
             case "RankingScene":
                 clip = bgmCollection != null ? bgmCollection : bgmHome; break;
         }
+        // ゲームシーンのみBGM増幅、それ以外は等倍に戻す
+        SetBGMBoost(sceneName == "GameScene");
         if (clip != null) PlayBGM(clip);
     }
 
@@ -275,6 +278,7 @@ public class AudioManager : MonoBehaviour
         AudioClip clip = stageBGMs[idx];
         // 個別BGMが無ければ汎用ゲームBGM
         if (clip == null) clip = bgmGame;
+        SetBGMBoost(true); // SEにかき消されないようステージ中は増幅
         if (clip != null) PlayBGM(clip);
     }
 
@@ -387,10 +391,30 @@ public class AudioManager : MonoBehaviour
 
     // ---- 音量 ----
 
+    // ユーザー設定の音量とシーン別補正を分離して管理する。
+    // ステージ中は効果音の連打でBGMがかき消されるため、ゲームBGMだけ内部的に増幅する。
+    float bgmUserVolume = 0.25f;
+    float bgmSceneBoost = 1f;
+    const float GameBgmBoost = 1.6f; // ステージBGMの増幅率（約+4dB相当）
+
+    void ApplyBGMVolume()
+    {
+        if (bgmSource != null)
+            bgmSource.volume = Mathf.Clamp01(bgmUserVolume * bgmSceneBoost);
+    }
+
+    /// <summary>ステージBGM用の増幅ON/OFF（PlayStageBGM/PlayBGMForScene から呼ばれる）</summary>
+    void SetBGMBoost(bool gameScene)
+    {
+        bgmSceneBoost = gameScene ? GameBgmBoost : 1f;
+        ApplyBGMVolume();
+    }
+
     public void SetBGMVolume(float volume)
     {
-        bgmSource.volume = Mathf.Clamp01(volume);
-        PlayerPrefs.SetFloat("BGMVolume", volume);
+        bgmUserVolume = Mathf.Clamp01(volume);
+        PlayerPrefs.SetFloat("BGMVolume", bgmUserVolume);
+        ApplyBGMVolume();
     }
 
     public void SetSEVolume(float volume)
@@ -399,7 +423,7 @@ public class AudioManager : MonoBehaviour
         PlayerPrefs.SetFloat("SEVolume", volume);
     }
 
-    public float BGMVolume => bgmSource.volume;
+    public float BGMVolume => bgmUserVolume;
     public float SEVolume  => seSource.volume;
 
     private void LoadSettings()
@@ -413,7 +437,8 @@ public class AudioManager : MonoBehaviour
             PlayerPrefs.Save();
         }
 
-        bgmSource.volume = PlayerPrefs.GetFloat("BGMVolume", 0.25f);
+        bgmUserVolume = PlayerPrefs.GetFloat("BGMVolume", 0.25f);
+        ApplyBGMVolume();
         seSource.volume  = PlayerPrefs.GetFloat("SEVolume",  1f);
         if (voiceSource != null)
             voiceSource.volume = PlayerPrefs.GetFloat("VoiceVolume", 1f);

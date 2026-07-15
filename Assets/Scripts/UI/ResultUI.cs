@@ -268,18 +268,20 @@ public class ResultUI : MonoBehaviour
             }
         }
 
-        // 初回クリア報酬
+        // 初回クリア報酬（長文でも折り返さず1行表示）
         if (isClear && ResultData.IsFirstClear)
         {
-            MakeText(canvasRoot,
+            var orbGetT = MakeText(canvasRoot,
                 $"★ {OrbManager.StageClearReward} オーブ GET!",
                 58, new Color(1f, 0.85f, 0.1f),
-                new Vector2(0.5f, 0.48f), new Vector2(700f, 70f));
+                new Vector2(0.5f, 0.48f), new Vector2(900f, 70f));
+            orbGetT.horizontalOverflow = HorizontalWrapMode.Overflow;
 
-            MakeText(canvasRoot,
+            var collGetT = MakeText(canvasRoot,
                 "美少女コレクション♡Get!",
                 58, new Color(1f, 0.5f, 0.8f),
-                new Vector2(0.5f, 0.41f), new Vector2(700f, 65f));
+                new Vector2(0.5f, 0.41f), new Vector2(900f, 65f));
+            collGetT.horizontalOverflow = HorizontalWrapMode.Overflow;
         }
 
         // NEXT STAGE ボタン（クリア時のみ）

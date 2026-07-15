@@ -17,13 +17,16 @@ MonoBehaviour:
   rarityColor: {r: 1, g: 0.85, b: 0.1, a: 1}
   icon: {fileID: 21300000, guid: 5c89cd2370e7de046aa93dc624d84022, type: 3}
   passiveType: 2
-  passiveValue: 3
+  passiveValue: 5
   passiveType2: 5
   passiveValue2: 3
-  ultimateType: 6
-  ultimateValue: 0
+  ultimateType: 2
+  ultimateValue: 10
   ultimateDuration: 0
   ultimateGaugeCost: 10
+  ultimateType2: 1
+  ultimateValue2: 2.5
+  ultimateDuration2: 10
   voiceVolumeMultiplier: 1
   voiceTitle: {fileID: 8300000, guid: 0119724f30419214aa7eea82b06cc5ae, type: 3}
   voiceSelect: {fileID: 8300000, guid: c7c3bb536b2412043925cfb1b5c7f501, type: 3}
@@ -35,4 +38,4 @@ MonoBehaviour:
   voiceDestroy60: {fileID: 8300000, guid: cbdf56d52449c92428fb5f5836ce9990, type: 3}
   voiceBossDamaged: {fileID: 8300000, guid: 496f7c7abe478824c9a2a325220dd41e, type: 3}
   voiceBossAttack: {fileID: 8300000, guid: 94266459e83240b4f98c458e68bddbef, type: 3}
-  description: "\u7D05\u84EE\u306E\u4F8D\u3002\u8FFD\u52A0\u30C0\u30E1\u30FC\u30B8+3\uFF06\u30AF\u30EA\u30C6\u30A3\u30AB\u30EB\u7BC4\u56F2+3%\uFF06\u5965\u7FA9\u3067\u30DC\u30FC\u30EB\u5206\u88C2\uFF01\u5727\u5012\u7684\u624B\u6570\u3067\u6575\u3092\u6BB2\u6EC5\u3002"
+  description: "紅蓮の侍。追加ダメージ+5＆クリティカル範囲+3%＆奥義で全体10ダメージ＋10秒間ダメージ+150%！一刀のもとに敵を殲滅。"
