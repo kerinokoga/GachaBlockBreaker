@@ -14,7 +14,7 @@
 |---|---|
 | アプリはユーザーデータを収集または共有しますか | **はい（収集する）** |
 | 収集したデータをすべて暗号化して送信しますか | **はい**（Firebase は TLS 通信） |
-| ユーザーがデータの削除をリクエストできますか | **はい**（info@kerinogame.com への問い合わせで対応。削除手順: ①Authentication ユーザー ②users/{UID} ③rankings 配下 entries/{UID}） |
+| ユーザーがデータの削除をリクエストできますか | **はい**（info@kerinogame.com への問い合わせで対応。削除手順: ①Authentication ユーザー ②users/{UID} ③rankings 配下 entries/{UID} ④playerNames/{プレイヤー名}） |
 
 ### 収集するデータの申告（3種類）
 
