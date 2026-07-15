@@ -1423,7 +1423,7 @@ public class CharaSelectUI : MonoBehaviour
         liT.text = icon; liT.fontSize = 24;
         liT.color = new Color(1f, 1f, 1f, 0.7f);
         liT.alignment = TextAnchor.MiddleCenter;
-        liT.font = Font.CreateDynamicFontFromOSFont("Arial", 24);
+        liT.font = UIFont.Main; liT.verticalOverflow = VerticalWrapMode.Overflow;
         var liRt = leftIcon.GetComponent<RectTransform>();
         liRt.anchorMin = liRt.anchorMax = new Vector2(0f, 0.5f);
         liRt.anchoredPosition = new Vector2(28f, 0f);
@@ -1436,7 +1436,7 @@ public class CharaSelectUI : MonoBehaviour
         riT.text = icon; riT.fontSize = 24;
         riT.color = new Color(1f, 1f, 1f, 0.7f);
         riT.alignment = TextAnchor.MiddleCenter;
-        riT.font = Font.CreateDynamicFontFromOSFont("Arial", 24);
+        riT.font = UIFont.Main; riT.verticalOverflow = VerticalWrapMode.Overflow;
         var riRt = rightIcon.GetComponent<RectTransform>();
         riRt.anchorMin = riRt.anchorMax = new Vector2(1f, 0.5f);
         riRt.anchoredPosition = new Vector2(-28f, 0f);
@@ -1449,7 +1449,7 @@ public class CharaSelectUI : MonoBehaviour
         t.text = label; t.fontSize = fontSize; t.color = Color.white;
         t.alignment = TextAnchor.MiddleCenter;
         var cherry = Resources.Load<Font>("Fonts/CherryBombOne-Regular");
-        t.font = cherry != null ? cherry : Font.CreateDynamicFontFromOSFont("Arial", fontSize);
+        t.font = cherry != null ? cherry : UIFont.Main;
         t.horizontalOverflow = HorizontalWrapMode.Overflow;
         t.verticalOverflow = VerticalWrapMode.Overflow;
         var txtShadow = txtGo.AddComponent<Shadow>();
@@ -1503,7 +1503,7 @@ public class CharaSelectUI : MonoBehaviour
         var t = go.AddComponent<Text>();
         t.text = txt; t.fontSize = size; t.color = col;
         t.alignment = TextAnchor.MiddleCenter;
-        t.font = Font.CreateDynamicFontFromOSFont("Arial", size);
+        t.font = UIFont.Main; t.verticalOverflow = VerticalWrapMode.Overflow;
         var rt = go.GetComponent<RectTransform>();
         rt.anchorMin = rt.anchorMax = anchor;
         rt.anchoredPosition = Vector2.zero;

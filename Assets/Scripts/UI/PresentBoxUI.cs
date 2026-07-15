@@ -489,7 +489,7 @@ public class PresentBoxUI : MonoBehaviour
         var t = go.AddComponent<Text>();
         t.text = txt; t.fontSize = size; t.color = col;
         t.alignment = TextAnchor.MiddleCenter;
-        t.font = Font.CreateDynamicFontFromOSFont("Arial", size);
+        t.font = UIFont.Main; t.verticalOverflow = VerticalWrapMode.Overflow;
         t.raycastTarget = false;
         var rt = go.GetComponent<RectTransform>();
         rt.anchorMin = rt.anchorMax = anchor;
@@ -531,7 +531,7 @@ public class PresentBoxUI : MonoBehaviour
         t.text = label; t.fontSize = 32; t.color = Color.white;
         t.alignment = TextAnchor.MiddleCenter;
         var cherry = Resources.Load<Font>("Fonts/CherryBombOne-Regular");
-        t.font = cherry != null ? cherry : Font.CreateDynamicFontFromOSFont("Arial", 32);
+        t.font = cherry != null ? cherry : UIFont.Main;
         t.horizontalOverflow = HorizontalWrapMode.Overflow;
         t.verticalOverflow = VerticalWrapMode.Overflow;
         AddShadow(txtGo);
@@ -568,7 +568,7 @@ public class PresentBoxUI : MonoBehaviour
         t.text = label; t.fontSize = 26; t.color = Color.white;
         t.alignment = TextAnchor.MiddleCenter;
         var cherry = Resources.Load<Font>("Fonts/CherryBombOne-Regular");
-        t.font = cherry != null ? cherry : Font.CreateDynamicFontFromOSFont("Arial", 26);
+        t.font = cherry != null ? cherry : UIFont.Main;
         t.horizontalOverflow = HorizontalWrapMode.Overflow;
         t.verticalOverflow = VerticalWrapMode.Overflow;
         var trt = txtGo.GetComponent<RectTransform>();

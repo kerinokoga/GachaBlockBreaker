@@ -513,7 +513,7 @@ public class StageSelectUI : MonoBehaviour
         t.text = label; t.fontSize = 36; t.color = Color.white;
         t.alignment = TextAnchor.MiddleCenter;
         var cherry = Resources.Load<Font>("Fonts/CherryBombOne-Regular");
-        t.font = cherry != null ? cherry : Font.CreateDynamicFontFromOSFont("Arial", 36);
+        t.font = cherry != null ? cherry : UIFont.Main;
         t.horizontalOverflow = HorizontalWrapMode.Overflow;
         t.verticalOverflow = VerticalWrapMode.Overflow;
         var txtShadow = txtGo.AddComponent<Shadow>();
@@ -579,7 +579,7 @@ public class StageSelectUI : MonoBehaviour
         var t = go.AddComponent<Text>();
         t.text = txt; t.fontSize = size; t.color = col;
         t.alignment = TextAnchor.MiddleCenter;
-        t.font = Font.CreateDynamicFontFromOSFont("Arial", size);
+        t.font = UIFont.Main; t.verticalOverflow = VerticalWrapMode.Overflow;
         var rt = go.GetComponent<RectTransform>();
         rt.anchorMin = rt.anchorMax = anchor;
         rt.anchoredPosition = Vector2.zero;
@@ -594,7 +594,7 @@ public class StageSelectUI : MonoBehaviour
         var t = go.AddComponent<Text>();
         t.text = txt; t.fontSize = size; t.color = col;
         t.alignment = TextAnchor.MiddleCenter;
-        t.font = Font.CreateDynamicFontFromOSFont("Arial", size);
+        t.font = UIFont.Main; t.verticalOverflow = VerticalWrapMode.Overflow;
         var rt = go.GetComponent<RectTransform>();
         rt.anchorMin = rt.anchorMax = anchor;
         rt.anchoredPosition = Vector2.zero;

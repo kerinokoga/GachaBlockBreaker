@@ -29,7 +29,7 @@ public class CharaManageUI : MonoBehaviour
 
     void Start()
     {
-        cachedFont = Font.CreateDynamicFontFromOSFont("Arial", 1);
+        cachedFont = UIFont.Main;
         btnFont = Resources.Load<Font>("Fonts/CherryBombOne-Regular") ?? cachedFont;
         allChars = Resources.LoadAll<CharacterData>("Characters");
         BuildUI();
@@ -744,6 +744,7 @@ public class CharaManageUI : MonoBehaviour
         t.text = txt; t.fontSize = size; t.color = col;
         t.alignment = TextAnchor.MiddleCenter;
         t.font = cachedFont;
+        t.verticalOverflow = VerticalWrapMode.Overflow;
         t.raycastTarget = false;
         var rt = go.GetComponent<RectTransform>();
         rt.anchorMin = rt.anchorMax = anchor;

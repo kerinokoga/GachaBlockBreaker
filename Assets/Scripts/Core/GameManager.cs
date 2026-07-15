@@ -1030,7 +1030,7 @@ public class GameManager : MonoBehaviour
         txGO.transform.SetParent(root.transform, false);
         var tx = txGO.AddComponent<UnityEngine.UI.Text>();
         tx.text = "Danger！";
-        tx.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        tx.font = UIFont.Main; tx.verticalOverflow = VerticalWrapMode.Overflow;
         tx.fontSize = 140;
         tx.fontStyle = FontStyle.Bold;
         tx.alignment = TextAnchor.MiddleCenter;

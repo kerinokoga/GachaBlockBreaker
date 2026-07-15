@@ -372,7 +372,7 @@ public class GameUI : MonoBehaviour
         t.fontSize = fontSize;
         t.color = new Color(color.r, color.g, color.b, 0f); // 初期透明
         t.alignment = TextAnchor.MiddleCenter;
-        t.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        t.font = UIFont.Main; t.verticalOverflow = VerticalWrapMode.Overflow;
         t.fontStyle = FontStyle.Bold;
         t.raycastTarget = false; // 操作を妨げない
         t.horizontalOverflow = HorizontalWrapMode.Overflow;
@@ -418,7 +418,7 @@ public class GameUI : MonoBehaviour
         t.fontSize = 30;
         t.color = new Color(1f, 0.75f, 0.2f);
         t.alignment = TextAnchor.MiddleRight;
-        t.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        t.font = UIFont.Main; t.verticalOverflow = VerticalWrapMode.Overflow;
         t.fontStyle = FontStyle.Bold;
         t.raycastTarget = false;
         t.horizontalOverflow = HorizontalWrapMode.Overflow;
@@ -697,7 +697,7 @@ public class GameUI : MonoBehaviour
         t.fontSize = 96;
         t.color = new Color(1f, 0.9f, 0.3f, 0f); // 初期 alpha 0
         t.alignment = TextAnchor.MiddleCenter;
-        t.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        t.font = UIFont.Main; t.verticalOverflow = VerticalWrapMode.Overflow;
         t.fontStyle = FontStyle.Bold;
         t.raycastTarget = false;
         t.horizontalOverflow = HorizontalWrapMode.Overflow;
@@ -1282,8 +1282,8 @@ public class GameUI : MonoBehaviour
             tapText.raycastTarget = false;
             tapText.horizontalOverflow = HorizontalWrapMode.Overflow;
             tapText.verticalOverflow   = VerticalWrapMode.Overflow;
-            // 細字にするためシステム Arial を使用（CherryBombOne は太字デザインのため避ける）
-            tapText.font = Font.CreateDynamicFontFromOSFont("Arial", 36);
+            // 本文用の丸ゴシック（CherryBombOne は太字の飾りフォントのため避ける）
+            tapText.font = UIFont.Main; tapText.verticalOverflow = VerticalWrapMode.Overflow;
             // タップラベル用の黒アウトライン（薄め・細め）
             var tapOutline = tapGo.AddComponent<Outline>();
             tapOutline.effectColor = new Color(0f, 0f, 0f, 0.75f);
@@ -1376,7 +1376,7 @@ public class GameUI : MonoBehaviour
         txt.fontSize = 46;
         txt.color = new Color(1f, 0.85f, 0.9f);
         txt.alignment = TextAnchor.MiddleCenter;
-        txt.font = Font.CreateDynamicFontFromOSFont("Arial", 46);
+        txt.font = UIFont.Main; txt.verticalOverflow = VerticalWrapMode.Overflow;
         var shadow = txtGo.AddComponent<Shadow>();
         shadow.effectColor = new Color(0f, 0f, 0f, 0.8f);
         shadow.effectDistance = new Vector2(2f, -2f);
@@ -1723,7 +1723,7 @@ public class GameUI : MonoBehaviour
         var t = go.AddComponent<Text>();
         t.text = txt; t.fontSize = size; t.color = col;
         t.alignment = align;
-        t.font = Font.CreateDynamicFontFromOSFont("Arial", size);
+        t.font = UIFont.Main; t.verticalOverflow = VerticalWrapMode.Overflow;
         var rt = go.GetComponent<RectTransform>();
         rt.anchorMin = rt.anchorMax = anchor;
         rt.pivot = pivot == default ? new Vector2(0.5f, 0.5f) : pivot;
@@ -1752,7 +1752,7 @@ public class GameUI : MonoBehaviour
         t.text = label; t.fontSize = fontSize; t.color = Color.white;
         t.alignment = TextAnchor.MiddleCenter;
         var cherry = Resources.Load<Font>("Fonts/CherryBombOne-Regular");
-        t.font = cherry != null ? cherry : Font.CreateDynamicFontFromOSFont("Arial", fontSize);
+        t.font = cherry != null ? cherry : UIFont.Main;
         t.horizontalOverflow = HorizontalWrapMode.Overflow;
         t.verticalOverflow = VerticalWrapMode.Overflow;
         var trt = txtGo.GetComponent<RectTransform>();

@@ -354,7 +354,7 @@ public class ResultUI : MonoBehaviour
         hint.fontSize = 28;
         hint.color = new Color(1f, 1f, 1f, 0.6f);
         hint.alignment = TextAnchor.MiddleCenter;
-        hint.font = Font.CreateDynamicFontFromOSFont("Arial", 28);
+        hint.font = UIFont.Main; hint.verticalOverflow = VerticalWrapMode.Overflow;
         var hrt = hintGo.GetComponent<RectTransform>();
         hrt.anchorMin = hrt.anchorMax = new Vector2(0.5f, 0.03f);
         hrt.anchoredPosition = Vector2.zero;
@@ -521,7 +521,7 @@ public class ResultUI : MonoBehaviour
         var t = go.AddComponent<Text>();
         t.text = txt; t.fontSize = size; t.color = col;
         t.alignment = TextAnchor.MiddleCenter;
-        t.font = Font.CreateDynamicFontFromOSFont("Arial", size);
+        t.font = UIFont.Main; t.verticalOverflow = VerticalWrapMode.Overflow;
         var rt = go.GetComponent<RectTransform>();
         rt.anchorMin = rt.anchorMax = anchor;
         rt.anchoredPosition = Vector2.zero;

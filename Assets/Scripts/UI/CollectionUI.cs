@@ -371,7 +371,7 @@ public class CollectionUI : MonoBehaviour
         galleryLockText.fontSize = 56;
         galleryLockText.color = new Color(1f, 0.85f, 0.1f, 1f);
         galleryLockText.alignment = TextAnchor.MiddleCenter;
-        galleryLockText.font = Font.CreateDynamicFontFromOSFont("Arial", 56);
+        galleryLockText.font = UIFont.Main; galleryLockText.verticalOverflow = VerticalWrapMode.Overflow;
         galleryLockText.fontStyle = FontStyle.Bold;
         galleryLockText.raycastTarget = false;
         var lockShadow = lockGo.AddComponent<Shadow>();
@@ -393,7 +393,7 @@ public class CollectionUI : MonoBehaviour
         galleryLabel.fontSize = 32;
         galleryLabel.color = Color.white;
         galleryLabel.alignment = TextAnchor.MiddleCenter;
-        galleryLabel.font = Font.CreateDynamicFontFromOSFont("Arial", 32);
+        galleryLabel.font = UIFont.Main; galleryLabel.verticalOverflow = VerticalWrapMode.Overflow;
         galleryLabel.raycastTarget = false;
         var lrt = labelGo.GetComponent<RectTransform>();
         lrt.anchorMin = lrt.anchorMax = new Vector2(0.5f, 0.91f);
@@ -424,7 +424,7 @@ public class CollectionUI : MonoBehaviour
         var ct = closeTxt.AddComponent<Text>();
         ct.text = "\u9589\u3058\u308b"; ct.fontSize = 28; ct.color = Color.white;
         ct.alignment = TextAnchor.MiddleCenter;
-        ct.font = Font.CreateDynamicFontFromOSFont("Arial", 28);
+        ct.font = UIFont.Main; ct.verticalOverflow = VerticalWrapMode.Overflow;
         AddShadow(closeTxt, new Color(0f, 0f, 0f, 0.5f), new Vector2(1f, -1f));
         var ctrt = closeTxt.GetComponent<RectTransform>();
         ctrt.anchorMin = Vector2.zero; ctrt.anchorMax = Vector2.one;
@@ -450,7 +450,7 @@ public class CollectionUI : MonoBehaviour
         var t = txtGo.AddComponent<Text>();
         t.text = label; t.fontSize = 40; t.color = Color.white;
         t.alignment = TextAnchor.MiddleCenter;
-        t.font = Font.CreateDynamicFontFromOSFont("Arial", 40);
+        t.font = UIFont.Main; t.verticalOverflow = VerticalWrapMode.Overflow;
         var trt = txtGo.GetComponent<RectTransform>();
         trt.anchorMin = Vector2.zero; trt.anchorMax = Vector2.one;
         trt.offsetMin = trt.offsetMax = Vector2.zero;
@@ -612,7 +612,7 @@ public class CollectionUI : MonoBehaviour
         var t = go.AddComponent<Text>();
         t.text = txt; t.fontSize = size; t.color = col;
         t.alignment = TextAnchor.MiddleCenter;
-        t.font = Font.CreateDynamicFontFromOSFont("Arial", size);
+        t.font = UIFont.Main; t.verticalOverflow = VerticalWrapMode.Overflow;
         var rt = go.GetComponent<RectTransform>();
         rt.anchorMin = rt.anchorMax = anchor;
         rt.anchoredPosition = Vector2.zero;
@@ -627,7 +627,7 @@ public class CollectionUI : MonoBehaviour
         var t = go.AddComponent<Text>();
         t.text = txt; t.fontSize = size; t.color = col;
         t.alignment = TextAnchor.MiddleCenter;
-        t.font = Font.CreateDynamicFontFromOSFont("Arial", size);
+        t.font = UIFont.Main; t.verticalOverflow = VerticalWrapMode.Overflow;
         var rt = go.GetComponent<RectTransform>();
         rt.anchorMin = rt.anchorMax = anchor;
         rt.anchoredPosition = Vector2.zero;
@@ -687,7 +687,7 @@ public class CollectionUI : MonoBehaviour
         t.text = label; t.fontSize = 36; t.color = Color.white;
         t.alignment = TextAnchor.MiddleCenter;
         var cherry = Resources.Load<Font>("Fonts/CherryBombOne-Regular");
-        t.font = cherry != null ? cherry : Font.CreateDynamicFontFromOSFont("Arial", 36);
+        t.font = cherry != null ? cherry : UIFont.Main;
         t.horizontalOverflow = HorizontalWrapMode.Overflow;
         t.verticalOverflow = VerticalWrapMode.Overflow;
         AddShadow(txtGo, new Color(0f, 0f, 0f, 0.5f), new Vector2(2f, -2f));
@@ -815,7 +815,7 @@ public class CollectionUI : MonoBehaviour
         var t = txtGo.AddComponent<Text>();
         t.text = label; t.fontSize = 30; t.color = Color.white;
         t.alignment = TextAnchor.MiddleCenter;
-        t.font = cherry != null ? cherry : Font.CreateDynamicFontFromOSFont("Arial", 30);
+        t.font = cherry != null ? cherry : UIFont.Main;
         t.horizontalOverflow = HorizontalWrapMode.Overflow;
         t.verticalOverflow = VerticalWrapMode.Overflow;
         var sh = txtGo.AddComponent<Shadow>();
@@ -1011,7 +1011,7 @@ public class CollectionUI : MonoBehaviour
         voicePopupIllustLabel.fontSize = 48;
         voicePopupIllustLabel.color = new Color(1f, 0.95f, 0.5f, 1f);
         voicePopupIllustLabel.alignment = TextAnchor.MiddleCenter;
-        voicePopupIllustLabel.font = cherry != null ? cherry : Font.CreateDynamicFontFromOSFont("Arial", 48);
+        voicePopupIllustLabel.font = cherry != null ? cherry : UIFont.Main;
         voicePopupIllustLabel.raycastTarget = false;
         voicePopupIllustLabel.horizontalOverflow = HorizontalWrapMode.Overflow;
         voicePopupIllustLabel.verticalOverflow = VerticalWrapMode.Overflow;

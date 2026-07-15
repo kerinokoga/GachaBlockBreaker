@@ -282,7 +282,7 @@ public class LoginUI : MonoBehaviour
             charT.fontSize = isKanji ? 64 : 82;
             charT.color = new Color(1f, 0.85f, 0.1f, 0f);
             charT.alignment = TextAnchor.MiddleCenter;
-            charT.font = titleFont != null ? titleFont : Font.CreateDynamicFontFromOSFont("Arial", 72);
+            charT.font = titleFont != null ? titleFont : UIFont.Main;
             charT.horizontalOverflow = HorizontalWrapMode.Overflow;
             charT.verticalOverflow = VerticalWrapMode.Overflow;
             charT.raycastTarget = false;
@@ -329,7 +329,7 @@ public class LoginUI : MonoBehaviour
         copyT.fontSize = 48;
         copyT.color = new Color(0.5f, 0.5f, 0.5f, 0f); // 最初は透明
         copyT.alignment = TextAnchor.MiddleCenter;
-        copyT.font = Font.CreateDynamicFontFromOSFont("Arial", 34);
+        copyT.font = UIFont.Main; copyT.verticalOverflow = VerticalWrapMode.Overflow;
         copyT.raycastTarget = false;
         var crt = copyGo.GetComponent<RectTransform>();
         crt.anchorMin = crt.anchorMax = new Vector2(0.5f, 0.05f);
@@ -630,7 +630,7 @@ public class LoginUI : MonoBehaviour
         var t = txtGo.AddComponent<Text>();
         t.text = label; t.fontSize = 34; t.color = Color.white;
         t.alignment = TextAnchor.MiddleCenter;
-        t.font = Font.CreateDynamicFontFromOSFont("Arial", 34);
+        t.font = UIFont.Main; t.verticalOverflow = VerticalWrapMode.Overflow;
         var txtShadow = txtGo.AddComponent<Shadow>();
         txtShadow.effectColor = new Color(0f, 0f, 0f, 0.7f);
         txtShadow.effectDistance = new Vector2(2f, -2f);
@@ -662,7 +662,7 @@ public class LoginUI : MonoBehaviour
         var t = go.AddComponent<Text>();
         t.text = txt; t.fontSize = size; t.color = col;
         t.alignment = TextAnchor.MiddleCenter;
-        t.font = Font.CreateDynamicFontFromOSFont("Arial", size);
+        t.font = UIFont.Main; t.verticalOverflow = VerticalWrapMode.Overflow;
         t.raycastTarget = false;
         var rt = go.GetComponent<RectTransform>();
         rt.anchorMin = rt.anchorMax = anchor;

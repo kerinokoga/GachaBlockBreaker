@@ -626,7 +626,7 @@ public class HomeUI : MonoBehaviour
             var dbgT = dbgTxtGo.AddComponent<Text>();
             dbgT.text = "+オーブ"; dbgT.fontSize = 22; dbgT.color = Color.white;
             dbgT.alignment = TextAnchor.MiddleCenter;
-            dbgT.font = Font.CreateDynamicFontFromOSFont("Arial", 22);
+            dbgT.font = UIFont.Main; dbgT.verticalOverflow = VerticalWrapMode.Overflow;
             var dbgTrt = dbgTxtGo.GetComponent<RectTransform>();
             dbgTrt.anchorMin = Vector2.zero; dbgTrt.anchorMax = Vector2.one;
             dbgTrt.offsetMin = dbgTrt.offsetMax = Vector2.zero;
@@ -661,7 +661,7 @@ public class HomeUI : MonoBehaviour
         var linkT = linkTxtGo.AddComponent<Text>();
         linkT.text = "アカウント連携"; linkT.fontSize = 24; linkT.color = Color.white;
         linkT.alignment = TextAnchor.MiddleCenter;
-        linkT.font = Font.CreateDynamicFontFromOSFont("Arial", 24);
+        linkT.font = UIFont.Main; linkT.verticalOverflow = VerticalWrapMode.Overflow;
         var linkTrt = linkTxtGo.GetComponent<RectTransform>();
         linkTrt.anchorMin = Vector2.zero; linkTrt.anchorMax = Vector2.one;
         linkTrt.offsetMin = linkTrt.offsetMax = Vector2.zero;
@@ -682,7 +682,7 @@ public class HomeUI : MonoBehaviour
         setT.text = "せってい"; setT.fontSize = 28; setT.color = Color.white;
         setT.alignment = TextAnchor.MiddleCenter;
         var setCherryFont = Resources.Load<Font>("Fonts/CherryBombOne-Regular");
-        setT.font = setCherryFont != null ? setCherryFont : Font.CreateDynamicFontFromOSFont("Arial", 28);
+        setT.font = setCherryFont != null ? setCherryFont : UIFont.Main;
         setT.horizontalOverflow = HorizontalWrapMode.Overflow;
         setT.verticalOverflow = VerticalWrapMode.Overflow;
         var setTrt = setTxtGo.GetComponent<RectTransform>();
@@ -897,7 +897,7 @@ public class HomeUI : MonoBehaviour
         t.text = label; t.fontSize = 34; t.color = Color.white;
         t.alignment = TextAnchor.MiddleCenter;
         var cherry = Resources.Load<Font>("Fonts/CherryBombOne-Regular");
-        t.font = cherry != null ? cherry : Font.CreateDynamicFontFromOSFont("Arial", 34);
+        t.font = cherry != null ? cherry : UIFont.Main;
         t.horizontalOverflow = HorizontalWrapMode.Overflow;
         t.verticalOverflow = VerticalWrapMode.Overflow;
         var txtShadow = txtGo.AddComponent<Shadow>();
@@ -914,7 +914,7 @@ public class HomeUI : MonoBehaviour
         arrowT.text = "▶"; arrowT.fontSize = 22;
         arrowT.color = new Color(1f, 1f, 1f, 0.5f);
         arrowT.alignment = TextAnchor.MiddleCenter;
-        arrowT.font = Font.CreateDynamicFontFromOSFont("Arial", 22);
+        arrowT.font = UIFont.Main; arrowT.verticalOverflow = VerticalWrapMode.Overflow;
         var arrowRt = arrowGo.GetComponent<RectTransform>();
         arrowRt.anchorMin = arrowRt.anchorMax = new Vector2(0.95f, 0.5f);
         arrowRt.anchoredPosition = Vector2.zero;
@@ -1789,7 +1789,7 @@ public class HomeUI : MonoBehaviour
         listT.fontSize = 28;
         listT.color = new Color(0.9f, 0.9f, 0.95f);
         listT.alignment = TextAnchor.UpperCenter;
-        listT.font = Font.CreateDynamicFontFromOSFont("Arial", 28);
+        listT.font = UIFont.Main; listT.verticalOverflow = VerticalWrapMode.Overflow;
         listT.lineSpacing = 1.45f;
         listT.supportRichText = true;
         listT.raycastTarget = false;
@@ -1973,7 +1973,7 @@ public class HomeUI : MonoBehaviour
         ph.text = placeholder;
         ph.fontSize = 26;
         ph.color = new Color(0.5f, 0.5f, 0.62f);
-        ph.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        ph.font = UIFont.Main; ph.verticalOverflow = VerticalWrapMode.Overflow;
         ph.alignment = TextAnchor.MiddleLeft;
         var phRt = phGo.GetComponent<RectTransform>();
         phRt.anchorMin = Vector2.zero; phRt.anchorMax = Vector2.one;
@@ -1985,7 +1985,7 @@ public class HomeUI : MonoBehaviour
         var txt = txtGo.AddComponent<Text>();
         txt.fontSize = 28;
         txt.color = Color.white;
-        txt.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        txt.font = UIFont.Main; txt.verticalOverflow = VerticalWrapMode.Overflow;
         txt.alignment = TextAnchor.MiddleLeft;
         txt.supportRichText = false;
         var txtRt = txtGo.GetComponent<RectTransform>();
@@ -2253,7 +2253,7 @@ public class HomeUI : MonoBehaviour
         liT.text = icon; liT.fontSize = 24;
         liT.color = new Color(1f, 1f, 1f, 0.7f);
         liT.alignment = TextAnchor.MiddleCenter;
-        liT.font = Font.CreateDynamicFontFromOSFont("Arial", 24);
+        liT.font = UIFont.Main; liT.verticalOverflow = VerticalWrapMode.Overflow;
         var liRt = leftIcon.GetComponent<RectTransform>();
         liRt.anchorMin = liRt.anchorMax = new Vector2(0f, 0.5f);
         liRt.anchoredPosition = new Vector2(28f, 0f);
@@ -2266,7 +2266,7 @@ public class HomeUI : MonoBehaviour
         riT.text = icon; riT.fontSize = 24;
         riT.color = new Color(1f, 1f, 1f, 0.7f);
         riT.alignment = TextAnchor.MiddleCenter;
-        riT.font = Font.CreateDynamicFontFromOSFont("Arial", 24);
+        riT.font = UIFont.Main; riT.verticalOverflow = VerticalWrapMode.Overflow;
         var riRt = rightIcon.GetComponent<RectTransform>();
         riRt.anchorMin = riRt.anchorMax = new Vector2(1f, 0.5f);
         riRt.anchoredPosition = new Vector2(-28f, 0f);
@@ -2282,7 +2282,7 @@ public class HomeUI : MonoBehaviour
         t.color = Color.white;
         t.alignment = TextAnchor.MiddleCenter;
         var cherry = Resources.Load<Font>("Fonts/CherryBombOne-Regular");
-        t.font = cherry != null ? cherry : Font.CreateDynamicFontFromOSFont("Arial", 28);
+        t.font = cherry != null ? cherry : UIFont.Main;
         t.horizontalOverflow = HorizontalWrapMode.Overflow;
         t.verticalOverflow = VerticalWrapMode.Overflow;
         var txtShadow = txtGo.AddComponent<Shadow>();
@@ -2346,7 +2346,7 @@ public class HomeUI : MonoBehaviour
         liT.text = "♡"; liT.fontSize = 24;
         liT.color = new Color(1f, 1f, 1f, 0.7f);
         liT.alignment = TextAnchor.MiddleCenter;
-        liT.font = Font.CreateDynamicFontFromOSFont("Arial", 24);
+        liT.font = UIFont.Main; liT.verticalOverflow = VerticalWrapMode.Overflow;
         var liRt = liGo.GetComponent<RectTransform>();
         liRt.anchorMin = liRt.anchorMax = new Vector2(0f, 0.5f);
         liRt.anchoredPosition = new Vector2(28f, 0f);
@@ -2359,7 +2359,7 @@ public class HomeUI : MonoBehaviour
         riT.text = "♡"; riT.fontSize = 24;
         riT.color = new Color(1f, 1f, 1f, 0.7f);
         riT.alignment = TextAnchor.MiddleCenter;
-        riT.font = Font.CreateDynamicFontFromOSFont("Arial", 24);
+        riT.font = UIFont.Main; riT.verticalOverflow = VerticalWrapMode.Overflow;
         var riRt = riGo.GetComponent<RectTransform>();
         riRt.anchorMin = riRt.anchorMax = new Vector2(1f, 0.5f);
         riRt.anchoredPosition = new Vector2(-28f, 0f);
@@ -2372,7 +2372,7 @@ public class HomeUI : MonoBehaviour
         t.text = "プレゼント"; t.fontSize = 28; t.color = Color.white;
         t.alignment = TextAnchor.MiddleCenter;
         var cherry = Resources.Load<Font>("Fonts/CherryBombOne-Regular");
-        t.font = cherry != null ? cherry : Font.CreateDynamicFontFromOSFont("Arial", 28);
+        t.font = cherry != null ? cherry : UIFont.Main;
         t.horizontalOverflow = HorizontalWrapMode.Overflow;
         t.verticalOverflow = VerticalWrapMode.Overflow;
         var txtShadow = txtGo.AddComponent<Shadow>();
@@ -2409,7 +2409,7 @@ public class HomeUI : MonoBehaviour
             bt.fontSize = 22; bt.color = Color.white;
             bt.alignment = TextAnchor.MiddleCenter;
             bt.fontStyle = FontStyle.Bold;
-            bt.font = Font.CreateDynamicFontFromOSFont("Arial", 22);
+            bt.font = UIFont.Main; bt.verticalOverflow = VerticalWrapMode.Overflow;
             var btrt = badgeTxt.GetComponent<RectTransform>();
             btrt.anchorMin = Vector2.zero; btrt.anchorMax = Vector2.one;
             btrt.offsetMin = btrt.offsetMax = Vector2.zero;
@@ -2425,7 +2425,7 @@ public class HomeUI : MonoBehaviour
         var t = go.AddComponent<Text>();
         t.text = txt; t.fontSize = size; t.color = col;
         t.alignment = TextAnchor.MiddleCenter;
-        t.font = Font.CreateDynamicFontFromOSFont("Arial", size);
+        t.font = UIFont.Main; t.verticalOverflow = VerticalWrapMode.Overflow;
         var rt = go.GetComponent<RectTransform>();
         rt.anchorMin = rt.anchorMax = anchor;
         rt.anchoredPosition = Vector2.zero;

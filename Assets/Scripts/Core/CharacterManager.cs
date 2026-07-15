@@ -346,7 +346,7 @@ public class CharacterManager : MonoBehaviour
         hint.fontSize = 26;
         hint.color = new Color(1f, 1f, 1f, 0.6f);
         hint.alignment = TextAnchor.MiddleCenter;
-        hint.font = Font.CreateDynamicFontFromOSFont("Arial", 26);
+        hint.font = UIFont.Main; hint.verticalOverflow = VerticalWrapMode.Overflow;
         hint.raycastTarget = false;
         var hrt = hintGo.GetComponent<RectTransform>();
         hrt.anchorMin = hrt.anchorMax = new Vector2(0.5f, 0.05f);

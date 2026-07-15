@@ -478,7 +478,7 @@ public class GachaUI : MonoBehaviour
         var t = go.AddComponent<Text>();
         t.text = txt; t.fontSize = fontSize; t.color = col;
         t.alignment = TextAnchor.MiddleCenter;
-        t.font = Font.CreateDynamicFontFromOSFont("Arial", fontSize);
+        t.font = UIFont.Main; t.verticalOverflow = VerticalWrapMode.Overflow;
         t.raycastTarget = false;
         var rt = go.GetComponent<RectTransform>();
         rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 1f);
@@ -927,7 +927,7 @@ public class GachaUI : MonoBehaviour
         t.color = Color.white;
         t.alignment = TextAnchor.MiddleCenter;
         var cherry = Resources.Load<Font>("Fonts/CherryBombOne-Regular");
-        t.font = cherry != null ? cherry : Font.CreateDynamicFontFromOSFont("Arial", 30);
+        t.font = cherry != null ? cherry : UIFont.Main;
         t.raycastTarget = false;
         var trt = t.GetComponent<RectTransform>();
         trt.anchorMin = Vector2.zero; trt.anchorMax = Vector2.one;
@@ -1101,7 +1101,7 @@ public class GachaUI : MonoBehaviour
             t.color = new Color(1f, 0.85f, 0.2f, 0.95f);
             t.alignment = TextAnchor.MiddleCenter;
             var cherry = Resources.Load<Font>("Fonts/CherryBombOne-Regular");
-            t.font = cherry != null ? cherry : Font.CreateDynamicFontFromOSFont("Arial", 48);
+            t.font = cherry != null ? cherry : UIFont.Main;
             t.raycastTarget = false;
             t.horizontalOverflow = HorizontalWrapMode.Overflow;
             t.verticalOverflow = VerticalWrapMode.Overflow;
@@ -1390,7 +1390,7 @@ public class GachaUI : MonoBehaviour
         var t = txtGo.AddComponent<Text>();
         t.text = label;
         var cherry = Resources.Load<Font>("Fonts/CherryBombOne-Regular");
-        t.font = cherry != null ? cherry : Font.CreateDynamicFontFromOSFont("Arial", 160);
+        t.font = cherry != null ? cherry : UIFont.Main;
         t.fontSize = 160;
         t.color = Color.white;
         t.alignment = TextAnchor.MiddleCenter;
@@ -1563,7 +1563,7 @@ public class GachaUI : MonoBehaviour
         hint.fontSize = 42;
         hint.color = new Color(1f, 0.95f, 0.5f, 0f);
         hint.alignment = TextAnchor.MiddleCenter;
-        hint.font = cherry != null ? cherry : Font.CreateDynamicFontFromOSFont("Arial", 42);
+        hint.font = cherry != null ? cherry : UIFont.Main;
         hint.raycastTarget = false;
         var hSh = hint.gameObject.AddComponent<Shadow>();
         hSh.effectColor = new Color(0.6f, 0.1f, 0.3f, 0.95f);
@@ -1673,7 +1673,7 @@ public class GachaUI : MonoBehaviour
             t.fontSize = 64;
             t.color = starCol;
             t.alignment = TextAnchor.MiddleCenter;
-            t.font = cherry != null ? cherry : Font.CreateDynamicFontFromOSFont("Arial", 64);
+            t.font = cherry != null ? cherry : UIFont.Main;
             t.raycastTarget = false;
             t.horizontalOverflow = HorizontalWrapMode.Overflow;
             t.verticalOverflow = VerticalWrapMode.Overflow;
@@ -1853,7 +1853,7 @@ public class GachaUI : MonoBehaviour
         var t = txtGo.AddComponent<Text>();
         t.text = label;
         var cherry = Resources.Load<Font>("Fonts/CherryBombOne-Regular");
-        t.font = cherry != null ? cherry : Font.CreateDynamicFontFromOSFont("Arial", 120);
+        t.font = cherry != null ? cherry : UIFont.Main;
         t.fontSize = 130;
         t.color = Color.white;
         t.alignment = TextAnchor.MiddleCenter;
@@ -1966,7 +1966,7 @@ public class GachaUI : MonoBehaviour
         hint.color = new Color(1f, 1f, 1f, 0f);
         hint.alignment = TextAnchor.MiddleCenter;
         var cherry = Resources.Load<Font>("Fonts/CherryBombOne-Regular");
-        hint.font = cherry != null ? cherry : Font.CreateDynamicFontFromOSFont("Arial", 42);
+        hint.font = cherry != null ? cherry : UIFont.Main;
         hint.raycastTarget = false;
         var hSh = hintGo.AddComponent<Shadow>();
         hSh.effectColor = new Color(0.6f, 0.1f, 0.3f, 0.9f);
@@ -2258,7 +2258,7 @@ public class GachaUI : MonoBehaviour
         nameT.fontSize = 58;
         nameT.color = Color.white;
         nameT.alignment = TextAnchor.MiddleCenter;
-        nameT.font = cherry != null ? cherry : Font.CreateDynamicFontFromOSFont("Arial", 58);
+        nameT.font = cherry != null ? cherry : UIFont.Main;
         nameT.raycastTarget = false;
         nameT.horizontalOverflow = HorizontalWrapMode.Overflow;
         nameT.verticalOverflow = VerticalWrapMode.Overflow;
@@ -2280,7 +2280,7 @@ public class GachaUI : MonoBehaviour
         rareT.fontSize = 42;
         rareT.color = rarityCol;
         rareT.alignment = TextAnchor.MiddleCenter;
-        rareT.font = cherry != null ? cherry : Font.CreateDynamicFontFromOSFont("Arial", 42);
+        rareT.font = cherry != null ? cherry : UIFont.Main;
         rareT.raycastTarget = false;
         var rareOl = rareT.gameObject.AddComponent<Outline>();
         rareOl.effectColor = new Color(0f, 0f, 0f, 0.9f);
@@ -2318,7 +2318,7 @@ public class GachaUI : MonoBehaviour
         closeT.fontSize = 48;
         closeT.color = Color.white;
         closeT.alignment = TextAnchor.MiddleCenter;
-        closeT.font = cherry != null ? cherry : Font.CreateDynamicFontFromOSFont("Arial", 48);
+        closeT.font = cherry != null ? cherry : UIFont.Main;
         closeT.raycastTarget = false;
         var ctRt = closeT.gameObject.GetComponent<RectTransform>();
         ctRt.anchorMin = Vector2.zero; ctRt.anchorMax = Vector2.one;
@@ -2346,7 +2346,7 @@ public class GachaUI : MonoBehaviour
         labelT.fontSize = 46;
         labelT.color = labelCol;
         labelT.alignment = TextAnchor.MiddleLeft;
-        labelT.font = cherry != null ? cherry : Font.CreateDynamicFontFromOSFont("Arial", 46);
+        labelT.font = cherry != null ? cherry : UIFont.Main;
         labelT.raycastTarget = false;
         labelT.horizontalOverflow = HorizontalWrapMode.Overflow;
         labelT.verticalOverflow = VerticalWrapMode.Overflow;
@@ -2381,7 +2381,7 @@ public class GachaUI : MonoBehaviour
         bodyT.fontSize = 38;
         bodyT.color = Color.white;
         bodyT.alignment = TextAnchor.UpperLeft;
-        bodyT.font = cherry != null ? cherry : Font.CreateDynamicFontFromOSFont("Arial", 38);
+        bodyT.font = cherry != null ? cherry : UIFont.Main;
         bodyT.raycastTarget = false;
         bodyT.horizontalOverflow = HorizontalWrapMode.Wrap;
         bodyT.verticalOverflow = VerticalWrapMode.Overflow;
@@ -2581,7 +2581,7 @@ public class GachaUI : MonoBehaviour
         liT.text = icon; liT.fontSize = 28;
         liT.color = new Color(1f, 1f, 1f, 0.7f);
         liT.alignment = TextAnchor.MiddleCenter;
-        liT.font = Font.CreateDynamicFontFromOSFont("Arial", 28);
+        liT.font = UIFont.Main; liT.verticalOverflow = VerticalWrapMode.Overflow;
         var liRt = liGo.GetComponent<RectTransform>();
         liRt.anchorMin = liRt.anchorMax = new Vector2(0f, 0.5f);
         liRt.anchoredPosition = new Vector2(30f, 0f);
@@ -2593,7 +2593,7 @@ public class GachaUI : MonoBehaviour
         riT.text = icon; riT.fontSize = 28;
         riT.color = new Color(1f, 1f, 1f, 0.7f);
         riT.alignment = TextAnchor.MiddleCenter;
-        riT.font = Font.CreateDynamicFontFromOSFont("Arial", 28);
+        riT.font = UIFont.Main; riT.verticalOverflow = VerticalWrapMode.Overflow;
         var riRt = riGo.GetComponent<RectTransform>();
         riRt.anchorMin = riRt.anchorMax = new Vector2(1f, 0.5f);
         riRt.anchoredPosition = new Vector2(-30f, 0f);
@@ -2604,7 +2604,7 @@ public class GachaUI : MonoBehaviour
         var t = txtGo.AddComponent<Text>();
         t.text = label; t.fontSize = 34; t.color = Color.white;
         t.alignment = TextAnchor.MiddleCenter;
-        t.font = Font.CreateDynamicFontFromOSFont("Arial", 34);
+        t.font = UIFont.Main; t.verticalOverflow = VerticalWrapMode.Overflow;
         var tShadow = txtGo.AddComponent<Shadow>();
         tShadow.effectColor = new Color(0f, 0f, 0f, 0.7f);
         tShadow.effectDistance = new Vector2(2f, -2f);
@@ -2643,7 +2643,7 @@ public class GachaUI : MonoBehaviour
         t.text = label; t.fontSize = 28; t.color = Color.white;
         t.alignment = TextAnchor.MiddleCenter;
         var cherry = Resources.Load<Font>("Fonts/CherryBombOne-Regular");
-        t.font = cherry != null ? cherry : Font.CreateDynamicFontFromOSFont("Arial", 28);
+        t.font = cherry != null ? cherry : UIFont.Main;
         t.horizontalOverflow = HorizontalWrapMode.Overflow;
         t.verticalOverflow = VerticalWrapMode.Overflow;
         AddShadow(txtGo);
@@ -2691,7 +2691,7 @@ public class GachaUI : MonoBehaviour
         var t = go.AddComponent<Text>();
         t.text = txt; t.fontSize = size; t.color = col;
         t.alignment = TextAnchor.MiddleCenter;
-        t.font = Font.CreateDynamicFontFromOSFont("Arial", size);
+        t.font = UIFont.Main; t.verticalOverflow = VerticalWrapMode.Overflow;
         var rt = go.GetComponent<RectTransform>();
         rt.anchorMin = rt.anchorMax = anchor;
         rt.anchoredPosition = Vector2.zero;

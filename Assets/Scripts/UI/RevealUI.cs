@@ -67,7 +67,7 @@ public class RevealUI : MonoBehaviour
         charNameText.fontSize = 36;
         charNameText.color = new Color(1f, 1f, 1f, 0f);
         charNameText.alignment = TextAnchor.UpperCenter;
-        charNameText.font = Font.CreateDynamicFontFromOSFont("Arial", 36);
+        charNameText.font = UIFont.Main; charNameText.verticalOverflow = VerticalWrapMode.Overflow;
         var trt = txtGo.GetComponent<RectTransform>();
         trt.anchorMin = new Vector2(0.75f, 0.88f);
         trt.anchorMax = new Vector2(1.0f, 0.88f);

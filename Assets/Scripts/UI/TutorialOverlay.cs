@@ -123,8 +123,8 @@ public class TutorialOverlay : MonoBehaviour
         bubbleText.fontSize = 40;
         bubbleText.color = new Color(0.15f, 0.05f, 0.3f, 1f);
         bubbleText.alignment = TextAnchor.MiddleCenter;
-        // 漢字・かなを同じフォントで揃えるため LegacyRuntime.ttf を使用
-        bubbleText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        // 漢字・かなを同じフォントで揃えるため共通フォントを使用
+        bubbleText.font = UIFont.Main; bubbleText.verticalOverflow = VerticalWrapMode.Overflow;
         bubbleText.fontStyle = FontStyle.Bold;
         bubbleText.raycastTarget = false;
         bubbleText.horizontalOverflow = HorizontalWrapMode.Wrap;
@@ -169,7 +169,7 @@ public class TutorialOverlay : MonoBehaviour
         skipTxt.fontSize = 26;
         skipTxt.color = Color.white;
         skipTxt.alignment = TextAnchor.MiddleCenter;
-        skipTxt.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        skipTxt.font = UIFont.Main; skipTxt.verticalOverflow = VerticalWrapMode.Overflow;
         skipTxt.fontStyle = FontStyle.Bold;
         skipTxt.raycastTarget = false;
         var stOl = skipTxtGo.AddComponent<Outline>();
@@ -424,7 +424,7 @@ public class TutorialOverlay : MonoBehaviour
         t.fontSize = 140;
         t.color = color ?? new Color(1f, 0.3f, 0.45f, 1f);
         t.alignment = TextAnchor.MiddleCenter;
-        t.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        t.font = UIFont.Main; t.verticalOverflow = VerticalWrapMode.Overflow;
         t.fontStyle = FontStyle.Bold;
         t.raycastTarget = false;
         t.horizontalOverflow = HorizontalWrapMode.Overflow;
@@ -553,7 +553,7 @@ public class TutorialOverlay : MonoBehaviour
         t.fontSize = 24;
         t.color = new Color(0.85f, 0.4f, 0.6f, 0.9f);
         t.alignment = TextAnchor.MiddleCenter;
-        t.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        t.font = UIFont.Main; t.verticalOverflow = VerticalWrapMode.Overflow;
         t.raycastTarget = false;
         var rt = go.GetComponent<RectTransform>();
         rt.anchorMin = rt.anchorMax = anchor;
@@ -590,7 +590,7 @@ public class TutorialOverlay : MonoBehaviour
         t.fontSize = 40;
         t.color = Color.white;
         t.alignment = TextAnchor.MiddleCenter;
-        t.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        t.font = UIFont.Main; t.verticalOverflow = VerticalWrapMode.Overflow;
         t.fontStyle = FontStyle.Bold;
         t.raycastTarget = false;
         var sh = t.gameObject.AddComponent<Shadow>();
