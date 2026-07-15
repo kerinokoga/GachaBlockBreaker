@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: Mika
   m_EditorClassIdentifier: 
   characterName: "\u30DF\u30AB"
+  title: "闇の魔導師"
   rarity: 2
   rarityColor: {r: 0.75, g: 0.3, b: 1, a: 1}
   icon: {fileID: 21300000, guid: 520602d72822bae4cad6cf06be1c8295, type: 3}

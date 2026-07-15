@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: Yuna
   m_EditorClassIdentifier: 
   characterName: "\u30E6\u30CA"
+  title: "暁のヒーラー"
   rarity: 0
   rarityColor: {r: 0.6, g: 0.6, b: 0.6, a: 1}
   icon: {fileID: 21300000, guid: 24598946afdcc6e469b4babbf3acd904, type: 3}

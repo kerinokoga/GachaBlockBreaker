@@ -2143,10 +2143,32 @@ public class GachaUI : MonoBehaviour
         nbRt.anchorMax = new Vector2(textOffsetX + 0.32f, 0.90f);
         nbRt.offsetMin = nbRt.offsetMax = Vector2.zero;
 
+        // 10連グリッドの小型カード（高さ120）と単発の大型カード（高さ220）でレイアウトを変える
+        bool smallCard = size.y < 200f;
+
+        // 二つ名（名前の上に表示。小型カードでは名前を少し下げて余白を確保）
+        if (!string.IsNullOrEmpty(result.chara.title))
+        {
+            var titleT = MakeText(cardGo.transform, result.chara.title,
+                smallCard ? 26 : 28,
+                new Color(1f, 0.95f, 0.75f),
+                new Vector2(textOffsetX, smallCard ? 0.84f : 0.87f),
+                new Vector2(size.x * 0.62f, 34f));
+            titleT.raycastTarget = false;
+            // 「桜吹雪のアイドル」等の長い二つ名は自動縮小して枠内に収める
+            titleT.resizeTextForBestFit = true;
+            titleT.resizeTextMinSize = 18;
+            titleT.resizeTextMaxSize = smallCard ? 26 : 28;
+            AddShadow(titleT.gameObject);
+            var titleOl = titleT.gameObject.AddComponent<Outline>();
+            titleOl.effectColor = new Color(0f, 0f, 0f, 0.9f);
+            titleOl.effectDistance = new Vector2(1.5f, -1.5f);
+        }
+
         string nameLabel = result.chara.characterName;
         if (result.isNew) nameLabel += "  ✦NEW!";
-        var nameT = MakeText(cardGo.transform, nameLabel, 44, Color.white,
-            new Vector2(textOffsetX, 0.65f), new Vector2(size.x * 0.7f, 60f));
+        var nameT = MakeText(cardGo.transform, nameLabel, smallCard ? 36 : 44, Color.white,
+            new Vector2(textOffsetX, smallCard ? 0.54f : 0.62f), new Vector2(size.x * 0.7f, 60f));
         nameT.raycastTarget = false;
         nameT.horizontalOverflow = HorizontalWrapMode.Overflow;
         nameT.verticalOverflow = VerticalWrapMode.Overflow;
@@ -2156,8 +2178,9 @@ public class GachaUI : MonoBehaviour
         nameOl.effectDistance = new Vector2(2f, -2f);
 
         string stars = RarityStars(result.chara.rarity);
-        var rareT = MakeText(cardGo.transform, $"{result.chara.rarity} {stars}", 34, rarityCol,
-            new Vector2(textOffsetX, 0.30f), new Vector2(size.x * 0.7f, 48f));
+        var rareT = MakeText(cardGo.transform, $"{result.chara.rarity} {stars}",
+            smallCard ? 26 : 34, rarityCol,
+            new Vector2(textOffsetX, smallCard ? 0.22f : 0.28f), new Vector2(size.x * 0.7f, 48f));
         rareT.raycastTarget = false;
         rareT.horizontalOverflow = HorizontalWrapMode.Overflow;
         rareT.verticalOverflow = VerticalWrapMode.Overflow;
@@ -2251,12 +2274,15 @@ public class GachaUI : MonoBehaviour
         lRt.anchoredPosition = Vector2.zero;
         lRt.sizeDelta = new Vector2(0f, 4f);
 
-        // [3] キャラ名のみ（星は不要）
+        // [3] キャラ名のみ（星は不要）二つ名付き・金色表示
         var nameT = new GameObject("NameTxt").AddComponent<Text>();
         nameT.transform.SetParent(charaDetailPanel.transform, false);
-        nameT.text = cd.characterName;
+        nameT.text = cd.DisplayName;
+        nameT.resizeTextForBestFit = true;
+        nameT.resizeTextMinSize = 40;
+        nameT.resizeTextMaxSize = 58;
         nameT.fontSize = 58;
-        nameT.color = Color.white;
+        nameT.color = new Color(1f, 0.85f, 0.15f);
         nameT.alignment = TextAnchor.MiddleCenter;
         nameT.font = cherry != null ? cherry : UIFont.Main;
         nameT.raycastTarget = false;
@@ -2269,7 +2295,8 @@ public class GachaUI : MonoBehaviour
         nameOl.effectColor = new Color(rarityCol.r * 0.5f, rarityCol.g * 0.5f, rarityCol.b * 0.5f, 1f);
         nameOl.effectDistance = new Vector2(2f, -2f);
         var nRt = nameT.gameObject.GetComponent<RectTransform>();
-        nRt.anchorMin = nRt.anchorMax = new Vector2(0.5f, 0.96f);
+        // イラスト（0.45〜1.0）のすぐ下に配置
+        nRt.anchorMin = nRt.anchorMax = new Vector2(0.5f, 0.425f);
         nRt.anchoredPosition = Vector2.zero;
         nRt.sizeDelta = new Vector2(1000f, 80f);
 
@@ -2286,14 +2313,14 @@ public class GachaUI : MonoBehaviour
         rareOl.effectColor = new Color(0f, 0f, 0f, 0.9f);
         rareOl.effectDistance = new Vector2(2f, -2f);
         var rRt = rareT.gameObject.GetComponent<RectTransform>();
-        rRt.anchorMin = rRt.anchorMax = new Vector2(0.5f, 0.42f);
+        rRt.anchorMin = rRt.anchorMax = new Vector2(0.5f, 0.365f);
         rRt.anchoredPosition = Vector2.zero;
         rRt.sizeDelta = new Vector2(800f, 55f);
 
         // [5] パッシブスキル説明
         BuildDetailRow(charaDetailPanel.transform, "◆ パッシブスキル",
             DescribePassiveFull(cd),
-            new Vector2(0.5f, 0.30f),
+            new Vector2(0.5f, 0.28f),
             new Color(0.4f, 0.95f, 1f));
 
         // [6] 奥義説明
@@ -2426,23 +2453,33 @@ public class GachaUI : MonoBehaviour
         }
     }
 
-    /// <summary>キャラの奥義を読みやすい日本語に変換</summary>
+    /// <summary>キャラの奥義を読みやすい日本語に変換（複合奥義は2行表示）</summary>
     string DescribeUltimateFull(CharacterData cd)
     {
-        switch (cd.ultimateType)
+        string line1 = DescribeUltimateOne(cd.ultimateType, cd.ultimateValue, cd.ultimateDuration);
+        if (cd.ultimateType2 != UltimateSkillType.None)
+            return line1 + "\n" + DescribeUltimateOne(cd.ultimateType2, cd.ultimateValue2, cd.ultimateDuration2);
+        return line1;
+    }
+
+    string DescribeUltimateOne(UltimateSkillType type, float value, float duration)
+    {
+        switch (type)
         {
             case UltimateSkillType.PowerBurst:
-                return $"・{cd.ultimateDuration:F0}秒間、ダメージ +{(cd.ultimateValue - 1f) * 100f:0}%";
+                return $"・{duration:F0}秒間、ダメージ +{(value - 1f) * 100f:0}%";
             case UltimateSkillType.MassDestroy:
-                return $"・全ブロックに {(int)cd.ultimateValue} ダメージ";
+                return $"・全ブロックに {(int)value} ダメージ";
             case UltimateSkillType.StockRecover:
-                return $"・ストック回復 +{(int)cd.ultimateValue}";
+                return $"・ストック回復 +{(int)value}";
             case UltimateSkillType.BarrierShot:
                 return "・次の1ミスをキャンセル";
             case UltimateSkillType.Penetrate:
-                return $"・{cd.ultimateDuration:F0}秒間、ボールがブロックを貫通";
+                return $"・{duration:F0}秒間、ボールがブロックを貫通";
             case UltimateSkillType.BallSplit:
                 return "・ボールを2つに分裂（分裂したボールも再分裂可能）";
+            case UltimateSkillType.GaugeCharge:
+                return $"・味方全員の奥義ゲージ +{(int)value}";
             default:
                 return "なし";
         }

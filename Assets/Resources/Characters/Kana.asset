@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: Kana
   m_EditorClassIdentifier: 
   characterName: "\u30AB\u30CA"
+  title: "銀河の魔女"
   rarity: 1
   rarityColor: {r: 0.3, g: 0.5, b: 1, a: 1}
   icon: {fileID: 21300000, guid: 75cdb9a707bfb5f409c7c8d643e3518c, type: 3}

@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: Mei
   m_EditorClassIdentifier: 
   characterName: "\u30E1\u30A4"
+  title: "春風の妖精"
   rarity: 0
   rarityColor: {r: 0.6, g: 0.6, b: 0.6, a: 1}
   icon: {fileID: 21300000, guid: 5f930291db1465740923cf3ec6008da1, type: 3}

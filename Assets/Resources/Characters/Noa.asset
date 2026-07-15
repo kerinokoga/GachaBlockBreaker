@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: Noa
   m_EditorClassIdentifier: 
   characterName: "\u30CE\u30A2"
+  title: "太陽の戦乙女"
   rarity: 3
   rarityColor: {r: 1, g: 0.85, b: 0.1, a: 1}
   icon: {fileID: 21300000, guid: b8fa94c23afd0ac4c8f744dc70699665, type: 3}

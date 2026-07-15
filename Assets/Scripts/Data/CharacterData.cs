@@ -29,6 +29,13 @@ public class CharacterData : ScriptableObject
 {
     [Header("基本情報")]
     public string characterName;
+
+    /// <summary>二つ名（例: 紅蓮の侍）。表示専用で、セーブキーには使わない</summary>
+    public string title;
+
+    /// <summary>二つ名付きの表示名（例: 紅蓮の侍 レイ）。二つ名未設定なら名前のみ</summary>
+    public string DisplayName =>
+        string.IsNullOrEmpty(title) ? characterName : $"{title} {characterName}";
     public Rarity rarity;
     public Color rarityColor = Color.white;
     /// <summary>キャラアイコン（ガチャ結果・管理画面等で使用）</summary>

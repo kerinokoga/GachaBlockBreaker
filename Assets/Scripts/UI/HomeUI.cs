@@ -1488,8 +1488,12 @@ public class HomeUI : MonoBehaviour
         float rowH = 96f, padY = 10f;
         int rowIndex = 0;
 
-        // デフォルト（セラ）行
-        BuildHomeCharRow(contentRt, "セラ（デフォルト）", true, selected == "",
+        // デフォルト（セラ）行（二つ名はキャラデータから取得）
+        var seraCd = System.Array.Find(
+            Resources.LoadAll<CharacterData>("Characters"), c => c.characterName == "セラ");
+        string seraLabel = (seraCd != null && !string.IsNullOrEmpty(seraCd.title))
+            ? $"{seraCd.title} セラ（デフォルト）" : "セラ（デフォルト）";
+        BuildHomeCharRow(contentRt, seraLabel, true, selected == "",
             "", () => { HomeCharManager.SetSelected(""); SceneManager.LoadScene("HomeScene"); },
             rowIndex++, rowH, padY);
 
@@ -1512,22 +1516,25 @@ public class HomeUI : MonoBehaviour
             bool unlocked = owned && HomeCharManager.IsUnlocked(cd);
             bool hasVideo = HomeCharManager.HasVideo(name);
 
+            // 二つ名付き表示名（例: 紅蓮の侍 レイ（SSR））
+            string dispName = string.IsNullOrEmpty(cd.title) ? name : $"{cd.title} {name}";
+
             string label;
             bool selectable = false;
             string sub = "";
             if (!unlocked)
             {
-                label = $"{name}（{cd.rarity}）";
+                label = $"{dispName}（{cd.rarity}）";
                 sub = HomeCharManager.UnlockConditionText(cd);
             }
             else if (!hasVideo)
             {
-                label = $"{name}（{cd.rarity}）";
+                label = $"{dispName}（{cd.rarity}）";
                 sub = "アニメ準備中";
             }
             else
             {
-                label = $"{name}（{cd.rarity}）";
+                label = $"{dispName}（{cd.rarity}）";
                 selectable = true;
             }
 
@@ -1567,12 +1574,15 @@ public class HomeUI : MonoBehaviour
             btn.onClick.AddListener(onSelect);
         }
 
-        // キャラ名（左寄せ）
+        // キャラ名（左寄せ）二つ名付きの長い名前は自動縮小で1行維持
         var nameT = MakeText(rowGo.transform, label, 30,
             selectable || isSelected ? Color.white : new Color(0.55f, 0.55f, 0.65f),
             new Vector2(0.35f, string.IsNullOrEmpty(subText) ? 0.5f : 0.66f),
             new Vector2(500f, 38f));
         nameT.alignment = TextAnchor.MiddleLeft;
+        nameT.resizeTextForBestFit = true;
+        nameT.resizeTextMinSize = 20;
+        nameT.resizeTextMaxSize = 30;
 
         // 状態表示（右寄せ）
         string status = isSelected ? "選択中" : (selectable ? "選択する" : "");

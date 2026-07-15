@@ -557,11 +557,14 @@ public class CharaManageUI : MonoBehaviour
         // ダイアログ幅 850px。テキスト幅は最大 780px に統一して左右に 35px の余白
         // overflow は Wrap で枠内に収め、長文は自動改行
 
-        // 名前
-        var nameTxt = MakeText(dp, $"{cd.characterName}", 48, rarCol,
+        // 名前（二つ名付き。長い場合は自動縮小で1行維持）
+        var nameTxt = MakeText(dp, cd.DisplayName, 48, rarCol,
             new Vector2(0.5f, 0.73f), new Vector2(780f, 70f));
         nameTxt.horizontalOverflow = HorizontalWrapMode.Wrap;
         nameTxt.verticalOverflow = VerticalWrapMode.Truncate;
+        nameTxt.resizeTextForBestFit = true;
+        nameTxt.resizeTextMinSize = 32;
+        nameTxt.resizeTextMaxSize = 48;
         AddOutline(nameTxt.gameObject);
 
         // レアリティバッジ
@@ -588,9 +591,13 @@ public class CharaManageUI : MonoBehaviour
         lvlTxt.verticalOverflow = VerticalWrapMode.Truncate;
         AddOutline(lvlTxt.gameObject);
 
-        // パワー（ダメージ）— 長文なので2行に分けて表示
-        int passiveDmg = (cd.passiveType == PassiveEffectType.ExtraDamage) ? (int)cd.passiveValue : 0;
-        float dmgMulti = (cd.passiveType == PassiveEffectType.BallDamageUp) ? cd.passiveValue : 1f;
+        // パワー（ダメージ）— 長文なので2行に分けて表示（パッシブ1・2の両方を集計）
+        int passiveDmg = 0;
+        float dmgMulti = 1f;
+        if (cd.passiveType  == PassiveEffectType.ExtraDamage)  passiveDmg += (int)cd.passiveValue;
+        if (cd.passiveType2 == PassiveEffectType.ExtraDamage)  passiveDmg += (int)cd.passiveValue2;
+        if (cd.passiveType  == PassiveEffectType.BallDamageUp) dmgMulti   *= cd.passiveValue;
+        if (cd.passiveType2 == PassiveEffectType.BallDamageUp) dmgMulti   *= cd.passiveValue2;
         float totalDmg = (charPower + passiveDmg) * dmgMulti;
         var pwTxt = MakeText(dp,
             $"パワー: {totalDmg:F1}\n(基礎{charPower:F1} + 追加{passiveDmg}) × {dmgMulti:F1}",
@@ -630,8 +637,10 @@ public class CharaManageUI : MonoBehaviour
         ultHead.verticalOverflow = VerticalWrapMode.Truncate;
         AddOutline(ultHead.gameObject);
 
-        // 奥義本文（BallSplit など長文があるので2行想定）
+        // 奥義本文（BallSplit など長文があるので2行想定。複合奥義は2行で表示）
         string ultDesc = GetUltimateDescription(cd.ultimateType, cd.ultimateValue, cd.ultimateDuration);
+        if (cd.ultimateType2 != UltimateSkillType.None)
+            ultDesc += $"\n＋ {GetUltimateDescription(cd.ultimateType2, cd.ultimateValue2, cd.ultimateDuration2)}";
         var ultText = MakeText(dp, ultDesc, 26, Color.white,
             new Vector2(0.5f, 0.205f), new Vector2(780f, 80f));
         ultText.horizontalOverflow = HorizontalWrapMode.Wrap;
@@ -708,6 +717,8 @@ public class CharaManageUI : MonoBehaviour
                 return $"{duration:F0}秒間、ボールがブロックを貫通";
             case UltimateSkillType.BallSplit:
                 return "ボールを2つに分裂（分裂したボールも再分裂可能）";
+            case UltimateSkillType.GaugeCharge:
+                return $"味方全員の奥義ゲージ +{(int)value}";
             default:
                 return "なし";
         }

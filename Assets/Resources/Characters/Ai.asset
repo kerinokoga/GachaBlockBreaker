@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: Ai
   m_EditorClassIdentifier: 
   characterName: "\u30A2\u30A4"
+  title: "黄金の巫女"
   rarity: 0
   rarityColor: {r: 0.6, g: 0.6, b: 0.6, a: 1}
   icon: {fileID: 21300000, guid: 1803ceb1d200d0f41a1db3382a03138b, type: 3}

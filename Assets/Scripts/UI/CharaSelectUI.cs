@@ -425,6 +425,10 @@ public class CharaSelectUI : MonoBehaviour
             new Vector2(0.5f, 0.885f), new Vector2(900f, 60f));
         detailName.horizontalOverflow = HorizontalWrapMode.Wrap;
         detailName.verticalOverflow = VerticalWrapMode.Truncate;
+        // 二つ名付きの長い名前でも1行に収まるよう自動縮小
+        detailName.resizeTextForBestFit = true;
+        detailName.resizeTextMinSize = 30;
+        detailName.resizeTextMaxSize = 46;
         AddOutlineCS(detailName.gameObject);
 
         detailRarity  = MakeText(dpInner.transform, "", 34, new Color(1f, 0.9f, 0.2f),
@@ -899,7 +903,7 @@ public class CharaSelectUI : MonoBehaviour
             detailDesc.text = "\u4e00\u89a7\u306e\u30ad\u30e3\u30e9\u3092\u30bf\u30c3\u30d7\u3067\u80fd\u529b\u3092\u78ba\u8a8d\n\u9577\u62bc\u3057\u2192\u30c9\u30e9\u30c3\u30b0\u3067\u30b9\u30ed\u30c3\u30c8\u306b\u30bb\u30c3\u30c8";
             return;
         }
-        detailName.text    = cd.characterName;
+        detailName.text    = cd.DisplayName; // 二つ名付き（例: 紅蓮の侍 レイ）
         detailRarity.text  = $"レアリティ: {cd.rarity}";
         string p2 = (cd.passiveType2 != PassiveEffectType.None) ? $" / {PassiveDescSingle(cd.passiveType2, cd.passiveValue2)}" : "";
         detailPassive.text = $"[パッシブスキル] {PassiveDescSingle(cd.passiveType, cd.passiveValue)}{p2}";
