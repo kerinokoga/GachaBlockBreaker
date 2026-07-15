@@ -21,9 +21,12 @@ MonoBehaviour:
   passiveType2: 0
   passiveValue2: 0
   ultimateType: 1
-  ultimateValue: 3
-  ultimateDuration: 30
+  ultimateValue: 2.2
+  ultimateDuration: 8
   ultimateGaugeCost: 10
+  ultimateType2: 2
+  ultimateValue2: 5
+  ultimateDuration2: 0
   voiceVolumeMultiplier: 1
   voiceTitle: {fileID: 8300000, guid: 7d1cbb9fe9238bd42b17738fcf1d0b0f, type: 3}
   voiceSelect: {fileID: 8300000, guid: 37e2420b94f26474d9af3350cf189433, type: 3}
@@ -35,4 +38,4 @@ MonoBehaviour:
   voiceDestroy60: {fileID: 8300000, guid: 383baf0f3a410594db203b885402e027, type: 3}
   voiceBossDamaged: {fileID: 8300000, guid: 649ed52aed7f1cb4fb6ba2a18092a8d5, type: 3}
   voiceBossAttack: {fileID: 8300000, guid: c820cb15cbd2349408af77f3c2cf4310, type: 3}
-  description: "\u6708\u5149\u306E\u9B54\u529B\u3067\u30C0\u30E1\u30FC\u30B8\u3092\u5897\u5E45\u3059\u308B\u9280\u9AEA\u306E\u9B54\u6CD5\u5C11\u5973\u3002\u5965\u7FA9\u306730\u79D2\u9593\u30C0\u30E1\u30FC\u30B82\u500D\uFF01"
+  description: "月光の魔力でダメージを増幅する銀髪の魔法少女。奥義で8秒間ダメージ+120%＋全体5ダメージ！"

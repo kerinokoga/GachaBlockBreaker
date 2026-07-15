@@ -16,203 +16,147 @@ MonoBehaviour:
   blocks:
   - blockType: 1
     gridPosition: {x: 0, y: 0}
-    hp: 160
+    hp: 240
     speedMultiplier: 1.15
   - blockType: 1
     gridPosition: {x: 1, y: 0}
-    hp: 160
+    hp: 240
     speedMultiplier: 1.15
   - blockType: 1
     gridPosition: {x: 2, y: 0}
-    hp: 160
+    hp: 240
     speedMultiplier: 1.15
   - blockType: 1
     gridPosition: {x: 3, y: 0}
-    hp: 160
+    hp: 240
     speedMultiplier: 1.15
   - blockType: 1
     gridPosition: {x: 4, y: 0}
-    hp: 160
+    hp: 240
     speedMultiplier: 1.15
   - blockType: 1
     gridPosition: {x: 5, y: 0}
-    hp: 160
+    hp: 240
     speedMultiplier: 1.15
   - blockType: 1
     gridPosition: {x: 6, y: 0}
-    hp: 160
+    hp: 240
     speedMultiplier: 1.15
   - blockType: 1
     gridPosition: {x: 7, y: 0}
-    hp: 160
+    hp: 240
     speedMultiplier: 1.15
   - blockType: 1
     gridPosition: {x: 8, y: 0}
-    hp: 160
-    speedMultiplier: 1.15
-  - blockType: 3
-    gridPosition: {x: 0, y: 1}
-    hp: 1
-    speedMultiplier: 1.15
-  - blockType: 3
-    gridPosition: {x: 1, y: 1}
-    hp: 1
-    speedMultiplier: 1.15
-  - blockType: 3
-    gridPosition: {x: 2, y: 1}
-    hp: 1
-    speedMultiplier: 1.15
-  - blockType: 3
-    gridPosition: {x: 3, y: 1}
-    hp: 1
-    speedMultiplier: 1.15
-  - blockType: 3
-    gridPosition: {x: 4, y: 1}
-    hp: 1
-    speedMultiplier: 1.15
-  - blockType: 3
-    gridPosition: {x: 5, y: 1}
-    hp: 1
-    speedMultiplier: 1.15
-  - blockType: 3
-    gridPosition: {x: 6, y: 1}
-    hp: 1
-    speedMultiplier: 1.15
-  - blockType: 3
-    gridPosition: {x: 7, y: 1}
-    hp: 1
-    speedMultiplier: 1.15
-  - blockType: 3
-    gridPosition: {x: 8, y: 1}
-    hp: 1
+    hp: 240
     speedMultiplier: 1.15
   - blockType: 1
     gridPosition: {x: 0, y: 2}
-    hp: 140
+    hp: 210
     speedMultiplier: 1.15
   - blockType: 1
     gridPosition: {x: 1, y: 2}
-    hp: 140
+    hp: 210
     speedMultiplier: 1.15
   - blockType: 1
     gridPosition: {x: 2, y: 2}
-    hp: 140
+    hp: 210
     speedMultiplier: 1.15
   - blockType: 1
     gridPosition: {x: 3, y: 2}
-    hp: 140
+    hp: 210
     speedMultiplier: 1.15
   - blockType: 1
     gridPosition: {x: 4, y: 2}
-    hp: 140
+    hp: 210
     speedMultiplier: 1.15
   - blockType: 1
     gridPosition: {x: 5, y: 2}
-    hp: 140
+    hp: 210
     speedMultiplier: 1.15
   - blockType: 1
     gridPosition: {x: 6, y: 2}
-    hp: 140
+    hp: 210
     speedMultiplier: 1.15
   - blockType: 1
     gridPosition: {x: 7, y: 2}
-    hp: 140
+    hp: 210
     speedMultiplier: 1.15
   - blockType: 1
     gridPosition: {x: 8, y: 2}
-    hp: 140
+    hp: 210
     speedMultiplier: 1.15
   - blockType: 1
     gridPosition: {x: 0, y: 3}
-    hp: 140
+    hp: 210
     speedMultiplier: 1.15
   - blockType: 1
     gridPosition: {x: 1, y: 3}
-    hp: 140
+    hp: 210
     speedMultiplier: 1.15
   - blockType: 1
     gridPosition: {x: 2, y: 3}
-    hp: 140
+    hp: 210
     speedMultiplier: 1.15
   - blockType: 1
     gridPosition: {x: 3, y: 3}
-    hp: 140
+    hp: 210
     speedMultiplier: 1.15
   - blockType: 1
     gridPosition: {x: 4, y: 3}
-    hp: 140
+    hp: 210
     speedMultiplier: 1.15
   - blockType: 1
     gridPosition: {x: 5, y: 3}
-    hp: 140
+    hp: 210
     speedMultiplier: 1.15
   - blockType: 1
     gridPosition: {x: 6, y: 3}
-    hp: 140
+    hp: 210
     speedMultiplier: 1.15
   - blockType: 1
     gridPosition: {x: 7, y: 3}
-    hp: 140
+    hp: 210
     speedMultiplier: 1.15
   - blockType: 1
     gridPosition: {x: 8, y: 3}
-    hp: 140
-    speedMultiplier: 1.15
-  - blockType: 2
-    gridPosition: {x: 0, y: 4}
-    hp: 1
-    speedMultiplier: 1.15
-  - blockType: 2
-    gridPosition: {x: 2, y: 4}
-    hp: 1
-    speedMultiplier: 1.15
-  - blockType: 2
-    gridPosition: {x: 4, y: 4}
-    hp: 1
-    speedMultiplier: 1.15
-  - blockType: 2
-    gridPosition: {x: 6, y: 4}
-    hp: 1
-    speedMultiplier: 1.15
-  - blockType: 2
-    gridPosition: {x: 8, y: 4}
-    hp: 1
+    hp: 210
     speedMultiplier: 1.15
   - blockType: 1
     gridPosition: {x: 0, y: 5}
-    hp: 200
+    hp: 300
     speedMultiplier: 1.15
   - blockType: 1
     gridPosition: {x: 1, y: 5}
-    hp: 200
+    hp: 300
     speedMultiplier: 1.15
   - blockType: 1
     gridPosition: {x: 2, y: 5}
-    hp: 200
+    hp: 300
     speedMultiplier: 1.15
   - blockType: 1
     gridPosition: {x: 3, y: 5}
-    hp: 200
+    hp: 300
     speedMultiplier: 1.15
   - blockType: 1
     gridPosition: {x: 4, y: 5}
-    hp: 200
+    hp: 300
     speedMultiplier: 1.15
   - blockType: 1
     gridPosition: {x: 5, y: 5}
-    hp: 200
+    hp: 300
     speedMultiplier: 1.15
   - blockType: 1
     gridPosition: {x: 6, y: 5}
-    hp: 200
+    hp: 300
     speedMultiplier: 1.15
   - blockType: 1
     gridPosition: {x: 7, y: 5}
-    hp: 200
+    hp: 300
     speedMultiplier: 1.15
   - blockType: 1
     gridPosition: {x: 8, y: 5}
-    hp: 200
+    hp: 300
     speedMultiplier: 1.15
   - blockType: 4
     gridPosition: {x: 1, y: 5}
@@ -249,203 +193,147 @@ MonoBehaviour:
   trueBlocks:
   - blockType: 1
     gridPosition: {x: 0, y: 0}
-    hp: 200
+    hp: 300
     speedMultiplier: 1.15
   - blockType: 1
     gridPosition: {x: 1, y: 0}
-    hp: 200
+    hp: 300
     speedMultiplier: 1.15
   - blockType: 1
     gridPosition: {x: 2, y: 0}
-    hp: 200
+    hp: 300
     speedMultiplier: 1.15
   - blockType: 1
     gridPosition: {x: 3, y: 0}
-    hp: 200
+    hp: 300
     speedMultiplier: 1.15
   - blockType: 1
     gridPosition: {x: 4, y: 0}
-    hp: 200
+    hp: 300
     speedMultiplier: 1.15
   - blockType: 1
     gridPosition: {x: 5, y: 0}
-    hp: 200
+    hp: 300
     speedMultiplier: 1.15
   - blockType: 1
     gridPosition: {x: 6, y: 0}
-    hp: 200
+    hp: 300
     speedMultiplier: 1.15
   - blockType: 1
     gridPosition: {x: 7, y: 0}
-    hp: 200
+    hp: 300
     speedMultiplier: 1.15
   - blockType: 1
     gridPosition: {x: 8, y: 0}
-    hp: 200
+    hp: 300
     speedMultiplier: 1.15
   - blockType: 1
     gridPosition: {x: 0, y: 1}
-    hp: 200
+    hp: 300
     speedMultiplier: 1.15
   - blockType: 1
     gridPosition: {x: 1, y: 1}
-    hp: 200
+    hp: 300
     speedMultiplier: 1.15
   - blockType: 1
     gridPosition: {x: 2, y: 1}
-    hp: 200
+    hp: 300
     speedMultiplier: 1.15
   - blockType: 1
     gridPosition: {x: 3, y: 1}
-    hp: 200
+    hp: 300
     speedMultiplier: 1.15
   - blockType: 1
     gridPosition: {x: 4, y: 1}
-    hp: 200
+    hp: 300
     speedMultiplier: 1.15
   - blockType: 1
     gridPosition: {x: 5, y: 1}
-    hp: 200
+    hp: 300
     speedMultiplier: 1.15
   - blockType: 1
     gridPosition: {x: 6, y: 1}
-    hp: 200
+    hp: 300
     speedMultiplier: 1.15
   - blockType: 1
     gridPosition: {x: 7, y: 1}
-    hp: 200
+    hp: 300
     speedMultiplier: 1.15
   - blockType: 1
     gridPosition: {x: 8, y: 1}
-    hp: 200
-    speedMultiplier: 1.15
-  - blockType: 3
-    gridPosition: {x: 0, y: 2}
-    hp: 1
-    speedMultiplier: 1.15
-  - blockType: 3
-    gridPosition: {x: 1, y: 2}
-    hp: 1
-    speedMultiplier: 1.15
-  - blockType: 3
-    gridPosition: {x: 2, y: 2}
-    hp: 1
-    speedMultiplier: 1.15
-  - blockType: 3
-    gridPosition: {x: 3, y: 2}
-    hp: 1
-    speedMultiplier: 1.15
-  - blockType: 3
-    gridPosition: {x: 4, y: 2}
-    hp: 1
-    speedMultiplier: 1.15
-  - blockType: 3
-    gridPosition: {x: 5, y: 2}
-    hp: 1
-    speedMultiplier: 1.15
-  - blockType: 3
-    gridPosition: {x: 6, y: 2}
-    hp: 1
-    speedMultiplier: 1.15
-  - blockType: 3
-    gridPosition: {x: 7, y: 2}
-    hp: 1
-    speedMultiplier: 1.15
-  - blockType: 3
-    gridPosition: {x: 8, y: 2}
-    hp: 1
+    hp: 300
     speedMultiplier: 1.15
   - blockType: 1
     gridPosition: {x: 0, y: 3}
-    hp: 180
+    hp: 270
     speedMultiplier: 1.15
   - blockType: 1
     gridPosition: {x: 1, y: 3}
-    hp: 180
+    hp: 270
     speedMultiplier: 1.15
   - blockType: 1
     gridPosition: {x: 2, y: 3}
-    hp: 180
+    hp: 270
     speedMultiplier: 1.15
   - blockType: 1
     gridPosition: {x: 3, y: 3}
-    hp: 180
+    hp: 270
     speedMultiplier: 1.15
   - blockType: 1
     gridPosition: {x: 4, y: 3}
-    hp: 180
+    hp: 270
     speedMultiplier: 1.15
   - blockType: 1
     gridPosition: {x: 5, y: 3}
-    hp: 180
+    hp: 270
     speedMultiplier: 1.15
   - blockType: 1
     gridPosition: {x: 6, y: 3}
-    hp: 180
+    hp: 270
     speedMultiplier: 1.15
   - blockType: 1
     gridPosition: {x: 7, y: 3}
-    hp: 180
+    hp: 270
     speedMultiplier: 1.15
   - blockType: 1
     gridPosition: {x: 8, y: 3}
-    hp: 180
+    hp: 270
     speedMultiplier: 1.15
   - blockType: 1
     gridPosition: {x: 0, y: 4}
-    hp: 180
+    hp: 270
     speedMultiplier: 1.15
   - blockType: 1
     gridPosition: {x: 1, y: 4}
-    hp: 180
+    hp: 270
     speedMultiplier: 1.15
   - blockType: 1
     gridPosition: {x: 2, y: 4}
-    hp: 180
+    hp: 270
     speedMultiplier: 1.15
   - blockType: 1
     gridPosition: {x: 3, y: 4}
-    hp: 180
+    hp: 270
     speedMultiplier: 1.15
   - blockType: 1
     gridPosition: {x: 4, y: 4}
-    hp: 180
+    hp: 270
     speedMultiplier: 1.15
   - blockType: 1
     gridPosition: {x: 5, y: 4}
-    hp: 180
+    hp: 270
     speedMultiplier: 1.15
   - blockType: 1
     gridPosition: {x: 6, y: 4}
-    hp: 180
+    hp: 270
     speedMultiplier: 1.15
   - blockType: 1
     gridPosition: {x: 7, y: 4}
-    hp: 180
+    hp: 270
     speedMultiplier: 1.15
   - blockType: 1
     gridPosition: {x: 8, y: 4}
-    hp: 180
-    speedMultiplier: 1.15
-  - blockType: 2
-    gridPosition: {x: 0, y: 5}
-    hp: 1
-    speedMultiplier: 1.15
-  - blockType: 2
-    gridPosition: {x: 2, y: 5}
-    hp: 1
-    speedMultiplier: 1.15
-  - blockType: 2
-    gridPosition: {x: 4, y: 5}
-    hp: 1
-    speedMultiplier: 1.15
-  - blockType: 2
-    gridPosition: {x: 6, y: 5}
-    hp: 1
-    speedMultiplier: 1.15
-  - blockType: 2
-    gridPosition: {x: 8, y: 5}
-    hp: 1
+    hp: 270
     speedMultiplier: 1.15
   - blockType: 4
     gridPosition: {x: 0, y: 5}

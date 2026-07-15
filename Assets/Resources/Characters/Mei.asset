@@ -21,9 +21,12 @@ MonoBehaviour:
   passiveType2: 0
   passiveValue2: 0
   ultimateType: 3
-  ultimateValue: 2
+  ultimateValue: 1
   ultimateDuration: 0
   ultimateGaugeCost: 10
+  ultimateType2: 2
+  ultimateValue2: 5
+  ultimateDuration2: 0
   voiceVolumeMultiplier: 1
   voiceTitle: {fileID: 8300000, guid: f8f7f478de64b564bb8af04516a74eb8, type: 3}
   voiceSelect: {fileID: 8300000, guid: b406d04c56bddff45b2c9f5484b619aa, type: 3}
@@ -35,4 +38,4 @@ MonoBehaviour:
   voiceDestroy60: {fileID: 8300000, guid: 288f74e27b77bdc4f9b3042738c24c8a, type: 3}
   voiceBossDamaged: {fileID: 8300000, guid: 374af4fd35920684ca4f7d66dabbd94e, type: 3}
   voiceBossAttack: {fileID: 8300000, guid: b9e7d51b1d785474580d028f01287add, type: 3}
-  description: "\u6625\u98A8\u306E\u5996\u7CBE\u3002\u8FFD\u52A0\u30C0\u30E1\u30FC\u30B8\uFF06\u5965\u7FA9\u3067\u30B9\u30C8\u30C3\u30AF+2\u56DE\u5FA9\u3002\u653B\u5B88\u30D0\u30E9\u30F3\u30B9\u578B\u3002"
+  description: "春風の妖精。追加ダメージ＆奥義でストック+1回復＋全ブロックに5ダメージ。攻守バランス型。"

@@ -24,6 +24,9 @@ MonoBehaviour:
   ultimateValue: 2
   ultimateDuration: 0
   ultimateGaugeCost: 10
+  ultimateType2: 1
+  ultimateValue2: 1.3
+  ultimateDuration2: 7
   voiceVolumeMultiplier: 1
   voiceTitle: {fileID: 8300000, guid: cbbb2ba39cc01b04f92a0f1640590af6, type: 3}
   voiceSelect: {fileID: 8300000, guid: 4e5d0c430b9b8764a99300996741167a, type: 3}
@@ -35,4 +38,4 @@ MonoBehaviour:
   voiceDestroy60: {fileID: 8300000, guid: 8f4f044b11f3f104ea4405ea7cf41bd9, type: 3}
   voiceBossDamaged: {fileID: 8300000, guid: ca18f89671bd43c4b939e6f59c0cbc81, type: 3}
   voiceBossAttack: {fileID: 8300000, guid: 36ede77fcb808fe43ac44a943a0d95d1, type: 3}
-  description: "\u6681\u306E\u30D2\u30FC\u30E9\u30FC\u3002\u8FFD\u52A0\u30C0\u30E1\u30FC\u30B8\uFF06\u5965\u7FA9\u3067\u30B9\u30C8\u30C3\u30AF+2\u56DE\u5FA9\u3002\u521D\u5FC3\u8005\u5411\u304D\u306E\u30AD\u30E3\u30E9\u3002"
+  description: "暁のヒーラー。追加ダメージ＆奥義でストック+2回復＋7秒間ダメージ+30%。初心者向きのキャラ。"

@@ -24,6 +24,9 @@ MonoBehaviour:
   ultimateValue: 2
   ultimateDuration: 0
   ultimateGaugeCost: 10
+  ultimateType2: 2
+  ultimateValue2: 10
+  ultimateDuration2: 0
   voiceVolumeMultiplier: 1
   voiceTitle: {fileID: 8300000, guid: 485d75debe594874e8945283aa103563, type: 3}
   voiceSelect: {fileID: 8300000, guid: 9a7854094358090409037ede7eb8da3a, type: 3}
@@ -35,4 +38,4 @@ MonoBehaviour:
   voiceDestroy60: {fileID: 8300000, guid: 4a013dfd66237ca429cf908c0df214b1, type: 3}
   voiceBossDamaged: {fileID: 8300000, guid: d473e5076e4948842b1d4b1fd3aa9876, type: 3}
   voiceBossAttack: {fileID: 8300000, guid: a3d8d456c22b2e94cb958142d8102761, type: 3}
-  description: "\u708E\u306E\u5263\u3092\u632F\u308B\u3046\u8D64\u9AEA\u306E\u9A0E\u58EB\u3002\u8FFD\u52A0\u30C0\u30E1\u30FC\u30B8\uFF06\u5965\u7FA9\u3067\u30B9\u30C8\u30C3\u30AF+2\u56DE\u5FA9\uFF01"
+  description: "炎の剣を振るう赤髪の騎士。追加ダメージ＆奥義でストック+2回復＋全体10ダメージ！"

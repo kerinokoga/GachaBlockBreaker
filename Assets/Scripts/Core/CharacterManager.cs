@@ -252,20 +252,36 @@ public class CharacterManager : MonoBehaviour
     /// <summary>奥義効果の適用本体（アニメなし時は即時、アニメあり時は再生後に呼ばれる）</summary>
     void ApplyUltimate(CharacterData cd, int slotIndex)
     {
-        switch (cd.ultimateType)
+        ApplyUltEffect(cd.ultimateType, cd.ultimateValue, cd.ultimateDuration);
+
+        // 複合奥義（回復＋αなど）の追加効果
+        if (cd.ultimateType2 != UltimateSkillType.None)
+            ApplyUltEffect(cd.ultimateType2, cd.ultimateValue2, cd.ultimateDuration2);
+
+        Debug.Log($"[CharacterManager] 奥義発動: {cd.characterName} - {cd.ultimateType}" +
+            (cd.ultimateType2 != UltimateSkillType.None ? $" + {cd.ultimateType2}" : ""));
+
+        // チュートリアル用に発動を通知
+        OnUltUsed?.Invoke(slotIndex);
+    }
+
+    /// <summary>単一の奥義効果を適用する（複合奥義では2回呼ばれる）</summary>
+    void ApplyUltEffect(UltimateSkillType type, float value, float duration)
+    {
+        switch (type)
         {
             case UltimateSkillType.PowerBurst:
-                StartCoroutine(PowerBurstCoroutine(cd.ultimateValue, cd.ultimateDuration));
+                StartCoroutine(PowerBurstCoroutine(value, duration));
                 break;
 
             case UltimateSkillType.MassDestroy:
                 var blocks = FindObjectsOfType<BlockBase>();
                 foreach (var b in blocks)
-                    b.TakeDamage((int)cd.ultimateValue);
+                    b.TakeDamage((int)value);
                 break;
 
             case UltimateSkillType.StockRecover:
-                GameManager.Instance.AddStock((int)cd.ultimateValue);
+                GameManager.Instance.AddStock((int)value);
                 break;
 
             case UltimateSkillType.BarrierShot:
@@ -274,18 +290,18 @@ public class CharacterManager : MonoBehaviour
                 break;
 
             case UltimateSkillType.Penetrate:
-                StartCoroutine(PenetrateCoroutine(cd.ultimateDuration));
+                StartCoroutine(PenetrateCoroutine(duration));
                 break;
 
             case UltimateSkillType.BallSplit:
                 GameManager.Instance?.TriggerBallSplit();
                 break;
+
+            case UltimateSkillType.GaugeCharge:
+                // 味方全員の奥義ゲージを加算（UltGaugeBoost パッシブも乗る共通処理を利用）
+                AddGauge(value);
+                break;
         }
-
-        Debug.Log($"[CharacterManager] 奥義発動: {cd.characterName} - {cd.ultimateType}");
-
-        // チュートリアル用に発動を通知
-        OnUltUsed?.Invoke(slotIndex);
     }
 
     /// <summary>

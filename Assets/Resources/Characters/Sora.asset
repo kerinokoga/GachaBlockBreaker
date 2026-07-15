@@ -21,8 +21,8 @@ MonoBehaviour:
   passiveType2: 0
   passiveValue2: 0
   ultimateType: 1
-  ultimateValue: 3
-  ultimateDuration: 30
+  ultimateValue: 2.5
+  ultimateDuration: 15
   ultimateGaugeCost: 10
   voiceVolumeMultiplier: 1
   voiceTitle: {fileID: 8300000, guid: f4a3b5a94ca96924685dbdf014982093, type: 3}
@@ -35,4 +35,4 @@ MonoBehaviour:
   voiceDestroy60: {fileID: 8300000, guid: 35a30aee6e2493f4b9184440d08badfc, type: 3}
   voiceBossDamaged: {fileID: 8300000, guid: cf6db595e1bf9404187a26014a2224d5, type: 3}
   voiceBossAttack: {fileID: 8300000, guid: a824380e47cd44f4bbf70ba2467d6fb9, type: 3}
-  description: "\u7A7A\u3092\u99C6\u3051\u308B\u84BC\u98A8\u306E\u30D1\u30A4\u30ED\u30C3\u30C8\u3002\u30C0\u30E1\u30FC\u30B81.3\u500D\uFF06\u5965\u7FA9\u306730\u79D2\u9593\u30C0\u30E1\u30FC\u30B82\u500D\uFF01"
+  description: "空を駆ける蒼風のパイロット。ダメージ1.3倍＆奥義で15秒間ダメージ+150%！"

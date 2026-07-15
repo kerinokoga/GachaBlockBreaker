@@ -21,8 +21,8 @@ MonoBehaviour:
   passiveType2: 0
   passiveValue2: 0
   ultimateType: 1
-  ultimateValue: 2.5
-  ultimateDuration: 25
+  ultimateValue: 1.8
+  ultimateDuration: 10
   ultimateGaugeCost: 10
   voiceVolumeMultiplier: 1.5
   voiceTitle: {fileID: 8300000, guid: ef763341b814dfe4ebe1a8c839faeee6, type: 3}
@@ -35,4 +35,4 @@ MonoBehaviour:
   voiceDestroy60: {fileID: 8300000, guid: 7e95a423ef5037b419838e151d4b963f, type: 3}
   voiceBossDamaged: {fileID: 8300000, guid: 2d6e661014eb09246838337588a5c850, type: 3}
   voiceBossAttack: {fileID: 8300000, guid: 00ba09afe93a1694391ae92b40a52c79, type: 3}
-  description: "\u7FE0\u7389\u306E\u6697\u6BBA\u8005\u3002\u30B2\u30FC\u30B82\u500D\u901F\uFF06\u5965\u7FA9\u306725\u79D2\u9593\u30C0\u30E1\u30FC\u30B82\u500D\uFF01"
+  description: "翠玉の暗殺者。ゲージ2倍速＆奥義で10秒間ダメージ+80%！"

@@ -22,7 +22,7 @@ MonoBehaviour:
   passiveValue2: 0
   ultimateType: 5
   ultimateValue: 1
-  ultimateDuration: 30
+  ultimateDuration: 35
   ultimateGaugeCost: 10
   voiceVolumeMultiplier: 1
   voiceTitle: {fileID: 8300000, guid: f9e9a48e21bb66340badfa283efb8c12, type: 3}
@@ -35,4 +35,4 @@ MonoBehaviour:
   voiceDestroy60: {fileID: 8300000, guid: a679d42579fd6ef4abdce5feebdfa7a7, type: 3}
   voiceBossDamaged: {fileID: 8300000, guid: 761d54856d781444c8ccca7dc2b6784a, type: 3}
   voiceBossAttack: {fileID: 8300000, guid: 155a4ac57c0b5844c8eba20738558a5e, type: 3}
-  description: "\u98A8\u306E\u5F13\u4F7F\u3044\u3002\u8FFD\u52A0\u30C0\u30E1\u30FC\u30B8+2\uFF06\u5965\u7FA9\u306730\u79D2\u9593\u8CAB\u901A\uFF01\u653B\u5B88\u517C\u5099\u306E\u5B9F\u529B\u8005\u3002"
+  description: "風の弓使い。追加ダメージ+2＆奥義で35秒間貫通！攻守兼備の実力者。"

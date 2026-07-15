@@ -14,7 +14,7 @@ public class BlockPlacementData
 {
     public BlockType blockType = BlockType.Normal;
     public Vector2Int gridPosition;  // グリッド上の位置（列, 行）
-    [Range(1, 100)]
+    [Range(1, 500)]
     public int hp = 1;               // DurableBlock 用
     public float speedMultiplier = 1.1f; // SpeedBlock 用
 }

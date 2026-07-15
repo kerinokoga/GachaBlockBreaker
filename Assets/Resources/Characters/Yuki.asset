@@ -22,7 +22,7 @@ MonoBehaviour:
   passiveValue2: 0
   ultimateType: 5
   ultimateValue: 1
-  ultimateDuration: 20
+  ultimateDuration: 25
   ultimateGaugeCost: 10
   voiceVolumeMultiplier: 1
   voiceTitle: {fileID: 8300000, guid: 313a5639e0f40cd428c3b78e222ee7b4, type: 3}
@@ -35,4 +35,4 @@ MonoBehaviour:
   voiceDestroy60: {fileID: 8300000, guid: a6fa3610a0966c94592c0ccf11b68453, type: 3}
   voiceBossDamaged: {fileID: 8300000, guid: f5f7015f3ff1cd04ea5f4a7e0ca24b74, type: 3}
   voiceBossAttack: {fileID: 8300000, guid: 365c706854871dd4cbbd20235ac7ca7b, type: 3}
-  description: "\u6C37\u306E\u7D50\u6676\u3092\u7E8F\u3046\u767D\u84BC\u306E\u59EB\u3002\u30C0\u30E1\u30FC\u30B81.3\u500D\uFF06\u5965\u7FA9\u306720\u79D2\u9593\u8CAB\u901A\uFF01"
+  description: "氷の結晶を纏う白蒼の姫。ダメージ1.3倍＆奥義で25秒間貫通！"

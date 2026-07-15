@@ -21,7 +21,7 @@ MonoBehaviour:
   passiveType2: 0
   passiveValue2: 0
   ultimateType: 2
-  ultimateValue: 10
+  ultimateValue: 25
   ultimateDuration: 0
   ultimateGaugeCost: 10
   voiceVolumeMultiplier: 1
@@ -35,4 +35,4 @@ MonoBehaviour:
   voiceDestroy60: {fileID: 8300000, guid: dfd69fbd51c3f2f44b9720b67e3cf473, type: 3}
   voiceBossDamaged: {fileID: 8300000, guid: e3dec32f9382248438af8b9a0d1de460, type: 3}
   voiceBossAttack: {fileID: 8300000, guid: 8559ad955ce7cb84bafbb4f2d22308ea, type: 3}
-  description: "\u95C7\u306E\u9B54\u8853\u3092\u64CD\u308B\u7D2B\u9AEA\u306E\u9B54\u5C0E\u5E2B\u3002\u30B2\u30FC\u30B83\u500D\u901F\uFF06\u5965\u7FA9\u3067\u5168\u4F5310\u30C0\u30E1\u30FC\u30B8\uFF01"
+  description: "闇の魔術を操る紫髪の魔導師。ゲージ3倍速＆奥義で全体25ダメージ！"

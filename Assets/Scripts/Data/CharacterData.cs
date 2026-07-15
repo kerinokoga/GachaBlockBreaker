@@ -17,10 +17,11 @@ public enum UltimateSkillType
     None,
     PowerBurst,     // ultimateDuration 秒間 ダメージ × ultimateValue（旧 SpeedBurst）
     MassDestroy,    // 全ブロックに (int)ultimateValue ダメージ
-    StockRecover,   // ストック +1
+    StockRecover,   // ストック +(int)ultimateValue
     BarrierShot,    // 次の1ミスをキャンセル
     Penetrate,      // ultimateDuration 秒間 ボールがブロックを貫通
     BallSplit,      // ボールを2つに分裂（各ボールがさらに分裂可能）
+    GaugeCharge,    // 味方全員の奥義ゲージ +(int)ultimateValue（複合奥義のおまけ用）
 }
 
 [CreateAssetMenu(fileName = "CharaData", menuName = "GachaBlock/CharacterData")]
@@ -46,6 +47,11 @@ public class CharacterData : ScriptableObject
     public float ultimateValue = 1f;
     public float ultimateDuration = 3f;
     public int ultimateGaugeCost = 10;
+
+    [Header("奥義の追加効果（複合奥義用。None なら単一効果）")]
+    public UltimateSkillType ultimateType2 = UltimateSkillType.None;
+    public float ultimateValue2 = 0f;
+    public float ultimateDuration2 = 0f;
 
     [Header("ボイス共通設定")]
     /// <summary>このキャラのボイス全体の音量倍率（1.0 が標準）。録音音量が小さい場合は 1.5 等に上げる。</summary>

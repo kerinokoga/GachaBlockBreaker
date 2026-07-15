@@ -21,9 +21,12 @@ MonoBehaviour:
   passiveType2: 0
   passiveValue2: 0
   ultimateType: 3
-  ultimateValue: 2
+  ultimateValue: 1
   ultimateDuration: 0
   ultimateGaugeCost: 10
+  ultimateType2: 2
+  ultimateValue2: 5
+  ultimateDuration2: 0
   voiceVolumeMultiplier: 1
   voiceTitle: {fileID: 8300000, guid: 571965523c1bdd14e824fb1ba70183f9, type: 3}
   voiceSelect: {fileID: 8300000, guid: bad08533c8dd5af478c03cf6576897f8, type: 3}
@@ -35,4 +38,4 @@ MonoBehaviour:
   voiceDestroy60: {fileID: 8300000, guid: 24ee44c9545b03e4399348a4e453e87e, type: 3}
   voiceBossDamaged: {fileID: 8300000, guid: a15dc7a1183e1254d97b62816dd197bc, type: 3}
   voiceBossAttack: {fileID: 8300000, guid: 6fc4efb2bcc8a414086b229bd655a802, type: 3}
-  description: "\u9EC4\u91D1\u306E\u5DEB\u5973\u3002\u958B\u59CB\u6642\u30B9\u30C8\u30C3\u30AF+1\uFF06\u5965\u7FA9\u3067\u30B9\u30C8\u30C3\u30AF+2\u56DE\u5FA9\u3002\u5B89\u5B9A\u611F\u306E\u3042\u308B\u30B5\u30DD\u30FC\u30BF\u30FC\u3002"
+  description: "黄金の巫女。開始時ストック+1＆奥義でストック+1回復＋全ブロックに5ダメージ。"

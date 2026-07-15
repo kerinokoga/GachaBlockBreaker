@@ -284,39 +284,51 @@ public class GameUI : MonoBehaviour
         var cd = CharacterManager.Instance.GetSelectedChar(slot);
         if (cd == null) return;
 
-        string effectLine = GetUltEffectText(cd);
+        // 複合奥義は「効果1 ＆ 効果2」でバナー表示
+        string effectLine = GetUltEffectText(cd.ultimateType, cd.ultimateValue, cd.ultimateDuration);
+        if (cd.ultimateType2 != UltimateSkillType.None)
+            effectLine += " ＆ " + GetUltEffectText(cd.ultimateType2, cd.ultimateValue2, cd.ultimateDuration2);
         StartCoroutine(UltBannerCoroutine($"{cd.characterName}の奥義！", effectLine));
 
-        // 持続系奥義は効果内容 + 残り時間も表示（案D）
-        if (cd.ultimateType == UltimateSkillType.PowerBurst)
+        // 持続系奥義は効果内容 + 残り時間も表示（案D）。複合の追加効果分も個別に表示
+        StartUltTimerIfDurational(cd.ultimateType, cd.ultimateValue, cd.ultimateDuration);
+        StartUltTimerIfDurational(cd.ultimateType2, cd.ultimateValue2, cd.ultimateDuration2);
+    }
+
+    /// <summary>持続系（ダメージUP/貫通）ならタイマー表示を開始する</summary>
+    void StartUltTimerIfDurational(UltimateSkillType type, float value, float duration)
+    {
+        if (type == UltimateSkillType.PowerBurst)
         {
             StartCoroutine(UltEffectTimerCoroutine(
-                $"ダメージ+{(cd.ultimateValue - 1f) * 100f:0}%", cd.ultimateDuration));
+                $"ダメージ+{(value - 1f) * 100f:0}%", duration));
         }
-        else if (cd.ultimateType == UltimateSkillType.Penetrate)
+        else if (type == UltimateSkillType.Penetrate)
         {
             StartCoroutine(UltEffectTimerCoroutine(
-                "ボール貫通", cd.ultimateDuration));
+                "ボール貫通", duration));
         }
     }
 
     /// <summary>奥義タイプから効果説明文を生成</summary>
-    string GetUltEffectText(CharacterData cd)
+    string GetUltEffectText(UltimateSkillType type, float value, float duration)
     {
-        switch (cd.ultimateType)
+        switch (type)
         {
             case UltimateSkillType.PowerBurst:
-                return $"{cd.ultimateDuration:0.#}秒間 ダメージ+{(cd.ultimateValue - 1f) * 100f:0}%！";
+                return $"{duration:0.#}秒間 ダメージ+{(value - 1f) * 100f:0}%！";
             case UltimateSkillType.MassDestroy:
-                return $"全ブロックに {cd.ultimateValue:0.#} ダメージ！";
+                return $"全ブロックに {value:0.#} ダメージ！";
             case UltimateSkillType.StockRecover:
-                return $"ストック +{cd.ultimateValue:0.#} 回復！";
+                return $"ストック +{value:0.#} 回復！";
             case UltimateSkillType.BarrierShot:
                 return "次のミスを1回防ぐ！";
             case UltimateSkillType.Penetrate:
-                return $"{cd.ultimateDuration:0.#}秒間 ボール貫通！";
+                return $"{duration:0.#}秒間 ボール貫通！";
             case UltimateSkillType.BallSplit:
                 return "ボールが2つに分裂！";
+            case UltimateSkillType.GaugeCharge:
+                return $"味方全員の奥義ゲージ +{value:0.#}！";
             default:
                 return "";
         }
@@ -989,8 +1001,6 @@ public class GameUI : MonoBehaviour
             "--- ブロックの種類 ---\n\n" +
             "通常ブロック（白）\n  1回当てると壊れる\n\n" +
             "耐久ブロック（黄〜紫）\n  HPが表示され、0になると壊れる\n  色が濃いほどHPが高い\n\n" +
-            "爆発ブロック（赤）\n  壊すと周囲のブロックも破壊する\n\n" +
-            "連鎖ブロック（緑）\n  壊すと隣接する同種ブロックが\n  連鎖して壊れる\n\n" +
             "速度ブロック（紫）\n  壊すとボールが加速する\n  速いほどダメージUp！注意！\n\n" +
             "ボスブロック（赤/大型）\n  各ステージに登場！\n  HPバー付きの大型ブロック\n  HPが減ると攻撃してくる！\n" +
             "  ・パドルが一時的に縮小\n  ・上からブロックが降ってくる\n  ・高難度ではスピードブロックも！\n\n" +

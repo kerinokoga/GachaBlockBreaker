@@ -16,107 +16,107 @@ MonoBehaviour:
   blocks:
   - blockType: 1
     gridPosition: {x: 1, y: 0}
-    hp: 5
+    hp: 8
     speedMultiplier: 1.15
   - blockType: 1
     gridPosition: {x: 2, y: 0}
-    hp: 5
+    hp: 8
     speedMultiplier: 1.15
   - blockType: 1
     gridPosition: {x: 3, y: 0}
-    hp: 5
+    hp: 8
     speedMultiplier: 1.15
   - blockType: 1
     gridPosition: {x: 4, y: 0}
-    hp: 5
+    hp: 8
     speedMultiplier: 1.15
   - blockType: 1
     gridPosition: {x: 5, y: 0}
-    hp: 5
+    hp: 8
     speedMultiplier: 1.15
   - blockType: 1
     gridPosition: {x: 6, y: 0}
-    hp: 5
+    hp: 8
     speedMultiplier: 1.15
   - blockType: 1
     gridPosition: {x: 7, y: 0}
-    hp: 5
+    hp: 8
     speedMultiplier: 1.15
   - blockType: 1
     gridPosition: {x: 1, y: 1}
-    hp: 5
+    hp: 8
     speedMultiplier: 1.15
   - blockType: 1
     gridPosition: {x: 2, y: 1}
-    hp: 5
+    hp: 8
     speedMultiplier: 1.15
   - blockType: 1
     gridPosition: {x: 3, y: 1}
-    hp: 5
+    hp: 8
     speedMultiplier: 1.15
   - blockType: 1
     gridPosition: {x: 4, y: 1}
-    hp: 5
+    hp: 8
     speedMultiplier: 1.15
   - blockType: 1
     gridPosition: {x: 5, y: 1}
-    hp: 5
+    hp: 8
     speedMultiplier: 1.15
   - blockType: 1
     gridPosition: {x: 6, y: 1}
-    hp: 5
+    hp: 8
     speedMultiplier: 1.15
   - blockType: 1
     gridPosition: {x: 7, y: 1}
-    hp: 5
+    hp: 8
     speedMultiplier: 1.15
   - blockType: 1
     gridPosition: {x: 1, y: 2}
-    hp: 8
+    hp: 12
     speedMultiplier: 1.15
   - blockType: 1
     gridPosition: {x: 2, y: 2}
-    hp: 8
+    hp: 12
     speedMultiplier: 1.15
   - blockType: 1
     gridPosition: {x: 3, y: 2}
-    hp: 8
+    hp: 12
     speedMultiplier: 1.15
   - blockType: 1
     gridPosition: {x: 4, y: 2}
-    hp: 8
+    hp: 12
     speedMultiplier: 1.15
   - blockType: 1
     gridPosition: {x: 5, y: 2}
-    hp: 8
+    hp: 12
     speedMultiplier: 1.15
   - blockType: 1
     gridPosition: {x: 6, y: 2}
-    hp: 8
+    hp: 12
     speedMultiplier: 1.15
   - blockType: 1
     gridPosition: {x: 7, y: 2}
-    hp: 8
+    hp: 12
     speedMultiplier: 1.15
   - blockType: 1
     gridPosition: {x: 2, y: 3}
-    hp: 12
+    hp: 18
     speedMultiplier: 1.15
   - blockType: 1
     gridPosition: {x: 3, y: 3}
-    hp: 12
+    hp: 18
     speedMultiplier: 1.15
   - blockType: 1
     gridPosition: {x: 4, y: 3}
-    hp: 12
+    hp: 18
     speedMultiplier: 1.15
   - blockType: 1
     gridPosition: {x: 5, y: 3}
-    hp: 12
+    hp: 18
     speedMultiplier: 1.15
   - blockType: 1
     gridPosition: {x: 6, y: 3}
-    hp: 12
+    hp: 18
     speedMultiplier: 1.15
   - blockType: 4
     gridPosition: {x: 3, y: 5}

@@ -21,9 +21,12 @@ MonoBehaviour:
   passiveType2: 0
   passiveValue2: 0
   ultimateType: 3
-  ultimateValue: 2
+  ultimateValue: 1
   ultimateDuration: 0
   ultimateGaugeCost: 10
+  ultimateType2: 7
+  ultimateValue2: 3
+  ultimateDuration2: 0
   voiceVolumeMultiplier: 1
   voiceTitle: {fileID: 8300000, guid: b392fa781a6ac6645b90e11a8f2bb0d3, type: 3}
   voiceSelect: {fileID: 8300000, guid: 87ca90a3b826ac34a95e51214d5910bc, type: 3}
@@ -35,4 +38,4 @@ MonoBehaviour:
   voiceDestroy60: {fileID: 8300000, guid: b1b4fd4e1b897f844a6886cd71176997, type: 3}
   voiceBossDamaged: {fileID: 8300000, guid: a848a7b686b0c1d4b8f16188b4c92324, type: 3}
   voiceBossAttack: {fileID: 8300000, guid: 473e9c2c2eb0e4b42971bc81a080c410, type: 3}
-  description: "\u6D77\u98A8\u306E\u30BB\u30A4\u30EC\u30FC\u30F3\u3002\u30C0\u30E1\u30FC\u30B81.2\u500D\uFF06\u5965\u7FA9\u3067\u30B9\u30C8\u30C3\u30AF+2\u56DE\u5FA9\u3002"
+  description: "海風のセイレーン。ダメージ1.2倍＆奥義でストック+1回復＋味方全員の奥義ゲージ+3。"

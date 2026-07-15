@@ -1290,14 +1290,24 @@ public class CharaSelectUI : MonoBehaviour
 
     string UltDesc(CharacterData cd)
     {
-        switch (cd.ultimateType)
+        string desc = UltEffectDesc(cd.ultimateType, cd.ultimateValue, cd.ultimateDuration);
+        // \u8907\u5408\u5965\u7fa9\u306f\u300c\u52b9\u679c1 \uff06 \u52b9\u679c2\u300d\u3067\u9023\u7d50\u8868\u793a
+        if (cd.ultimateType2 != UltimateSkillType.None)
+            desc += " \uff06 " + UltEffectDesc(cd.ultimateType2, cd.ultimateValue2, cd.ultimateDuration2);
+        return desc;
+    }
+
+    string UltEffectDesc(UltimateSkillType type, float value, float duration)
+    {
+        switch (type)
         {
-            case UltimateSkillType.PowerBurst:   return $"{cd.ultimateDuration:F0}\u79d2\u9593\u3001\u30c0\u30e1\u30fc\u30b8 +{(cd.ultimateValue - 1f) * 100f:0}%";
-            case UltimateSkillType.MassDestroy:  return $"\u5168\u30d6\u30ed\u30c3\u30af\u306b {(int)cd.ultimateValue} \u30c0\u30e1\u30fc\u30b8";
-            case UltimateSkillType.StockRecover: return $"\u30b9\u30c8\u30c3\u30af\u56de\u5fa9 +{(int)cd.ultimateValue}";
+            case UltimateSkillType.PowerBurst:   return $"{duration:F0}\u79d2\u9593\u3001\u30c0\u30e1\u30fc\u30b8 +{(value - 1f) * 100f:0}%";
+            case UltimateSkillType.MassDestroy:  return $"\u5168\u30d6\u30ed\u30c3\u30af\u306b {(int)value} \u30c0\u30e1\u30fc\u30b8";
+            case UltimateSkillType.StockRecover: return $"\u30b9\u30c8\u30c3\u30af\u56de\u5fa9 +{(int)value}";
             case UltimateSkillType.BarrierShot:  return "\u6b21\u306e1\u30df\u30b9\u3092\u30ad\u30e3\u30f3\u30bb\u30eb";
-            case UltimateSkillType.Penetrate:    return $"{cd.ultimateDuration:F0}\u79d2\u9593\u3001\u30dc\u30fc\u30eb\u304c\u30d6\u30ed\u30c3\u30af\u3092\u8cab\u901a";
+            case UltimateSkillType.Penetrate:    return $"{duration:F0}\u79d2\u9593\u3001\u30dc\u30fc\u30eb\u304c\u30d6\u30ed\u30c3\u30af\u3092\u8cab\u901a";
             case UltimateSkillType.BallSplit:    return "\u30dc\u30fc\u30eb\u30922\u3064\u306b\u5206\u88c2\uff08\u5206\u88c2\u3057\u305f\u30dc\u30fc\u30eb\u3082\u518d\u5206\u88c2\u53ef\u80fd\uff09";
+            case UltimateSkillType.GaugeCharge:  return $"\u5473\u65b9\u5168\u54e1\u306e\u5965\u7fa9\u30b2\u30fc\u30b8 +{(int)value}";
             default: return "\u306a\u3057";
         }
     }

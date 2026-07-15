@@ -726,8 +726,10 @@ public class GameManager : MonoBehaviour
     /// </summary>
     private StageData PickEndlessLayout(int waveIndex)
     {
+        // 1〜4体目: ステージ10/11/12/14、5〜9体目: ステージ15、10体目以降: ステージ20
         int[] earlyLayouts = { 10, 11, 12, 14 };
-        int layoutNum = waveIndex < earlyLayouts.Length ? earlyLayouts[waveIndex] : 15;
+        int layoutNum = waveIndex < earlyLayouts.Length ? earlyLayouts[waveIndex]
+                      : (waveIndex >= 9 ? 20 : 15);
 
         var all = Resources.LoadAll<StageData>("Stages");
         foreach (var s in all)

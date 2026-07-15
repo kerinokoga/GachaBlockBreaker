@@ -24,6 +24,9 @@ MonoBehaviour:
   ultimateValue: 2
   ultimateDuration: 0
   ultimateGaugeCost: 10
+  ultimateType2: 1
+  ultimateValue2: 1.5
+  ultimateDuration2: 12
   voiceVolumeMultiplier: 1
   voiceTitle: {fileID: 8300000, guid: b8719cb686cd9f84c8643e6f07dc83b6, type: 3}
   voiceSelect: {fileID: 8300000, guid: cba748cc1314b6f48bdb209c24da1ca4, type: 3}
@@ -35,4 +38,4 @@ MonoBehaviour:
   voiceDestroy60: {fileID: 8300000, guid: 6dc947d82bfdb014f8e657d14e18d59e, type: 3}
   voiceBossDamaged: {fileID: 8300000, guid: 13f37a0575451624eb7423bf5851cb26, type: 3}
   voiceBossAttack: {fileID: 8300000, guid: 8aed893d4487bc846b479b9e932fcddd, type: 3}
-  description: "\u82B1\u306E\u529B\u3067\u5B88\u8B77\u3059\u308B\u91D1\u9AEA\u306E\u821E\u59EB\u3002\u8FFD\u52A0\u30C0\u30E1\u30FC\u30B8+2\uFF06\u5965\u7FA9\u3067\u30B9\u30C8\u30C3\u30AF+2\u56DE\u5FA9\uFF01"
+  description: "花の力で守護する金髪の舞姫。追加ダメージ+2＆奥義でストック+2回復＋12秒間ダメージ+50%！"

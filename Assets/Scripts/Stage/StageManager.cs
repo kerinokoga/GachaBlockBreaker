@@ -318,11 +318,11 @@ public class StageManager : MonoBehaviour
         float spacingY = 0.55f;
 
         // ブロック種別パターン（行ごと）
-        // 0:Normal 1:Durable 2:Explosion 3:Chain
+        // 0:Normal 1:Durable 4:Speed（爆発・連鎖は廃止）
         int[,] pattern = {
             { 0, 0, 1, 0, 0 }, // 行1: 通常×4 + 耐久×1
-            { 0, 2, 0, 2, 0 }, // 行2: 爆発ブロック2個
-            { 3, 3, 3, 3, 3 }, // 行3: 連鎖ブロック5個
+            { 0, 1, 0, 1, 0 }, // 行2: 耐久ブロック2個
+            { 0, 4, 0, 4, 0 }, // 行3: 加速ブロック2個
         };
 
         for (int row = 0; row < pattern.GetLength(0); row++)

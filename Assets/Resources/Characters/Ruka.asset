@@ -21,9 +21,12 @@ MonoBehaviour:
   passiveType2: 0
   passiveValue2: 0
   ultimateType: 1
-  ultimateValue: 3
-  ultimateDuration: 30
+  ultimateValue: 2.2
+  ultimateDuration: 10
   ultimateGaugeCost: 10
+  ultimateType2: 3
+  ultimateValue2: 1
+  ultimateDuration2: 0
   voiceVolumeMultiplier: 1
   voiceTitle: {fileID: 8300000, guid: a15490933634b4642a0cc2e182ac7e5b, type: 3}
   voiceSelect: {fileID: 8300000, guid: 67f181011a1699549986c848d741716d, type: 3}
@@ -35,4 +38,4 @@ MonoBehaviour:
   voiceDestroy60: {fileID: 8300000, guid: 489903ef6cabba943a5fcc78dca22263, type: 3}
   voiceBossDamaged: {fileID: 8300000, guid: a0c6d042a0e84494ba3bb12121f3c3bb, type: 3}
   voiceBossAttack: {fileID: 8300000, guid: 13efa576f989d4d46b81833a30653bff, type: 3}
-  description: "\u9EC4\u660F\u306E\u5973\u5E1D\u3002\u8FFD\u52A0\u30C0\u30E1\u30FC\u30B8+2\uFF06\u5965\u7FA9\u306730\u79D2\u9593\u30C0\u30E1\u30FC\u30B82.5\u500D\uFF01"
+  description: "黄昏の女帝。追加ダメージ+2＆奥義で10秒間ダメージ+120%＋ストック+1回復！"
