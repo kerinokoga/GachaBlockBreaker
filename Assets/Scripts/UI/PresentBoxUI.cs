@@ -317,11 +317,16 @@ public class PresentBoxUI : MonoBehaviour
             new Vector2(0.4f, 0.75f), new Vector2(500f, 50f));
         contentTxt.alignment = TextAnchor.MiddleLeft;
 
-        // 備考テキスト
+        // 備考テキスト（アイコン〜受取ボタンの間いっぱいに確保し、
+        // 収まらない長文は1行のまま自動縮小して見切れを防ぐ）
         var msgTxt = MakeText(rowGo.transform, present.message, 32,
             new Color(0.7f, 0.7f, 0.85f),
-            new Vector2(0.4f, 0.47f), new Vector2(500f, 42f));
+            new Vector2(0.47f, 0.47f), new Vector2(640f, 42f));
         msgTxt.alignment = TextAnchor.MiddleLeft;
+        msgTxt.horizontalOverflow = HorizontalWrapMode.Wrap;
+        msgTxt.resizeTextForBestFit = true;
+        msgTxt.resizeTextMinSize = 20;
+        msgTxt.resizeTextMaxSize = 32;
 
         // 期限テキスト
         string expireStr = "期限: " + present.expireDate;
