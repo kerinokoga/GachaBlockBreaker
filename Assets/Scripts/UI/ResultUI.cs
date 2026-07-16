@@ -231,9 +231,22 @@ public class ResultUI : MonoBehaviour
                 new Vector2(0.5f, 0.555f), new Vector2(700f, 60f));
 
             // 全国順位（非同期取得）
+            // 順位は「今回のスコアと自己ベストの大きい方」＝ランキング登録値を基準にする
+            // （今回が自己ベスト未満だと、DB上の自分のベストに追い越された順位が出てしまうため）
+            int rankScore = Mathf.Max(ResultData.EndlessScore,
+                PlayerPrefs.GetInt("GachaBlock_EndlessBest", 0));
+
             var rankT = MakeText(canvasRoot, "全国順位: 取得中...",
                 36, Color.white, new Vector2(0.5f, 0.475f), new Vector2(800f, 55f));
-            RankingManager.GetEndlessMyRank(ResultData.EndlessScore, (rank, total) =>
+
+            // スコア0＝ランキング未登録。順位を計算すると「4位/3人中」のような
+            // 矛盾表記になるため、案内文だけ表示して問い合わせない
+            if (rankScore <= 0)
+            {
+                rankT.text = "1ステージ突破で全国ランキングに登録されます";
+                rankT.color = new Color(0.6f, 0.6f, 0.7f);
+            }
+            else RankingManager.GetEndlessMyRank(rankScore, (rank, total) =>
             {
                 if (rankT == null) return;
                 if (rank <= 0)
@@ -243,10 +256,11 @@ public class ResultUI : MonoBehaviour
                     return;
                 }
                 string totalPart = total > 0 ? $" / {total}人中" : "";
-                string pctPart = total > 0
-                    ? $"（上位 {Mathf.Clamp((float)rank / total * 100f, 0.1f, 100f):0.#}%）"
-                    : "";
-                rankT.text = $"全国 {rank}位{totalPart} {pctPart}";
+                // 「上位◯%」は上位半分に入っているときだけ表示
+                // （最下位に「上位100%」と出るのは日本語として不自然なため）
+                float pct = total > 0 ? Mathf.Clamp((float)rank / total * 100f, 0.1f, 100f) : 100f;
+                string pctPart = (total > 0 && pct <= 50f) ? $"（上位 {pct:0.#}%）" : "";
+                rankT.text = $"全国 {rank}位{totalPart} {pctPart}".TrimEnd();
             });
         }
         else

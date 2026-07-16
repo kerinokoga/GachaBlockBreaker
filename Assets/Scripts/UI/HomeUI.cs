@@ -509,11 +509,11 @@ public class HomeUI : MonoBehaviour
             });
         }
 
-        // ユーザー情報（右上）
-        string userName = AuthManager.GetName();
-        if (!string.IsNullOrEmpty(userName))
+        // プレイヤー名（右上）。未設定なら何も表示しない
+        // （メールアドレス表示は連携後に露出するため廃止。連携状態はポップアップ内で確認可）
+        if (PlayerNameManager.HasName)
         {
-            var nameT = MakeText(cGo.transform, userName, 24,
+            var nameT = MakeText(cGo.transform, PlayerNameManager.GetName(), 24,
                 new Color(0.7f, 0.95f, 1f), new Vector2(0.72f, 0.96f), new Vector2(400f, 30f));
             AddShadow(nameT.gameObject);
         }

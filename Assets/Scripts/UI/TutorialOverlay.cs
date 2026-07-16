@@ -124,11 +124,16 @@ public class TutorialOverlay : MonoBehaviour
         bubbleText.color = new Color(0.15f, 0.05f, 0.3f, 1f);
         bubbleText.alignment = TextAnchor.MiddleCenter;
         // 漢字・かなを同じフォントで揃えるため共通フォントを使用
-        bubbleText.font = UIFont.Main; bubbleText.verticalOverflow = VerticalWrapMode.Overflow;
+        bubbleText.font = UIFont.Main;
         bubbleText.fontStyle = FontStyle.Bold;
         bubbleText.raycastTarget = false;
         bubbleText.horizontalOverflow = HorizontalWrapMode.Wrap;
-        bubbleText.verticalOverflow = VerticalWrapMode.Overflow;
+        // 長文説明が吹き出しからはみ出さないよう、枠に収まるまで自動縮小する
+        // （画面比率やフォントの行高差ではみ出す端末があるため Overflow は使わない）
+        bubbleText.verticalOverflow = VerticalWrapMode.Truncate;
+        bubbleText.resizeTextForBestFit = true;
+        bubbleText.resizeTextMinSize = 20;
+        bubbleText.resizeTextMaxSize = 40;
         bubbleText.lineSpacing = 1.15f;
         var txtRt = txtGo.GetComponent<RectTransform>();
         txtRt.anchorMin = Vector2.zero; txtRt.anchorMax = Vector2.one;
