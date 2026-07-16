@@ -255,6 +255,14 @@ public class BallController : MonoBehaviour
         rb.velocity = Vector2.zero;
         SetPenetrate(false);
         EndCritical();
+        // 透明化パルスの「透明フェーズ」で待機・非表示にされると、
+        // コルーチンが止まったまま alpha=0 が残り、復活時に見えなくなるため必ず戻す
+        if (sr != null && sr.color.a < 1f)
+        {
+            var c = sr.color;
+            c.a = 1f;
+            sr.color = c;
+        }
     }
 
     /// <summary>
@@ -466,6 +474,22 @@ public class BallController : MonoBehaviour
     private Coroutine transparencyCoroutine;
     private float transparencyRemaining = 0f; // 残り時間（継承判定用）
     private float transparencyInterval  = 1f;
+
+    /// <summary>
+    /// 非アクティブ化でコルーチンが止まっても透明のままにならないよう復帰させる。
+    /// （オリジナルボールがクローン生存中に落ちて SetActive(false) される場合など）
+    /// </summary>
+    void OnDisable()
+    {
+        transparencyCoroutine = null;
+        transparencyRemaining = 0f;
+        if (sr != null && sr.color.a < 1f)
+        {
+            var c = sr.color;
+            c.a = 1f;
+            sr.color = c;
+        }
+    }
 
     /// <summary>外部参照用：現在アクティブな透明化パルスが残っていれば true</summary>
     public bool IsTransparencyActive => transparencyRemaining > 0f;
