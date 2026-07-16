@@ -2,6 +2,7 @@ using System;
 using UnityEngine;
 using UnityEngine.Purchasing;
 using UnityEngine.Purchasing.Extension;
+using UnityEngine.Purchasing.Security;
 using Unity.Services.Core;
 
 /// <summary>
@@ -9,8 +10,8 @@ using Unity.Services.Core;
 /// - 商品はすべて消費型（オーブ）
 /// - Editor ではフェイクストアで動作（購入ダイアログが出て常に成功させられる）
 /// - 実機（Google Play）では Play Console に同じ productId の商品登録が必要
-/// - 受け取り検証（Receipt Validation）は Play Console 発行の公開鍵が必要なため
-///   ストア登録後に追加する（TODO）
+/// - 受け取り検証（Receipt Validation）は実機のみ実行。
+///   Play Console の公開鍵を難読化した GooglePlayTangle を使用する。
 /// </summary>
 public static class IAPManager
 {
@@ -196,8 +197,19 @@ public static class IAPManager
 
         public PurchaseProcessingResult ProcessPurchase(PurchaseEventArgs args)
         {
-            // TODO: ストア公開後に Receipt Validation（CrossPlatformValidator）を追加
             string id = args.purchasedProduct.definition.id;
+
+            // レシート検証（実機のみ。改ざん・別アプリのレシート流用を弾く）
+            if (!ValidateReceipt(args.purchasedProduct))
+            {
+                Debug.LogWarning($"[IAP] レシート検証に失敗したため付与しません: {id}");
+                var failCb = pendingCallback;
+                pendingCallback = null;
+                failCb?.Invoke(false, "購入の確認ができませんでした");
+                // Complete を返して取引を閉じる（Pending のままだと毎回再通知されるため）
+                return PurchaseProcessingResult.Complete;
+            }
+
             GrantProduct(id);
 
             // アプリ起動時に届く保留購入（pendingCallback == null）でも付与だけは行われる
@@ -206,6 +218,57 @@ public static class IAPManager
             cb?.Invoke(true, "購入が完了しました");
 
             return PurchaseProcessingResult.Complete;
+        }
+
+        /// <summary>
+        /// レシートの署名を検証する。
+        /// Editor / フェイクストアは検証対象外（常に true）。
+        /// 検証機構を用意できない環境でも購入をブロックしないよう、例外時のみ true 側に倒す。
+        /// </summary>
+        static bool ValidateReceipt(Product product)
+        {
+#if UNITY_EDITOR
+            return true;
+#else
+            if (product == null || string.IsNullOrEmpty(product.receipt)) return false;
+
+            try
+            {
+                var validator = new CrossPlatformValidator(
+                    GooglePlayTangle.Data(), null, Application.identifier);
+                var results = validator.Validate(product.receipt);
+
+                // 検証済みレシートに購入した商品IDが含まれているか確認
+                foreach (var r in results)
+                {
+                    if (r.productID == product.definition.id)
+                    {
+                        Debug.Log($"[IAP] レシート検証OK: {r.productID} ({r.purchaseDate})");
+                        return true;
+                    }
+                }
+                Debug.LogWarning($"[IAP] レシート内に該当商品なし: {product.definition.id}");
+                return false;
+            }
+            catch (IAPSecurityException e)
+            {
+                // 署名不正・改ざんの疑い → 付与しない
+                Debug.LogWarning($"[IAP] レシート検証NG（不正の疑い）: {e.Message}");
+                return false;
+            }
+            catch (NotImplementedException)
+            {
+                // 未対応ストア（Amazon 等）では検証不可 → 購入自体は通す
+                Debug.Log("[IAP] このストアはレシート検証に未対応のためスキップ");
+                return true;
+            }
+            catch (Exception e)
+            {
+                // 想定外の例外で正規購入を弾かないよう通す（サーバー検証は将来課題）
+                Debug.LogWarning($"[IAP] レシート検証で例外: {e.Message}");
+                return true;
+            }
+#endif
         }
 
         public void OnPurchaseFailed(Product product, PurchaseFailureReason reason)
