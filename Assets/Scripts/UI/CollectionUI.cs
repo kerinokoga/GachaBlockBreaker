@@ -124,8 +124,12 @@ public class CollectionUI : MonoBehaviour
     // ============================================================
 
     /// <summary>エンドレスギャラリーの一覧ポップアップを開く</summary>
+    // ギャラリーセルのサムネイル参照（初ダウンロード完了時にセルへ即反映するため）
+    readonly Dictionary<string, RawImage> galleryThumbs = new Dictionary<string, RawImage>();
+
     void ShowEndlessGallery()
     {
+        galleryThumbs.Clear();
         var overlay = new GameObject("EndlessGalleryOverlay");
         overlay.transform.SetParent(canvasRoot, false);
         overlay.AddComponent<Image>().color = new Color(0.03f, 0.02f, 0.1f, 0.98f);
@@ -249,20 +253,29 @@ public class CollectionUI : MonoBehaviour
         rt.anchoredPosition = new Vector2(x, -y);
         rt.sizeDelta = new Vector2(cell, cell);
 
-        // サムネイル（解放済み＆キャッシュ済みの画像セルのみ、非同期で表示）
-        if (unlocked && !isKisekae && file != null && EndlessGalleryManager.IsCached(file))
+        // サムネイル枠（解放済みの画像セルは常に作成し、初ダウンロード時にも即反映できるようにする）
+        if (unlocked && !isKisekae && file != null)
         {
             var thumbGo = new GameObject("Thumb");
             thumbGo.transform.SetParent(go.transform, false);
             var raw = thumbGo.AddComponent<RawImage>();
-            raw.color = Color.white;
+            raw.color = Color.clear; // テクスチャが入るまで非表示
+            raw.raycastTarget = false;
             var trt = thumbGo.GetComponent<RectTransform>();
             trt.anchorMin = Vector2.zero; trt.anchorMax = Vector2.one;
             trt.offsetMin = new Vector2(6f, 6f); trt.offsetMax = new Vector2(-6f, -6f);
-            StartCoroutine(EndlessGalleryManager.LoadImage(file, tex =>
-            {
-                if (raw != null && tex != null) raw.texture = tex;
-            }));
+            galleryThumbs[file] = raw;
+
+            // キャッシュ済みなら即読み込み（未キャッシュはタップ閲覧後に反映される）
+            if (EndlessGalleryManager.IsCached(file))
+                StartCoroutine(EndlessGalleryManager.LoadImage(file, tex =>
+                {
+                    if (raw != null && tex != null)
+                    {
+                        raw.texture = tex;
+                        raw.color = Color.white;
+                    }
+                }));
         }
 
         // ラベル（体数）
@@ -349,6 +362,12 @@ public class CollectionUI : MonoBehaviour
                 raw.texture = tex;
                 raw.color = Color.white;
                 fitter.aspectRatio = (float)tex.width / tex.height;
+            }
+            // 初ダウンロード時、一覧のセルにもサムネイルを即反映
+            if (galleryThumbs.TryGetValue(file, out var cellThumb) && cellThumb != null)
+            {
+                cellThumb.texture = tex;
+                cellThumb.color = Color.white;
             }
         }));
     }
