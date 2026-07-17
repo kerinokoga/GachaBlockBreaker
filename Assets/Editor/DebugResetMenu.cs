@@ -11,7 +11,7 @@ public static class DebugResetMenu
     public static void UnlockAll()
     {
         if (!EditorUtility.DisplayDialog("全解放デバッグ",
-            "全ステージクリア・全キャラ所持＋覚醒・エンドレス累計100体撃破 の状態にします。\n" +
+            "全ステージクリア・全キャラ所持＋覚醒・エンドレス累計100体＆自己ベスト100体 の状態にします。\n" +
             "（きせかえ等の解放条件テスト用）実行しますか？",
             "実行する", "キャンセル"))
             return;
@@ -32,9 +32,11 @@ public static class DebugResetMenu
             PlayerPrefs.SetInt($"GachaBlock_Awakened_{n}", 1);
         }
 
-        // エンドレス累計100体撃破
+        // エンドレス累計100体撃破＋自己ベスト100体（きせかえバリアントの解放条件）
         if (PlayerPrefs.GetInt("GachaBlock_EndlessTotalKills", 0) < 100)
             PlayerPrefs.SetInt("GachaBlock_EndlessTotalKills", 100);
+        if (PlayerPrefs.GetInt("GachaBlock_EndlessBest", 0) < 100)
+            PlayerPrefs.SetInt("GachaBlock_EndlessBest", 100);
 
         PlayerPrefs.Save();
         Debug.Log($"[Debug] 全解放完了: ステージ{ProgressManager.TotalStages} / キャラ{allChars.Length}体 / エンドレス100体");
