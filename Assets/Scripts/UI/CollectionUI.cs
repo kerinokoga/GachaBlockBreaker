@@ -124,12 +124,14 @@ public class CollectionUI : MonoBehaviour
     // ============================================================
 
     /// <summary>エンドレスギャラリーの一覧ポップアップを開く</summary>
-    // ギャラリーセルのサムネイル参照（初ダウンロード完了時にセルへ即反映するため）
+    // ギャラリーセルのサムネイル・ラベル参照（初ダウンロード完了時にセルへ即反映するため）
     readonly Dictionary<string, RawImage> galleryThumbs = new Dictionary<string, RawImage>();
+    readonly Dictionary<string, Text> galleryLabels = new Dictionary<string, Text>();
 
     void ShowEndlessGallery()
     {
         galleryThumbs.Clear();
+        galleryLabels.Clear();
         var overlay = new GameObject("EndlessGalleryOverlay");
         overlay.transform.SetParent(canvasRoot, false);
         overlay.AddComponent<Image>().color = new Color(0.03f, 0.02f, 0.1f, 0.98f);
@@ -278,12 +280,18 @@ public class CollectionUI : MonoBehaviour
                 }));
         }
 
-        // ラベル（体数）
+        // ラベル（体数）。解放済みで未ダウンロードの画像セルは案内文を添える
+        // （サムネイル表示後は体数のみに戻す）
+        bool awaitingTap = unlocked && !isKisekae && file != null
+            && !EndlessGalleryManager.IsCached(file);
         var t = new GameObject("Label").AddComponent<Text>();
         t.transform.SetParent(go.transform, false);
-        t.text = unlocked ? (isKisekae ? $"{label}\nきせかえ" : label)
-                          : $"{label}\n未解放";
-        t.fontSize = unlocked ? 26 : 24;
+        t.text = unlocked
+            ? (isKisekae ? $"{label}\nきせかえ"
+               : awaitingTap ? $"{label}\n解放済み\nタップで表示" : label)
+            : $"{label}\n未解放";
+        t.fontSize = awaitingTap ? 22 : (unlocked ? 26 : 24);
+        if (unlocked && !isKisekae && file != null) galleryLabels[file] = t;
         t.color = unlocked ? Color.white : new Color(0.5f, 0.5f, 0.6f);
         t.alignment = TextAnchor.MiddleCenter;
         t.font = UIFont.Main; t.verticalOverflow = VerticalWrapMode.Overflow;
@@ -363,11 +371,16 @@ public class CollectionUI : MonoBehaviour
                 raw.color = Color.white;
                 fitter.aspectRatio = (float)tex.width / tex.height;
             }
-            // 初ダウンロード時、一覧のセルにもサムネイルを即反映
+            // 初ダウンロード時、一覧のセルにもサムネイルを即反映（案内文は体数のみに戻す）
             if (galleryThumbs.TryGetValue(file, out var cellThumb) && cellThumb != null)
             {
                 cellThumb.texture = tex;
                 cellThumb.color = Color.white;
+            }
+            if (galleryLabels.TryGetValue(file, out var cellLabel) && cellLabel != null)
+            {
+                cellLabel.text = label;
+                cellLabel.fontSize = 26;
             }
         }));
     }
