@@ -14,9 +14,9 @@ using System.IO;
 /// </summary>
 public static class EndlessGalleryManager
 {
-    // 配信元URLベース（公式サイトの GitHub Pages から配信。追加はリポジトリへの push のみ）
-    // 将来規模が大きくなったら Cloudflare R2 等のCDNへ移行し、このURLを差し替える
-    public const string StorageBase = "https://kerinogame.com/gallery/";
+    // Firebase Storage（gallery/ フォルダ・公開読み取り）の配信URLベース
+    public const string StorageBase =
+        "https://firebasestorage.googleapis.com/v0/b/gachablockbreaker.firebasestorage.app/o/gallery%2F";
 
     /// <summary>
     /// 累計撃破のマイルストーン（1, 5, 10, 以降は10刻みで500まで＝計52箇所）。
@@ -60,7 +60,7 @@ public static class EndlessGalleryManager
 
     public static bool IsCached(string file) => File.Exists(CachePath(file));
 
-    public static string Url(string file) => StorageBase + file;
+    public static string Url(string file) => StorageBase + file + "?alt=media";
 
     /// <summary>
     /// 画像を取得する。キャッシュ済みなら即時、無ければダウンロードして保存。
