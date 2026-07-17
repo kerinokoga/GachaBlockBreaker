@@ -45,6 +45,43 @@ public static class HomeCharManager
     public static bool HasVideo(string charName)
         => Resources.Load<VideoClip>($"Movies/Home/{charName}") != null;
 
+    // ---- バリアントきせかえ（自己ベスト報酬の特別動画） ----
+    // 選択キーには "アカリ_dance" のようにファイル名をそのまま保存する
+    // （GetHomeClip は Movies/Home/{選択キー} を読むため追加処理なしで再生される）
+
+    /// <summary>バリアント定義: 表示名・動画ファイル名・必要自己ベスト・ベースキャラ</summary>
+    public struct Variant
+    {
+        public string baseChar;   // 所持＋覚醒チェック用のキャラ名
+        public string fileName;   // Movies/Home/ 配下のファイル名（選択キーにもなる）
+        public string label;      // きせかえ一覧での表示名
+        public int requiredBest;  // 必要な自己ベスト（1ランの最高撃破数）
+    }
+
+    public static readonly Variant[] Variants =
+    {
+        new Variant { baseChar = "アカリ", fileName = "アカリ_dance",
+                      label = "アカリ（ダンス）", requiredBest = 10 },
+        new Variant { baseChar = "アカリ", fileName = "アカリ_swim",
+                      label = "アカリ（水着）", requiredBest = 20 },
+    };
+
+    /// <summary>自己ベスト（1ランの最高撃破数）</summary>
+    public static int GetEndlessBest() => PlayerPrefs.GetInt("GachaBlock_EndlessBest", 0);
+
+    /// <summary>バリアントが解放済みか（ベースキャラ覚醒＋自己ベスト到達）</summary>
+    public static bool IsVariantUnlocked(Variant v)
+        => OrbManager.IsAwakened(v.baseChar) && GetEndlessBest() >= v.requiredBest;
+
+    /// <summary>バリアントの解放条件文</summary>
+    public static string VariantConditionText(Variant v)
+    {
+        int best = GetEndlessBest();
+        if (best < v.requiredBest)
+            return $"覚醒＋エンドレス自己ベスト{v.requiredBest}体で解放（現在{best}体）";
+        return $"覚醒＋エンドレス自己ベスト{v.requiredBest}体で解放";
+    }
+
     // ---- 解放条件 ----
 
     /// <summary>そのキャラをホームに設定できるか</summary>

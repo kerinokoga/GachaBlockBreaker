@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
+using System.Collections;
 using System.Collections.Generic;
 
 /// <summary>
@@ -100,17 +101,277 @@ public class CollectionUI : MonoBehaviour
         MakeLine(canvasRoot, new Vector2(0.5f, 0.915f), new Vector2(700f, 3f),
             new Color(1f, 0.85f, 0.4f, 0.5f));
 
-        // ほーむ ボタン（スタイル付き）
+        // ほーむ ボタン＋エンドレスギャラリーボタン（下部に2つ並べる）
         MakeStyledButton(canvasRoot, "ホーム", new Color(0.25f, 0.15f, 0.45f),
             new Color(0.5f, 0.3f, 0.9f, 0.35f),
-            new Vector2(0.5f, 0.06f), new Vector2(360f, 80f),
+            new Vector2(0.28f, 0.06f), new Vector2(360f, 80f),
             () => SceneManager.LoadScene("HomeScene"));
+
+        MakeStyledButton(canvasRoot, "エンドレスギャラリー", new Color(0.45f, 0.2f, 0.4f),
+            new Color(0.9f, 0.4f, 0.7f, 0.4f),
+            new Vector2(0.72f, 0.06f), new Vector2(420f, 80f),
+            ShowEndlessGallery);
 
         // ScrollRect
         BuildScrollList(canvasRoot);
 
         // ギャラリーパネル（初期非表示）
         BuildGalleryPanel();
+    }
+
+    // ============================================================
+    // エンドレスギャラリー（撃破報酬イラストの閲覧）
+    // ============================================================
+
+    /// <summary>エンドレスギャラリーの一覧ポップアップを開く</summary>
+    void ShowEndlessGallery()
+    {
+        var overlay = new GameObject("EndlessGalleryOverlay");
+        overlay.transform.SetParent(canvasRoot, false);
+        overlay.AddComponent<Image>().color = new Color(0.03f, 0.02f, 0.1f, 0.98f);
+        var ort = overlay.GetComponent<RectTransform>();
+        ort.anchorMin = Vector2.zero; ort.anchorMax = Vector2.one;
+        ort.offsetMin = ort.offsetMax = Vector2.zero;
+
+        var title = MakeText(overlay.transform, "エンドレスギャラリー", 46,
+            new Color(1f, 0.85f, 0.1f), new Vector2(0.5f, 0.945f), new Vector2(900f, 64f));
+        AddShadow(title.gameObject, new Color(0f, 0f, 0f, 0.7f), new Vector2(2f, -2f));
+
+        var info = MakeText(overlay.transform,
+            $"累計撃破: {EndlessGalleryManager.TotalKills}体　自己ベスト: {EndlessGalleryManager.BestScore}体",
+            28, new Color(0.75f, 0.8f, 0.95f), new Vector2(0.5f, 0.9f), new Vector2(900f, 40f));
+
+        // スクロールリスト
+        var scrollGo = new GameObject("GalleryScroll");
+        scrollGo.transform.SetParent(overlay.transform, false);
+        var scrollRT = scrollGo.AddComponent<RectTransform>();
+        scrollRT.anchorMin = new Vector2(0.03f, 0.12f);
+        scrollRT.anchorMax = new Vector2(0.97f, 0.87f);
+        scrollRT.offsetMin = scrollRT.offsetMax = Vector2.zero;
+        var sr = scrollGo.AddComponent<ScrollRect>();
+        sr.horizontal = false;
+        sr.scrollSensitivity = 40f;
+
+        var vpGo = new GameObject("Viewport");
+        vpGo.transform.SetParent(scrollGo.transform, false);
+        vpGo.AddComponent<Image>().color = Color.white;
+        vpGo.AddComponent<Mask>().showMaskGraphic = false;
+        var vpRT = vpGo.GetComponent<RectTransform>();
+        vpRT.anchorMin = Vector2.zero; vpRT.anchorMax = Vector2.one;
+        vpRT.offsetMin = vpRT.offsetMax = Vector2.zero;
+
+        var contentGo = new GameObject("Content");
+        contentGo.transform.SetParent(vpGo.transform, false);
+        var contentRT = contentGo.AddComponent<RectTransform>();
+        contentRT.anchorMin = new Vector2(0f, 1f);
+        contentRT.anchorMax = new Vector2(1f, 1f);
+        contentRT.pivot = new Vector2(0.5f, 1f);
+        contentRT.anchoredPosition = Vector2.zero;
+        sr.content = contentRT;
+        sr.viewport = vpRT;
+
+        // ---- セル配置（5列グリッド） ----
+        const float cell = 180f, gap = 22f;
+        float y = 20f;
+
+        y = AddGalleryHeader(contentGo.transform, "◆ 累計撃破報酬", y);
+        int ti = 0;
+        foreach (int n in EndlessGalleryManager.TotalMilestones)
+        {
+            int col = ti % 5;
+            if (col == 0 && ti > 0) y += cell + gap;
+            BuildGalleryCell(contentGo.transform,
+                EndlessGalleryManager.TotalFile(n), $"{n}体",
+                EndlessGalleryManager.IsTotalUnlocked(n), false,
+                $"累計{n}体で解放", col, y, cell, gap);
+            ti++;
+        }
+        y += cell + gap + 30f;
+
+        y = AddGalleryHeader(contentGo.transform, "◆ 自己ベスト報酬（1ランの最高記録）", y);
+        int bi = 0;
+        foreach (int m in EndlessGalleryManager.BestMilestones)
+        {
+            int col = bi % 5;
+            if (col == 0 && bi > 0) y += cell + gap;
+            bool isKisekae = EndlessGalleryManager.IsKisekaeMilestone(m);
+            BuildGalleryCell(contentGo.transform,
+                isKisekae ? null : EndlessGalleryManager.BestFile(m),
+                $"{m}体", EndlessGalleryManager.IsBestUnlocked(m), isKisekae,
+                $"自己ベスト{m}体で解放", col, y, cell, gap);
+            bi++;
+        }
+        y += cell + gap + 20f;
+
+        contentRT.sizeDelta = new Vector2(0f, y);
+
+        // とじる
+        MakeStyledButton(overlay.transform, "とじる", new Color(0.25f, 0.25f, 0.35f),
+            new Color(0.45f, 0.45f, 0.6f, 0.6f),
+            new Vector2(0.5f, 0.055f), new Vector2(300f, 76f),
+            () => Destroy(overlay));
+    }
+
+    /// <summary>ギャラリーのセクション見出しを配置し、次のY位置を返す</summary>
+    float AddGalleryHeader(Transform parent, string text, float y)
+    {
+        var t = new GameObject("Header").AddComponent<Text>();
+        t.transform.SetParent(parent, false);
+        t.text = text; t.fontSize = 30; t.color = new Color(1f, 0.8f, 0.3f);
+        t.alignment = TextAnchor.MiddleLeft;
+        t.font = UIFont.Main; t.verticalOverflow = VerticalWrapMode.Overflow;
+        var rt = t.GetComponent<RectTransform>();
+        rt.anchorMin = new Vector2(0f, 1f); rt.anchorMax = new Vector2(1f, 1f);
+        rt.pivot = new Vector2(0.5f, 1f);
+        rt.anchoredPosition = new Vector2(0f, -y);
+        rt.sizeDelta = new Vector2(-20f, 44f);
+        return y + 56f;
+    }
+
+    /// <summary>
+    /// ギャラリーの1セル。解放済みはタップで拡大表示（キャッシュ済みならサムネも出す）。
+    /// isKisekae のセルは画像ではなく「きせかえ報酬」の案内。
+    /// </summary>
+    void BuildGalleryCell(Transform parent, string file, string label,
+        bool unlocked, bool isKisekae, string lockText, int col, float y, float cell, float gap)
+    {
+        var go = new GameObject($"Cell_{label}");
+        go.transform.SetParent(parent, false);
+        var img = go.AddComponent<Image>();
+        img.color = unlocked
+            ? (isKisekae ? new Color(0.45f, 0.25f, 0.4f, 0.95f) : new Color(0.2f, 0.16f, 0.38f, 0.95f))
+            : new Color(0.09f, 0.08f, 0.14f, 0.9f);
+        UISprites.Button(img);
+        var rt = go.GetComponent<RectTransform>();
+        rt.anchorMin = new Vector2(0f, 1f); rt.anchorMax = new Vector2(0f, 1f);
+        rt.pivot = new Vector2(0f, 1f);
+        float x = gap + col * (cell + gap);
+        rt.anchoredPosition = new Vector2(x, -y);
+        rt.sizeDelta = new Vector2(cell, cell);
+
+        // サムネイル（解放済み＆キャッシュ済みの画像セルのみ、非同期で表示）
+        if (unlocked && !isKisekae && file != null && EndlessGalleryManager.IsCached(file))
+        {
+            var thumbGo = new GameObject("Thumb");
+            thumbGo.transform.SetParent(go.transform, false);
+            var raw = thumbGo.AddComponent<RawImage>();
+            raw.color = Color.white;
+            var trt = thumbGo.GetComponent<RectTransform>();
+            trt.anchorMin = Vector2.zero; trt.anchorMax = Vector2.one;
+            trt.offsetMin = new Vector2(6f, 6f); trt.offsetMax = new Vector2(-6f, -6f);
+            StartCoroutine(EndlessGalleryManager.LoadImage(file, tex =>
+            {
+                if (raw != null && tex != null) raw.texture = tex;
+            }));
+        }
+
+        // ラベル（体数）
+        var t = new GameObject("Label").AddComponent<Text>();
+        t.transform.SetParent(go.transform, false);
+        t.text = unlocked ? (isKisekae ? $"{label}\nきせかえ" : label)
+                          : $"{label}\n未解放";
+        t.fontSize = unlocked ? 26 : 24;
+        t.color = unlocked ? Color.white : new Color(0.5f, 0.5f, 0.6f);
+        t.alignment = TextAnchor.MiddleCenter;
+        t.font = UIFont.Main; t.verticalOverflow = VerticalWrapMode.Overflow;
+        var lrt = t.GetComponent<RectTransform>();
+        lrt.anchorMin = Vector2.zero; lrt.anchorMax = Vector2.one;
+        lrt.offsetMin = lrt.offsetMax = Vector2.zero;
+        var sh = t.gameObject.AddComponent<Shadow>();
+        sh.effectColor = new Color(0f, 0f, 0f, 0.85f);
+        sh.effectDistance = new Vector2(2f, -2f);
+
+        // タップ動作
+        var btn = go.AddComponent<Button>();
+        if (unlocked && !isKisekae && file != null)
+        {
+            string capturedFile = file;
+            string capturedLabel = label;
+            btn.onClick.AddListener(() => ShowGalleryImage(capturedFile, capturedLabel));
+        }
+        else if (unlocked && isKisekae)
+        {
+            btn.onClick.AddListener(() => ShowGalleryNotice("きせかえはホーム画面の\nきせかえボタンから設定できます"));
+        }
+        else
+        {
+            string capturedLock = lockText;
+            btn.onClick.AddListener(() => ShowGalleryNotice(capturedLock));
+        }
+    }
+
+    /// <summary>フルスクリーンのイラスト表示（必要ならダウンロード）</summary>
+    void ShowGalleryImage(string file, string label)
+    {
+        var viewer = new GameObject("GalleryViewer");
+        viewer.transform.SetParent(canvasRoot, false);
+        viewer.AddComponent<Image>().color = new Color(0f, 0f, 0f, 0.97f);
+        var vrt = viewer.GetComponent<RectTransform>();
+        vrt.anchorMin = Vector2.zero; vrt.anchorMax = Vector2.one;
+        vrt.offsetMin = vrt.offsetMax = Vector2.zero;
+        // 画面タップで閉じる
+        var closeBtn = viewer.AddComponent<Button>();
+        closeBtn.transition = Selectable.Transition.None;
+        closeBtn.onClick.AddListener(() => Destroy(viewer));
+
+        var status = MakeText(viewer.transform, "ダウンロード中...", 32,
+            new Color(0.8f, 0.8f, 0.9f), new Vector2(0.5f, 0.5f), new Vector2(600f, 50f));
+
+        var imgGo = new GameObject("Img");
+        imgGo.transform.SetParent(viewer.transform, false);
+        var raw = imgGo.AddComponent<RawImage>();
+        raw.color = Color.clear;
+        raw.raycastTarget = false;
+        var irt = imgGo.GetComponent<RectTransform>();
+        irt.anchorMin = new Vector2(0.02f, 0.06f);
+        irt.anchorMax = new Vector2(0.98f, 0.94f);
+        irt.offsetMin = irt.offsetMax = Vector2.zero;
+        var fitter = imgGo.AddComponent<AspectRatioFitter>();
+        fitter.aspectMode = AspectRatioFitter.AspectMode.FitInParent;
+
+        var cap = MakeText(viewer.transform, $"エンドレスギャラリー {label}", 28,
+            new Color(0.9f, 0.9f, 1f), new Vector2(0.5f, 0.97f), new Vector2(800f, 40f));
+        var hint = MakeText(viewer.transform, "タップで閉じる", 24,
+            new Color(0.6f, 0.6f, 0.7f), new Vector2(0.5f, 0.03f), new Vector2(500f, 36f));
+
+        StartCoroutine(EndlessGalleryManager.LoadImage(file, tex =>
+        {
+            if (viewer == null) return;
+            if (tex == null)
+            {
+                if (status != null)
+                    status.text = "取得できませんでした\n通信環境を確認してもう一度お試しください";
+                return;
+            }
+            if (status != null) status.gameObject.SetActive(false);
+            if (raw != null)
+            {
+                raw.texture = tex;
+                raw.color = Color.white;
+                fitter.aspectRatio = (float)tex.width / tex.height;
+            }
+        }));
+    }
+
+    /// <summary>ギャラリー内の小さな通知（ロック条件など）</summary>
+    void ShowGalleryNotice(string message)
+    {
+        var notice = new GameObject("GalleryNotice");
+        notice.transform.SetParent(canvasRoot, false);
+        var bg = notice.AddComponent<Image>();
+        bg.color = new Color(0.08f, 0.05f, 0.18f, 0.97f);
+        UISprites.Button(bg);
+        var nrt = notice.GetComponent<RectTransform>();
+        nrt.anchorMin = nrt.anchorMax = new Vector2(0.5f, 0.5f);
+        nrt.anchoredPosition = Vector2.zero;
+        nrt.sizeDelta = new Vector2(760f, 220f);
+
+        var t = MakeText(notice.transform, message, 30, Color.white,
+            new Vector2(0.5f, 0.5f), new Vector2(700f, 160f));
+
+        var btn = notice.AddComponent<Button>();
+        btn.onClick.AddListener(() => Destroy(notice));
+        Destroy(notice, 2.5f); // 放置でも自動で消える
     }
 
     void BuildScrollList(Transform root)

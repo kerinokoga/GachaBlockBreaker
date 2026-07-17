@@ -239,6 +239,20 @@ public class ResultUI : MonoBehaviour
             var rankT = MakeText(canvasRoot, "全国順位: 取得中...",
                 36, Color.white, new Vector2(0.5f, 0.475f), new Vector2(800f, 55f));
 
+            // ギャラリー・きせかえの新規解放通知
+            int newKisekae;
+            int newImages = EndlessGalleryManager.ConsumeNewUnlocks(out newKisekae);
+            if (newImages > 0 || newKisekae > 0)
+            {
+                string unlockMsg = "";
+                if (newImages > 0) unlockMsg += $"新しいイラストを{newImages}枚解放！";
+                if (newKisekae > 0) unlockMsg += (unlockMsg == "" ? "" : "\n") + "新しいきせかえを解放！";
+                var unlockT = MakeText(canvasRoot, "🎁 " + unlockMsg,
+                    34, new Color(1f, 0.6f, 0.85f),
+                    new Vector2(0.5f, 0.41f), new Vector2(800f, 80f));
+                AddShadow(unlockT.gameObject);
+            }
+
             // スコア0＝ランキング未登録。順位を計算すると「4位/3人中」のような
             // 矛盾表記になるため、案内文だけ表示して問い合わせない
             if (rankScore <= 0)

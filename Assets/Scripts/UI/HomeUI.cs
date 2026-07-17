@@ -1543,6 +1543,24 @@ public class HomeUI : MonoBehaviour
                 rowIndex++, rowH, padY);
         }
 
+        // ---- バリアントきせかえ（自己ベスト報酬の特別動画） ----
+        foreach (var v in HomeCharManager.Variants)
+        {
+            bool vUnlocked = OrbManager.IsOwned(v.baseChar) && HomeCharManager.IsVariantUnlocked(v);
+            bool vHasVideo = HomeCharManager.HasVideo(v.fileName);
+            bool vSelected = selected == v.fileName;
+            string vFile = v.fileName;
+
+            string vLabel = $"★ {v.label}";
+            string vSub = vUnlocked
+                ? (vHasVideo ? "" : "アニメ準備中")
+                : HomeCharManager.VariantConditionText(v);
+
+            BuildHomeCharRow(contentRt, vLabel, vUnlocked && vHasVideo, vSelected,
+                vSub, () => { HomeCharManager.SetSelected(vFile); SceneManager.LoadScene("HomeScene"); },
+                rowIndex++, rowH, padY);
+        }
+
         contentRt.sizeDelta = new Vector2(0f, rowIndex * (rowH + padY) + padY);
 
         // とじる
