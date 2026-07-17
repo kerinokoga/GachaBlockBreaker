@@ -559,6 +559,13 @@ public class ResultUI : MonoBehaviour
         return t;
     }
 
+    void AddShadow(GameObject go)
+    {
+        var s = go.AddComponent<Shadow>();
+        s.effectColor = new Color(0f, 0f, 0f, 0.6f);
+        s.effectDistance = new Vector2(2f, -2f);
+    }
+
     void MakeImage(Transform parent, Color col, Vector2 anchorMin, Vector2 anchorMax)
     {
         var go = new GameObject("BG");
