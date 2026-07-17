@@ -114,6 +114,37 @@ public static class EndlessGalleryManager
         }
     }
 
+    /// <summary>
+    /// 汎用ファイルダウンロード（きせかえ動画等）。保存先に書き込み、成否を返す。
+    /// </summary>
+    public static IEnumerator DownloadFile(string url, string savePath, Action<bool> onDone)
+    {
+        using (var req = UnityWebRequest.Get(url))
+        {
+            req.timeout = 60;
+            yield return req.SendWebRequest();
+
+            if (req.result != UnityWebRequest.Result.Success)
+            {
+                Debug.LogWarning($"[Gallery] ファイルDL失敗 {url}: {req.error}");
+                onDone?.Invoke(false);
+                yield break;
+            }
+            try
+            {
+                Directory.CreateDirectory(Path.GetDirectoryName(savePath));
+                File.WriteAllBytes(savePath, req.downloadHandler.data);
+            }
+            catch (Exception e)
+            {
+                Debug.LogWarning($"[Gallery] ファイル保存失敗: {e.Message}");
+                onDone?.Invoke(false);
+                yield break;
+            }
+            onDone?.Invoke(true);
+        }
+    }
+
     // ---- 新規解放の検知（リザルト通知用） ----
 
     const string KeySeenTotal = "GachaBlock_GallerySeenTotal";

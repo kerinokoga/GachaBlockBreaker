@@ -704,9 +704,15 @@ public class HomeUI : MonoBehaviour
     /// </summary>
     void SetupHomeBgMovie(Transform parent)
     {
-        // きせかえで選択されたキャラの動画（無ければデフォルトのセラ）
-        var clip = HomeCharManager.GetHomeClip();
-        if (clip == null) return;
+        // 配信きせかえ（キャッシュ済みURL）→ 同梱きせかえ → デフォルト の順で解決
+        string streamUrl;
+        bool useUrl = HomeCharManager.TryGetHomeVideoUrl(out streamUrl);
+        VideoClip clip = null;
+        if (!useUrl)
+        {
+            clip = HomeCharManager.GetHomeClip();
+            if (clip == null) return;
+        }
 
         var go = new GameObject("BGMovie");
         go.transform.SetParent(parent, false);
@@ -720,19 +726,37 @@ public class HomeUI : MonoBehaviour
         // 静止背景（preserveAspect）と同じく、アスペクト比を保って画面内に収める
         var fitter = go.AddComponent<AspectRatioFitter>();
         fitter.aspectMode = AspectRatioFitter.AspectMode.FitInParent;
-        fitter.aspectRatio = (float)clip.width / clip.height;
 
-        homeBgTexture = new RenderTexture((int)clip.width, (int)clip.height, 0);
         var vp = go.AddComponent<VideoPlayer>();
         vp.playOnAwake = false;
         vp.renderMode = VideoRenderMode.RenderTexture;
-        vp.targetTexture = homeBgTexture;
         vp.audioOutputMode = VideoAudioOutputMode.None;
         vp.isLooping = false;
-        vp.clip = clip;
+
+        if (useUrl)
+        {
+            // 配信動画: サイズは Prepare 完了後に確定する
+            vp.source = VideoSource.Url;
+            vp.url = streamUrl;
+        }
+        else
+        {
+            fitter.aspectRatio = (float)clip.width / clip.height;
+            homeBgTexture = new RenderTexture((int)clip.width, (int)clip.height, 0);
+            vp.targetTexture = homeBgTexture;
+            vp.clip = clip;
+        }
+
         vp.prepareCompleted += p =>
         {
             if (raw == null) return;
+            if (homeBgTexture == null)
+            {
+                // URL再生時はここで実サイズが分かる
+                homeBgTexture = new RenderTexture((int)p.width, (int)p.height, 0);
+                p.targetTexture = homeBgTexture;
+                fitter.aspectRatio = (float)p.width / p.height;
+            }
             raw.texture = homeBgTexture;
             raw.color = Color.white;
             p.Play();
@@ -1547,18 +1571,21 @@ public class HomeUI : MonoBehaviour
         foreach (var v in HomeCharManager.Variants)
         {
             bool vUnlocked = OrbManager.IsOwned(v.baseChar) && HomeCharManager.IsVariantUnlocked(v);
-            bool vHasVideo = HomeCharManager.HasVideo(v.fileName);
+            // 同梱はResources存在チェック、配信は常に利用可能（選択時にDL）
+            bool vHasVideo = v.streamed || HomeCharManager.HasVideo(v.fileName);
             bool vSelected = selected == v.fileName;
-            string vFile = v.fileName;
+            var vCopy = v;
 
             string vLabel = $"★ {v.label}";
-            string vSub = vUnlocked
-                ? (vHasVideo ? "" : "アニメ準備中")
-                : HomeCharManager.VariantConditionText(v);
+            string vSub;
+            if (!vUnlocked) vSub = HomeCharManager.VariantConditionText(v);
+            else if (!vHasVideo) vSub = "アニメ準備中";
+            else if (v.streamed && !HomeCharManager.IsVariantCached(v.fileName))
+                vSub = "選択するとダウンロードします（約2MB）";
+            else vSub = "";
 
             BuildHomeCharRow(contentRt, vLabel, vUnlocked && vHasVideo, vSelected,
-                vSub, () => { HomeCharManager.SetSelected(vFile); SceneManager.LoadScene("HomeScene"); },
-                rowIndex++, rowH, padY);
+                vSub, () => SelectVariant(vCopy), rowIndex++, rowH, padY);
         }
 
         contentRt.sizeDelta = new Vector2(0f, rowIndex * (rowH + padY) + padY);
@@ -1567,6 +1594,49 @@ public class HomeUI : MonoBehaviour
         MakeSettingsItem(dialog.transform, "とじる", 0.055f,
             new Color(0.25f, 0.25f, 0.35f), new Color(0.45f, 0.45f, 0.6f, 0.6f),
             () => Destroy(overlay));
+    }
+
+    /// <summary>
+    /// バリアントきせかえを選択する。
+    /// 配信タイプで未キャッシュならダウンロードしてから適用する。
+    /// </summary>
+    void SelectVariant(HomeCharManager.Variant v)
+    {
+        if (!v.streamed || HomeCharManager.IsVariantCached(v.fileName))
+        {
+            HomeCharManager.SetSelected(v.fileName);
+            SceneManager.LoadScene("HomeScene");
+            return;
+        }
+
+        // ダウンロード中の簡易オーバーレイ
+        var dlOverlay = new GameObject("VariantDLOverlay");
+        dlOverlay.transform.SetParent(canvasRoot, false);
+        dlOverlay.AddComponent<Image>().color = new Color(0f, 0f, 0f, 0.85f);
+        var dort = dlOverlay.GetComponent<RectTransform>();
+        dort.anchorMin = Vector2.zero; dort.anchorMax = Vector2.one;
+        dort.offsetMin = dort.offsetMax = Vector2.zero;
+        var dlText = MakeText(dlOverlay.transform, $"{v.label} をダウンロード中...", 32,
+            Color.white, new Vector2(0.5f, 0.5f), new Vector2(800f, 50f));
+
+        string file = v.fileName;
+        StartCoroutine(EndlessGalleryManager.DownloadFile(
+            HomeCharManager.VariantUrl(file),
+            HomeCharManager.VariantCachePath(file),
+            ok =>
+            {
+                if (ok)
+                {
+                    HomeCharManager.SetSelected(file);
+                    SceneManager.LoadScene("HomeScene");
+                }
+                else
+                {
+                    if (dlText != null)
+                        dlText.text = "ダウンロードに失敗しました\n通信環境を確認してもう一度お試しください";
+                    if (dlOverlay != null) Destroy(dlOverlay, 2.5f);
+                }
+            }));
     }
 
     /// <summary>きせかえ一覧の1行を生成する</summary>

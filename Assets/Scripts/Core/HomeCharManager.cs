@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.Video;
+using System.IO;
 
 /// <summary>
 /// ホーム画面きせかえ（背景キャラアニメ変更）の管理。
@@ -53,18 +54,71 @@ public static class HomeCharManager
     public struct Variant
     {
         public string baseChar;   // 所持＋覚醒チェック用のキャラ名
-        public string fileName;   // Movies/Home/ 配下のファイル名（選択キーにもなる）
+        public string fileName;   // 選択キー。同梱ならResources/Movies/Home/のファイル名、配信なら配信ファイル名
         public string label;      // きせかえ一覧での表示名
         public int requiredBest;  // 必要な自己ベスト（1ランの最高撃破数）
+        public bool streamed;     // true = Firebase Storageから配信（初回選択時にDL＆キャッシュ）
     }
 
     public static readonly Variant[] Variants =
     {
+        // アプリ同梱（容量が小さいため）
         new Variant { baseChar = "アカリ", fileName = "アカリ_dance",
                       label = "アカリ（ダンス）", requiredBest = 10 },
         new Variant { baseChar = "アカリ", fileName = "アカリ_swim",
                       label = "アカリ（水着）", requiredBest = 20 },
+        // 配信（アプリ容量200MB制限のためStorageからDL。ファイル名は英字）
+        new Variant { baseChar = "アカリ", fileName = "akari_robe",
+                      label = "アカリ（白ローブ）", requiredBest = 30, streamed = true },
+        new Variant { baseChar = "セラ", fileName = "sera_bunny",
+                      label = "セラ（バニー）", requiredBest = 40, streamed = true },
+        new Variant { baseChar = "アカリ", fileName = "akari_bikini",
+                      label = "アカリ（ビキニ）", requiredBest = 50, streamed = true },
+        new Variant { baseChar = "ルカ", fileName = "ruka_bunny",
+                      label = "ルカ（バニー）", requiredBest = 60, streamed = true },
+        new Variant { baseChar = "ノア", fileName = "noa_dance",
+                      label = "ノア（ダンス）", requiredBest = 70, streamed = true },
+        new Variant { baseChar = "ルカ", fileName = "ruka_robe",
+                      label = "ルカ（白ローブ）", requiredBest = 80, streamed = true },
+        new Variant { baseChar = "リコ", fileName = "riko_bunny",
+                      label = "リコ（バニー）", requiredBest = 90, streamed = true },
+        new Variant { baseChar = "ナナ", fileName = "nana_bunny",
+                      label = "ナナ（バニーダンス）", requiredBest = 100, streamed = true },
     };
+
+    // ---- 配信バリアントのダウンロード・キャッシュ ----
+
+    /// <summary>配信バリアント動画のローカルキャッシュパス</summary>
+    public static string VariantCachePath(string fileName) =>
+        Path.Combine(Application.persistentDataPath, "kisekae", fileName + ".mp4");
+
+    public static bool IsVariantCached(string fileName) =>
+        File.Exists(VariantCachePath(fileName));
+
+    /// <summary>配信バリアント動画のダウンロードURL（ギャラリーと同じStorageのgallery/配下）</summary>
+    public static string VariantUrl(string fileName) =>
+        EndlessGalleryManager.StorageBase + fileName + ".mp4?alt=media";
+
+    /// <summary>
+    /// 選択中が配信バリアントでキャッシュ済みなら、そのファイルURLを返す。
+    /// （VideoPlayer は VideoClip ではなく URL 再生を使う）
+    /// </summary>
+    public static bool TryGetHomeVideoUrl(out string url)
+    {
+        url = null;
+        string sel = GetSelected();
+        if (string.IsNullOrEmpty(sel)) return false;
+        foreach (var v in Variants)
+        {
+            if (v.fileName == sel && v.streamed)
+            {
+                string path = VariantCachePath(sel);
+                if (File.Exists(path)) { url = path; return true; }
+                return false; // 未キャッシュ（デフォルト動画にフォールバック）
+            }
+        }
+        return false;
+    }
 
     /// <summary>自己ベスト（1ランの最高撃破数）</summary>
     public static int GetEndlessBest() => PlayerPrefs.GetInt("GachaBlock_EndlessBest", 0);
