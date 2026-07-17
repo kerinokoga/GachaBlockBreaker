@@ -630,6 +630,30 @@ public class HomeUI : MonoBehaviour
             var dbgTrt = dbgTxtGo.GetComponent<RectTransform>();
             dbgTrt.anchorMin = Vector2.zero; dbgTrt.anchorMax = Vector2.one;
             dbgTrt.offsetMin = dbgTrt.offsetMax = Vector2.zero;
+
+            // デバッグ: 全解放ボタン（+オーブの下。実機での解放条件テスト用）
+            var unlGo = new GameObject("DebugUnlockBtn");
+            unlGo.transform.SetParent(cGo.transform, false);
+            unlGo.AddComponent<Image>().color = new Color(0.1f, 0.3f, 0.6f, 0.85f);
+            var unlBtn = unlGo.AddComponent<Button>();
+            var unlRt = unlGo.GetComponent<RectTransform>();
+            unlRt.anchorMin = unlRt.anchorMax = new Vector2(0.92f, 0.855f);
+            unlRt.anchoredPosition = Vector2.zero;
+            unlRt.sizeDelta = new Vector2(130f, 50f);
+            unlBtn.onClick.AddListener(() =>
+            {
+                DebugUnlock.UnlockAll();
+                SceneManager.LoadScene("HomeScene"); // 表示更新
+            });
+            var unlTxtGo = new GameObject("Txt");
+            unlTxtGo.transform.SetParent(unlGo.transform, false);
+            var unlT = unlTxtGo.AddComponent<Text>();
+            unlT.text = "全解放"; unlT.fontSize = 22; unlT.color = Color.white;
+            unlT.alignment = TextAnchor.MiddleCenter;
+            unlT.font = UIFont.Main; unlT.verticalOverflow = VerticalWrapMode.Overflow;
+            var unlTrt = unlTxtGo.GetComponent<RectTransform>();
+            unlTrt.anchorMin = Vector2.zero; unlTrt.anchorMax = Vector2.one;
+            unlTrt.offsetMin = unlTrt.offsetMax = Vector2.zero;
         }
 
         // エンドレス初回チャレンジ報酬の告知（解放済み＆本日未挑戦の日のみ）
