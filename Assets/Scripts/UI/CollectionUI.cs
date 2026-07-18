@@ -204,7 +204,7 @@ public class CollectionUI : MonoBehaviour
             BuildGalleryCell(contentGo.transform,
                 isKisekae ? null : EndlessGalleryManager.BestFile(m),
                 $"{m}体", EndlessGalleryManager.IsBestUnlocked(m), isKisekae,
-                $"自己ベスト{m}体で解放", col, y, cell, gap);
+                $"自己ベスト{m}体で解放", col, y, cell, gap, isKisekae ? m : 0);
             bi++;
         }
         y += cell + gap + 20f;
@@ -323,7 +323,8 @@ public class CollectionUI : MonoBehaviour
     /// isKisekae のセルは画像ではなく「きせかえ報酬」の案内。
     /// </summary>
     void BuildGalleryCell(Transform parent, string file, string label,
-        bool unlocked, bool isKisekae, string lockText, int col, float y, float cell, float gap)
+        bool unlocked, bool isKisekae, string lockText, int col, float y, float cell, float gap,
+        int kisekaeBest = 0)
     {
         var go = new GameObject($"Cell_{label}");
         go.transform.SetParent(parent, false);
@@ -371,10 +372,10 @@ public class CollectionUI : MonoBehaviour
         var t = new GameObject("Label").AddComponent<Text>();
         t.transform.SetParent(go.transform, false);
         t.text = unlocked
-            ? (isKisekae ? $"{label}\nきせかえ"
+            ? (isKisekae ? $"{label}\nきせかえ\nタップで再生"
                : awaitingTap ? $"{label}\n解放済み\nタップで表示" : label)
             : $"{label}\n未解放";
-        t.fontSize = awaitingTap ? 22 : (unlocked ? 26 : 24);
+        t.fontSize = (awaitingTap || (unlocked && isKisekae)) ? 22 : (unlocked ? 26 : 24);
         if (unlocked && !isKisekae && file != null) galleryLabels[file] = t;
         t.color = unlocked ? Color.white : new Color(0.5f, 0.5f, 0.6f);
         t.alignment = TextAnchor.MiddleCenter;
@@ -396,7 +397,8 @@ public class CollectionUI : MonoBehaviour
         }
         else if (unlocked && isKisekae)
         {
-            btn.onClick.AddListener(() => ShowGalleryNotice("きせかえはホーム画面の\nきせかえボタンから設定できます"));
+            int capturedBest = kisekaeBest;
+            btn.onClick.AddListener(() => ShowKisekaeVideo(capturedBest));
         }
         else
         {
@@ -467,6 +469,120 @@ public class CollectionUI : MonoBehaviour
                 cellLabel.fontSize = 26;
             }
         }));
+    }
+
+    /// <summary>
+    /// きせかえ動画のフルスクリーン再生（解放済みセル用）。
+    /// 配信タイプで未DLならその場でダウンロードしてから再生する
+    /// </summary>
+    void ShowKisekaeVideo(int best)
+    {
+        // マイルストーンに対応するバリアントを検索
+        HomeCharManager.Variant v = default;
+        bool found = false;
+        foreach (var vv in HomeCharManager.Variants)
+            if (vv.requiredBest == best) { v = vv; found = true; break; }
+        if (!found)
+        {
+            ShowGalleryNotice("このきせかえは準備中です");
+            return;
+        }
+
+        var viewer = new GameObject("KisekaeViewer");
+        viewer.transform.SetParent(canvasRoot, false);
+        viewer.AddComponent<Image>().color = new Color(0f, 0f, 0f, 0.97f);
+        var vrt = viewer.GetComponent<RectTransform>();
+        vrt.anchorMin = Vector2.zero; vrt.anchorMax = Vector2.one;
+        vrt.offsetMin = vrt.offsetMax = Vector2.zero;
+
+        var status = MakeText(viewer.transform, "読み込み中...", 32,
+            new Color(0.8f, 0.8f, 0.9f), new Vector2(0.5f, 0.5f), new Vector2(600f, 90f));
+
+        var imgGo = new GameObject("Img");
+        imgGo.transform.SetParent(viewer.transform, false);
+        var raw = imgGo.AddComponent<RawImage>();
+        raw.color = Color.clear;
+        raw.raycastTarget = false;
+        var irt = imgGo.GetComponent<RectTransform>();
+        irt.anchorMin = new Vector2(0.02f, 0.06f);
+        irt.anchorMax = new Vector2(0.98f, 0.94f);
+        irt.offsetMin = irt.offsetMax = Vector2.zero;
+        var fitter = imgGo.AddComponent<AspectRatioFitter>();
+        fitter.aspectMode = AspectRatioFitter.AspectMode.FitInParent;
+
+        MakeText(viewer.transform, $"きせかえ {v.label}", 28,
+            new Color(0.9f, 0.9f, 1f), new Vector2(0.5f, 0.97f), new Vector2(800f, 40f));
+        MakeText(viewer.transform, "タップで閉じる", 24,
+            new Color(0.6f, 0.6f, 0.7f), new Vector2(0.5f, 0.03f), new Vector2(500f, 36f));
+
+        var vp = viewer.AddComponent<UnityEngine.Video.VideoPlayer>();
+        vp.playOnAwake = false;
+        vp.renderMode = UnityEngine.Video.VideoRenderMode.RenderTexture;
+        vp.audioOutputMode = UnityEngine.Video.VideoAudioOutputMode.None;
+        vp.isLooping = true;
+
+        RenderTexture rtex = null;
+        vp.prepareCompleted += p =>
+        {
+            if (viewer == null || raw == null) return;
+            rtex = new RenderTexture((int)p.width, (int)p.height, 0);
+            p.targetTexture = rtex;
+            raw.texture = rtex;
+            raw.color = Color.white;
+            fitter.aspectRatio = (float)p.width / p.height;
+            if (status != null) status.gameObject.SetActive(false);
+            p.Play();
+        };
+
+        // 画面タップで閉じる（RenderTextureも解放）
+        var closeBtn = viewer.AddComponent<Button>();
+        closeBtn.transition = Selectable.Transition.None;
+        closeBtn.onClick.AddListener(() =>
+        {
+            vp.Stop();
+            if (rtex != null) { rtex.Release(); Destroy(rtex); }
+            Destroy(viewer);
+        });
+
+        void StartPlay()
+        {
+            if (v.streamed)
+            {
+                vp.source = UnityEngine.Video.VideoSource.Url;
+                vp.url = HomeCharManager.VariantCachePath(v.fileName);
+            }
+            else
+            {
+                var clip = Resources.Load<UnityEngine.Video.VideoClip>($"Movies/Home/{v.fileName}");
+                if (clip == null)
+                {
+                    if (status != null) status.text = "動画が見つかりません";
+                    return;
+                }
+                vp.clip = clip;
+            }
+            vp.Prepare();
+        }
+
+        if (v.streamed && !HomeCharManager.IsVariantCached(v.fileName))
+        {
+            status.text = $"{v.label} をダウンロード中...";
+            StartCoroutine(EndlessGalleryManager.DownloadFile(
+                HomeCharManager.VariantUrl(v.fileName),
+                HomeCharManager.VariantCachePath(v.fileName),
+                ok =>
+                {
+                    if (viewer == null) return;
+                    if (!ok)
+                    {
+                        if (status != null)
+                            status.text = "取得できませんでした\n通信環境を確認してもう一度お試しください";
+                        return;
+                    }
+                    StartPlay();
+                }));
+        }
+        else StartPlay();
     }
 
     /// <summary>ギャラリー内の小さな通知（ロック条件など）</summary>
