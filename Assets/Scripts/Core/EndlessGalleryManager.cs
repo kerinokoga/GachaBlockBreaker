@@ -156,23 +156,38 @@ public static class EndlessGalleryManager
     /// <summary>
     /// 前回確認時から新しく解放された報酬（イラスト＋きせかえ）の件数を返し、確認済みとして記録する。
     /// エンドレスのリザルト表示時に呼ぶ。
+    /// newImageFiles / newKisekaeBests を渡すと、新規解放の内訳も受け取れる
     /// </summary>
-    public static int ConsumeNewUnlocks(out int newKisekae)
+    public static int ConsumeNewUnlocks(out int newKisekae,
+        System.Collections.Generic.List<string> newImageFiles = null,
+        System.Collections.Generic.List<int> newKisekaeBests = null)
     {
         int seenTotal = PlayerPrefs.GetInt(KeySeenTotal, 0);
         int seenBest  = PlayerPrefs.GetInt(KeySeenBest, 0);
 
         int count = 0;
         foreach (int m in TotalMilestones)
-            if (TotalKills >= m && seenTotal < m) count++;
+            if (TotalKills >= m && seenTotal < m)
+            {
+                count++;
+                newImageFiles?.Add(TotalFile(m));
+            }
 
         newKisekae = 0;
         foreach (int m in BestMilestones)
         {
             if (BestScore >= m && seenBest < m)
             {
-                if (IsKisekaeMilestone(m)) newKisekae++;
-                else count++;
+                if (IsKisekaeMilestone(m))
+                {
+                    newKisekae++;
+                    newKisekaeBests?.Add(m);
+                }
+                else
+                {
+                    count++;
+                    newImageFiles?.Add(BestFile(m));
+                }
             }
         }
 
@@ -180,5 +195,31 @@ public static class EndlessGalleryManager
         PlayerPrefs.SetInt(KeySeenBest, BestScore);
         PlayerPrefs.Save();
         return count;
+    }
+
+    // ---- 未確認バッジ（ギャラリーを開くまで表示） ----
+
+    const string KeyViewTotal = "GachaBlock_GalleryViewTotal";
+    const string KeyViewBest  = "GachaBlock_GalleryViewBest";
+
+    /// <summary>ギャラリーでまだ確認していない解放済み報酬の数（バッジ表示用）</summary>
+    public static int UnseenRewardCount()
+    {
+        int vt = PlayerPrefs.GetInt(KeyViewTotal, 0);
+        int vb = PlayerPrefs.GetInt(KeyViewBest, 0);
+        int count = 0;
+        foreach (int m in TotalMilestones)
+            if (TotalKills >= m && vt < m) count++;
+        foreach (int m in BestMilestones)
+            if (BestScore >= m && vb < m) count++;
+        return count;
+    }
+
+    /// <summary>エンドレスギャラリーを開いたときに呼ぶ（バッジを消す）</summary>
+    public static void MarkRewardsSeen()
+    {
+        PlayerPrefs.SetInt(KeyViewTotal, TotalKills);
+        PlayerPrefs.SetInt(KeyViewBest, BestScore);
+        PlayerPrefs.Save();
     }
 }

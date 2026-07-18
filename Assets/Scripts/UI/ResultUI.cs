@@ -239,9 +239,12 @@ public class ResultUI : MonoBehaviour
             var rankT = MakeText(canvasRoot, "全国順位: 取得中...",
                 36, Color.white, new Vector2(0.5f, 0.475f), new Vector2(800f, 55f));
 
-            // ギャラリー・きせかえの新規解放通知
+            // ギャラリー・きせかえの新規解放通知（解放イラストのサムネイル付き）
             int newKisekae;
-            int newImages = EndlessGalleryManager.ConsumeNewUnlocks(out newKisekae);
+            var newImgFiles = new System.Collections.Generic.List<string>();
+            var newKiseBests = new System.Collections.Generic.List<int>();
+            int newImages = EndlessGalleryManager.ConsumeNewUnlocks(
+                out newKisekae, newImgFiles, newKiseBests);
             if (newImages > 0 || newKisekae > 0)
             {
                 string unlockMsg = "";
@@ -251,6 +254,51 @@ public class ResultUI : MonoBehaviour
                     34, new Color(1f, 0.6f, 0.85f),
                     new Vector2(0.5f, 0.41f), new Vector2(800f, 80f));
                 AddShadow(unlockT.gameObject);
+
+                // 解放されたイラスト・きせかえのサムネイルを最大5枚並べる
+                var thumbFiles = new System.Collections.Generic.List<string>();
+                foreach (var f in newImgFiles)
+                    thumbFiles.Add(EndlessGalleryManager.ThumbFile(f));
+                foreach (int b in newKiseBests)
+                    if (HomeCharManager.TryGetVariantByBest(b, out var kv)
+                        && !string.IsNullOrEmpty(kv.thumb))
+                        thumbFiles.Add(kv.thumb);
+
+                int show = Mathf.Min(5, thumbFiles.Count);
+                const float thumbW = 100f, thumbH = 178f, thumbGap = 12f;
+                float rowW = show * thumbW + (show - 1) * thumbGap;
+                for (int i = 0; i < show; i++)
+                {
+                    var tGo = new GameObject("UnlockThumb");
+                    tGo.transform.SetParent(canvasRoot, false);
+                    var rawT = tGo.AddComponent<RawImage>();
+                    rawT.color = new Color(1f, 1f, 1f, 0.12f); // 読み込みまでは薄枠
+                    rawT.raycastTarget = false;
+                    var trt = tGo.GetComponent<RectTransform>();
+                    trt.anchorMin = trt.anchorMax = new Vector2(0.5f, 0.315f);
+                    trt.anchoredPosition =
+                        new Vector2(-rowW / 2f + thumbW / 2f + i * (thumbW + thumbGap), 0f);
+                    trt.sizeDelta = new Vector2(thumbW, thumbH);
+                    StartCoroutine(EndlessGalleryManager.LoadImage(thumbFiles[i], tex =>
+                    {
+                        if (rawT == null || tex == null) return;
+                        rawT.texture = tex;
+                        rawT.color = Color.white;
+                        // 枠(9:16)に合わせてクロップ（横長のきせかえサムネは中央、縦長は上端基準）
+                        float ta = (float)tex.width / tex.height, ca = thumbW / thumbH;
+                        rawT.uvRect = ta >= ca
+                            ? new Rect((1f - ca / ta) / 2f, 0f, ca / ta, 1f)
+                            : new Rect(0f, 1f - ta / ca, 1f, ta / ca);
+                    }));
+                }
+                if (thumbFiles.Count > show)
+                {
+                    var moreT = MakeText(canvasRoot, $"+{thumbFiles.Count - show}", 32,
+                        Color.white, new Vector2(0.5f, 0.315f), new Vector2(90f, 50f));
+                    moreT.GetComponent<RectTransform>().anchoredPosition =
+                        new Vector2(rowW / 2f + 50f, 0f);
+                    AddShadow(moreT.gameObject);
+                }
             }
 
             // スコア0＝ランキング未登録。順位を計算すると「4位/3人中」のような

@@ -112,6 +112,15 @@ public class CollectionUI : MonoBehaviour
             new Vector2(0.72f, 0.06f), new Vector2(420f, 80f),
             ShowEndlessGallery);
 
+        // 未確認の報酬があればバッジ表示（ギャラリーを開くと消える）
+        int unseen = EndlessGalleryManager.UnseenRewardCount();
+        if (unseen > 0)
+        {
+            var galleryBtnTr = canvasRoot.Find("エンドレスギャラリーBtnFrame");
+            if (galleryBtnTr != null)
+                galleryBadge = AddCountBadge(galleryBtnTr.gameObject, unseen);
+        }
+
         // ScrollRect
         BuildScrollList(canvasRoot);
 
@@ -149,8 +158,15 @@ public class CollectionUI : MonoBehaviour
         onDone?.Invoke(result);
     }
 
+    // エンドレスギャラリーボタンの未確認バッジ（ギャラリーを開いたら消す）
+    GameObject galleryBadge;
+
     void ShowEndlessGallery()
     {
+        // 報酬を確認済みにしてバッジを消す
+        EndlessGalleryManager.MarkRewardsSeen();
+        if (galleryBadge != null) { Destroy(galleryBadge); galleryBadge = null; }
+
         galleryThumbs.Clear();
         galleryLabels.Clear();
         var overlay = new GameObject("EndlessGalleryOverlay");
@@ -281,6 +297,31 @@ public class CollectionUI : MonoBehaviour
         rt.anchorMin = Vector2.zero; rt.anchorMax = Vector2.one;
         rt.offsetMin = new Vector2(6f, 6f); rt.offsetMax = new Vector2(-6f, -6f);
         return raw;
+    }
+
+    /// <summary>ボタン右上に赤い件数バッジを付ける（ホームのプレゼントボタンと同様式）</summary>
+    static GameObject AddCountBadge(GameObject btnGo, int count)
+    {
+        var badgeGo = new GameObject("Badge");
+        badgeGo.transform.SetParent(btnGo.transform, false);
+        badgeGo.AddComponent<Image>().color = new Color(1f, 0.15f, 0.15f, 1f);
+        var badgeRt = badgeGo.GetComponent<RectTransform>();
+        badgeRt.anchorMin = badgeRt.anchorMax = new Vector2(1f, 1f);
+        badgeRt.anchoredPosition = new Vector2(-10f, -8f);
+        badgeRt.sizeDelta = new Vector2(44f, 44f);
+
+        var badgeTxt = new GameObject("Num");
+        badgeTxt.transform.SetParent(badgeGo.transform, false);
+        var bt = badgeTxt.AddComponent<Text>();
+        bt.text = count > 99 ? "99+" : count.ToString();
+        bt.fontSize = 22; bt.color = Color.white;
+        bt.alignment = TextAnchor.MiddleCenter;
+        bt.fontStyle = FontStyle.Bold;
+        bt.font = UIFont.Main; bt.verticalOverflow = VerticalWrapMode.Overflow;
+        var btrt = badgeTxt.GetComponent<RectTransform>();
+        btrt.anchorMin = Vector2.zero; btrt.anchorMax = Vector2.one;
+        btrt.offsetMin = btrt.offsetMax = Vector2.zero;
+        return badgeGo;
     }
 
     /// <summary>ギャラリーのセクション見出しを配置し、次のY位置を返す</summary>

@@ -586,6 +586,14 @@ public class HomeUI : MonoBehaviour
             new Color(0.7f, 0.15f, 0.4f), new Color(0.9f, 0.35f, 0.55f),
             0.47f, "♡", () => SceneManager.LoadScene("CollectionScene"));
 
+        // エンドレスギャラリーに未確認の報酬があればバッジ表示（プレゼントと同様式）
+        int unseenRewards = EndlessGalleryManager.UnseenRewardCount();
+        if (unseenRewards > 0)
+        {
+            var collBtnTr = cGo.transform.Find("コレクションBtn");
+            if (collBtnTr != null) AddCountBadge(collBtnTr.gameObject, unseenRewards);
+        }
+
         // プレゼントボックスボタン（バッジ付き）
         MakePresentButton(cGo.transform, 0.395f);
 
@@ -2526,6 +2534,30 @@ public class HomeUI : MonoBehaviour
             btrt.anchorMin = Vector2.zero; btrt.anchorMax = Vector2.one;
             btrt.offsetMin = btrt.offsetMax = Vector2.zero;
         }
+    }
+
+    /// <summary>ボタン右上に赤い件数バッジを付ける（プレゼントボタンと同様式）</summary>
+    void AddCountBadge(GameObject btnGo, int count)
+    {
+        var badgeGo = new GameObject("Badge");
+        badgeGo.transform.SetParent(btnGo.transform, false);
+        badgeGo.AddComponent<Image>().color = new Color(1f, 0.15f, 0.15f, 1f);
+        var badgeRt = badgeGo.GetComponent<RectTransform>();
+        badgeRt.anchorMin = badgeRt.anchorMax = new Vector2(1f, 1f);
+        badgeRt.anchoredPosition = new Vector2(-10f, -8f);
+        badgeRt.sizeDelta = new Vector2(44f, 44f);
+
+        var badgeTxt = new GameObject("Num");
+        badgeTxt.transform.SetParent(badgeGo.transform, false);
+        var bt = badgeTxt.AddComponent<Text>();
+        bt.text = count > 99 ? "99+" : count.ToString();
+        bt.fontSize = 22; bt.color = Color.white;
+        bt.alignment = TextAnchor.MiddleCenter;
+        bt.fontStyle = FontStyle.Bold;
+        bt.font = UIFont.Main; bt.verticalOverflow = VerticalWrapMode.Overflow;
+        var btrt = badgeTxt.GetComponent<RectTransform>();
+        btrt.anchorMin = Vector2.zero; btrt.anchorMax = Vector2.one;
+        btrt.offsetMin = btrt.offsetMax = Vector2.zero;
     }
 
     // ---- ファクトリーメソッド ----
