@@ -441,7 +441,9 @@ public class HomeUI : MonoBehaviour
         // きせかえで別キャラを選択中は表示しない
         // （静止画はセラのため、動画準備中に一瞬セラが映ってしまうのを防ぐ。暗背景のまま動画を待つ）
         string homeSel = HomeCharManager.GetSelected();
-        bool usingCustomChar = !string.IsNullOrEmpty(homeSel) && HomeCharManager.HasVideo(homeSel);
+        bool usingCustomChar = !string.IsNullOrEmpty(homeSel)
+            && (HomeCharManager.HasVideo(homeSel)          // 同梱きせかえ
+                || HomeCharManager.IsVariantCached(homeSel)); // 配信きせかえ（DL済み）
         var bgSprite = usingCustomChar ? null : Resources.Load<Sprite>("Home/bg");
         if (bgSprite != null)
         {

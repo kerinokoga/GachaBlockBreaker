@@ -77,7 +77,7 @@ public static class HomeCharManager
         new Variant { baseChar = "ルカ", fileName = "ruka_bunny",
                       label = "ルカ（バニー）", requiredBest = 60, streamed = true },
         new Variant { baseChar = "ノア", fileName = "noa_dance",
-                      label = "ノア（ダンス）", requiredBest = 70, streamed = true },
+                      label = "ノア（体操着）", requiredBest = 70, streamed = true },
         new Variant { baseChar = "ルカ", fileName = "ruka_robe",
                       label = "ルカ（白ローブ）", requiredBest = 80, streamed = true },
         new Variant { baseChar = "リコ", fileName = "riko_bunny",
