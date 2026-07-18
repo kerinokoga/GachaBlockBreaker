@@ -300,18 +300,18 @@ public class CollectionUI : MonoBehaviour
         rt.anchoredPosition = new Vector2(x, -y);
         rt.sizeDelta = new Vector2(cell, cell * CellAspect);
 
-        // ラベル（体数）。解放済みで未ダウンロードの画像セルは案内文を添える。
+        // ラベル（体数）。解放済みの画像セルは読み込み完了までの表示。
         // ※サムネイル読込より先に生成する（キャッシュ済みだと読込コールバックが
         //   同期実行されるため、後から生成するとラベルを消す処理が空振りする）
-        bool awaitingTap = unlocked && !isKisekae && file != null
+        bool loading = unlocked && !isKisekae && file != null
             && !EndlessGalleryManager.IsCached(file);
         var t = new GameObject("Label").AddComponent<Text>();
         t.transform.SetParent(go.transform, false);
         t.text = unlocked
             ? (isKisekae ? $"{label}\nきせかえ\nタップで再生"
-               : awaitingTap ? $"{label}\n解放済み\nタップで表示" : label)
+               : loading ? $"{label}\n読み込み中..." : label)
             : $"{label}\n未解放";
-        t.fontSize = (awaitingTap || (unlocked && isKisekae)) ? 22 : (unlocked ? 26 : 24);
+        t.fontSize = (loading || (unlocked && isKisekae)) ? 22 : (unlocked ? 26 : 24);
         if (unlocked && !isKisekae && file != null) galleryLabels[file] = t;
         t.color = unlocked ? Color.white : new Color(0.5f, 0.5f, 0.6f);
         t.alignment = TextAnchor.MiddleCenter;
@@ -338,21 +338,27 @@ public class CollectionUI : MonoBehaviour
             }));
         }
 
-        // サムネイル枠（解放済みの画像セルは常に作成し、初ダウンロード時にも即反映できるようにする）
+        // サムネイル（解放済みの画像セルは自動で読み込む。
+        // キャッシュ済みは即表示、未取得はダウンロードして表示）
         if (unlocked && !isKisekae && file != null)
         {
             var raw = MakeCellThumbSlot(go.transform);
             galleryThumbs[file] = raw;
 
-            // キャッシュ済みなら即読み込み（未キャッシュはタップ閲覧後に反映される）
-            if (EndlessGalleryManager.IsCached(file))
-                StartCoroutine(EndlessGalleryManager.LoadImage(file, tex =>
+            string capturedLabel2 = label;
+            StartCoroutine(EndlessGalleryManager.LoadImage(file, tex =>
+            {
+                if (raw == null) return;
+                if (tex == null)
                 {
-                    if (raw == null || tex == null) return;
-                    SetCellThumb(raw, tex);
-                    // サムネイル表示中は体数ラベルを消す
-                    if (t != null) t.gameObject.SetActive(false);
-                }));
+                    // 取得失敗（オフライン等）。タップで拡大表示から再試行できる
+                    if (t != null) t.text = $"{capturedLabel2}\nタップで表示";
+                    return;
+                }
+                SetCellThumb(raw, tex);
+                // サムネイル表示中は体数ラベルを消す
+                if (t != null) t.gameObject.SetActive(false);
+            }));
         }
 
         // ラベルをサムネイルより手前に（きせかえ▶等を画像の上に表示）
@@ -392,7 +398,7 @@ public class CollectionUI : MonoBehaviour
         closeBtn.transition = Selectable.Transition.None;
         closeBtn.onClick.AddListener(() => Destroy(viewer));
 
-        var status = MakeText(viewer.transform, "ダウンロード中...", 32,
+        var status = MakeText(viewer.transform, "読み込み中...", 32,
             new Color(0.8f, 0.8f, 0.9f), new Vector2(0.5f, 0.5f), new Vector2(600f, 50f));
 
         var imgGo = new GameObject("Img");
@@ -533,7 +539,7 @@ public class CollectionUI : MonoBehaviour
             }
             if (v.streamed && !HomeCharManager.IsVariantCached(v.fileName))
             {
-                ShowGalleryNotice("ダウンロード完了までお待ちください");
+                ShowGalleryNotice("読み込み完了までお待ちください");
                 return;
             }
             HomeCharManager.SetSelected(v.fileName);
@@ -564,7 +570,7 @@ public class CollectionUI : MonoBehaviour
 
         if (v.streamed && !HomeCharManager.IsVariantCached(v.fileName))
         {
-            status.text = $"{v.label} をダウンロード中...";
+            status.text = $"{v.label} を読み込み中...";
             StartCoroutine(EndlessGalleryManager.DownloadFile(
                 HomeCharManager.VariantUrl(v.fileName),
                 HomeCharManager.VariantCachePath(v.fileName),

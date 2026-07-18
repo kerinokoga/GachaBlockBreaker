@@ -1554,7 +1554,7 @@ public class HomeUI : MonoBehaviour
                 if (!vUnlocked) vSub = HomeCharManager.VariantConditionText(v);
                 else if (!vHasVideo) vSub = "アニメ準備中";
                 else if (v.streamed && !HomeCharManager.IsVariantCached(v.fileName))
-                    vSub = "選択するとダウンロードします（約2MB）";
+                    vSub = "初回選択時に読み込みます（約2MB）";
                 else vSub = "";
 
                 BuildHomeCharRow(contentRt, $"　★ {v.label}", vUnlocked && vHasVideo,
@@ -1641,7 +1641,7 @@ public class HomeUI : MonoBehaviour
         var dort = dlOverlay.GetComponent<RectTransform>();
         dort.anchorMin = Vector2.zero; dort.anchorMax = Vector2.one;
         dort.offsetMin = dort.offsetMax = Vector2.zero;
-        var dlText = MakeText(dlOverlay.transform, $"{v.label} をダウンロード中...", 32,
+        var dlText = MakeText(dlOverlay.transform, $"{v.label} を読み込み中...", 32,
             Color.white, new Vector2(0.5f, 0.5f), new Vector2(800f, 50f));
 
         string file = v.fileName;
