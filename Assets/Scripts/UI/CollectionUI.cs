@@ -176,30 +176,32 @@ public class CollectionUI : MonoBehaviour
         sr.content = contentRT;
         sr.viewport = vpRT;
 
-        // ---- セル配置（5列グリッド） ----
-        const float cell = 180f, gap = 22f;
+        // ---- セル配置（3列グリッド・16:9セル） ----
+        const float cell = 309f, gap = 22f;
+        const int cols = 3;
+        float cellH = cell * CellAspect;
         float y = 20f;
 
         y = AddGalleryHeader(contentGo.transform, "◆ 累計撃破報酬", y);
         int ti = 0;
         foreach (int n in EndlessGalleryManager.TotalMilestones)
         {
-            int col = ti % 5;
-            if (col == 0 && ti > 0) y += cell + gap;
+            int col = ti % cols;
+            if (col == 0 && ti > 0) y += cellH + gap;
             BuildGalleryCell(contentGo.transform,
                 EndlessGalleryManager.TotalFile(n), $"{n}体",
                 EndlessGalleryManager.IsTotalUnlocked(n), false,
                 $"累計{n}体で解放", col, y, cell, gap);
             ti++;
         }
-        y += cell + gap + 30f;
+        y += cellH + gap + 30f;
 
         y = AddGalleryHeader(contentGo.transform, "◆ 自己ベスト報酬（1ランの最高記録）", y);
         int bi = 0;
         foreach (int m in EndlessGalleryManager.BestMilestones)
         {
-            int col = bi % 5;
-            if (col == 0 && bi > 0) y += cell + gap;
+            int col = bi % cols;
+            if (col == 0 && bi > 0) y += cellH + gap;
             bool isKisekae = EndlessGalleryManager.IsKisekaeMilestone(m);
             BuildGalleryCell(contentGo.transform,
                 isKisekae ? null : EndlessGalleryManager.BestFile(m),
@@ -207,7 +209,7 @@ public class CollectionUI : MonoBehaviour
                 $"自己ベスト{m}体で解放", col, y, cell, gap, isKisekae ? m : 0);
             bi++;
         }
-        y += cell + gap + 20f;
+        y += cellH + gap + 20f;
 
         contentRT.sizeDelta = new Vector2(0f, y);
 
@@ -218,18 +220,46 @@ public class CollectionUI : MonoBehaviour
             () => Destroy(overlay));
     }
 
+    // セルの縦横比（16:9）。高さ = 幅 × CellAspect
+    const float CellAspect = 9f / 16f;
+
     /// <summary>
     /// セルのサムネイルにテクスチャを設定する。
-    /// 正方形セルに合わせて中央を正方形にクロップし、縦横比の歪みを防ぐ
+    /// 16:9セルに合わせてクロップし、縦横比の歪みを防ぐ。
+    /// 縦長イラストは上端（顔側）を基準に切り抜く
     /// </summary>
     static void SetCellThumb(RawImage raw, Texture2D tex)
     {
         raw.texture = tex;
         raw.color = Color.white;
-        float a = (float)tex.width / tex.height;
-        raw.uvRect = a >= 1f
-            ? new Rect((1f - 1f / a) / 2f, 0f, 1f / a, 1f)   // 横長→左右をカット
-            : new Rect(0f, (1f - a) / 2f, 1f, a);            // 縦長→上下をカット
+        float texAspect = (float)tex.width / tex.height;   // 幅/高さ
+        float cellAspect = 16f / 9f;
+        if (texAspect >= cellAspect)
+        {
+            // セルより横長→左右を中央基準でカット
+            float w = cellAspect / texAspect;
+            raw.uvRect = new Rect((1f - w) / 2f, 0f, w, 1f);
+        }
+        else
+        {
+            // セルより縦長→上下をカット（上端＝顔側を残す）
+            float h = texAspect / cellAspect;
+            raw.uvRect = new Rect(0f, 1f - h, 1f, h);
+        }
+    }
+
+    /// <summary>セル内に全面のサムネイル枠（RawImage）を作る。テクスチャが入るまで透明</summary>
+    static RawImage MakeCellThumbSlot(Transform cellParent)
+    {
+        var go = new GameObject("Thumb");
+        go.transform.SetParent(cellParent, false);
+        var raw = go.AddComponent<RawImage>();
+        raw.color = Color.clear;
+        raw.raycastTarget = false;
+        var rt = go.GetComponent<RectTransform>();
+        rt.anchorMin = Vector2.zero; rt.anchorMax = Vector2.one;
+        rt.offsetMin = new Vector2(6f, 6f); rt.offsetMax = new Vector2(-6f, -6f);
+        return raw;
     }
 
     /// <summary>ギャラリーのセクション見出しを配置し、次のY位置を返す</summary>
@@ -268,63 +298,11 @@ public class CollectionUI : MonoBehaviour
         rt.pivot = new Vector2(0f, 1f);
         float x = gap + col * (cell + gap);
         rt.anchoredPosition = new Vector2(x, -y);
-        rt.sizeDelta = new Vector2(cell, cell);
+        rt.sizeDelta = new Vector2(cell, cell * CellAspect);
 
-        // きせかえセルのサムネイル（小さいjpgなので自動ダウンロードして表示）
-        if (unlocked && isKisekae
-            && HomeCharManager.TryGetVariantByBest(kisekaeBest, out var thumbVar)
-            && !string.IsNullOrEmpty(thumbVar.thumb))
-        {
-            var kThumbGo = new GameObject("Thumb");
-            kThumbGo.transform.SetParent(go.transform, false);
-            var kRaw = kThumbGo.AddComponent<RawImage>();
-            kRaw.color = Color.clear;
-            kRaw.raycastTarget = false;
-            var kTrt = kThumbGo.GetComponent<RectTransform>();
-            kTrt.anchorMin = Vector2.zero; kTrt.anchorMax = Vector2.one;
-            kTrt.offsetMin = new Vector2(6f, 6f); kTrt.offsetMax = new Vector2(-6f, -6f);
-            StartCoroutine(EndlessGalleryManager.LoadImage(thumbVar.thumb, tex =>
-            {
-                if (kRaw == null || tex == null) return;
-                SetCellThumb(kRaw, tex);
-                // サムネイルが出たら文字は再生マークだけに
-                var lbl = go != null ? go.transform.Find("Label") : null;
-                if (lbl != null)
-                {
-                    var lblT = lbl.GetComponent<Text>();
-                    lblT.text = "きせかえ▶";
-                    lblT.fontSize = 24;
-                }
-            }));
-        }
-
-        // サムネイル枠（解放済みの画像セルは常に作成し、初ダウンロード時にも即反映できるようにする）
-        if (unlocked && !isKisekae && file != null)
-        {
-            var thumbGo = new GameObject("Thumb");
-            thumbGo.transform.SetParent(go.transform, false);
-            var raw = thumbGo.AddComponent<RawImage>();
-            raw.color = Color.clear; // テクスチャが入るまで非表示
-            raw.raycastTarget = false;
-            var trt = thumbGo.GetComponent<RectTransform>();
-            trt.anchorMin = Vector2.zero; trt.anchorMax = Vector2.one;
-            trt.offsetMin = new Vector2(6f, 6f); trt.offsetMax = new Vector2(-6f, -6f);
-            galleryThumbs[file] = raw;
-
-            // キャッシュ済みなら即読み込み（未キャッシュはタップ閲覧後に反映される）
-            if (EndlessGalleryManager.IsCached(file))
-                StartCoroutine(EndlessGalleryManager.LoadImage(file, tex =>
-                {
-                    if (raw == null || tex == null) return;
-                    SetCellThumb(raw, tex);
-                    // サムネイル表示中は体数ラベルを消す
-                    if (galleryLabels.TryGetValue(file, out var l) && l != null)
-                        l.gameObject.SetActive(false);
-                }));
-        }
-
-        // ラベル（体数）。解放済みで未ダウンロードの画像セルは案内文を添える
-        // （サムネイル表示後は体数のみに戻す）
+        // ラベル（体数）。解放済みで未ダウンロードの画像セルは案内文を添える。
+        // ※サムネイル読込より先に生成する（キャッシュ済みだと読込コールバックが
+        //   同期実行されるため、後から生成するとラベルを消す処理が空振りする）
         bool awaitingTap = unlocked && !isKisekae && file != null
             && !EndlessGalleryManager.IsCached(file);
         var t = new GameObject("Label").AddComponent<Text>();
@@ -344,6 +322,41 @@ public class CollectionUI : MonoBehaviour
         var sh = t.gameObject.AddComponent<Shadow>();
         sh.effectColor = new Color(0f, 0f, 0f, 0.85f);
         sh.effectDistance = new Vector2(2f, -2f);
+
+        // きせかえセルのサムネイル（小さいjpgなので自動ダウンロードして表示）
+        if (unlocked && isKisekae
+            && HomeCharManager.TryGetVariantByBest(kisekaeBest, out var thumbVar)
+            && !string.IsNullOrEmpty(thumbVar.thumb))
+        {
+            var kRaw = MakeCellThumbSlot(go.transform);
+            StartCoroutine(EndlessGalleryManager.LoadImage(thumbVar.thumb, tex =>
+            {
+                if (kRaw == null || tex == null) return;
+                SetCellThumb(kRaw, tex);
+                // サムネイルが出たら文字は再生マークだけに
+                if (t != null) { t.text = "きせかえ▶"; t.fontSize = 24; }
+            }));
+        }
+
+        // サムネイル枠（解放済みの画像セルは常に作成し、初ダウンロード時にも即反映できるようにする）
+        if (unlocked && !isKisekae && file != null)
+        {
+            var raw = MakeCellThumbSlot(go.transform);
+            galleryThumbs[file] = raw;
+
+            // キャッシュ済みなら即読み込み（未キャッシュはタップ閲覧後に反映される）
+            if (EndlessGalleryManager.IsCached(file))
+                StartCoroutine(EndlessGalleryManager.LoadImage(file, tex =>
+                {
+                    if (raw == null || tex == null) return;
+                    SetCellThumb(raw, tex);
+                    // サムネイル表示中は体数ラベルを消す
+                    if (t != null) t.gameObject.SetActive(false);
+                }));
+        }
+
+        // ラベルをサムネイルより手前に（きせかえ▶等を画像の上に表示）
+        t.transform.SetAsLastSibling();
 
         // タップ動作
         var btn = go.AddComponent<Button>();
