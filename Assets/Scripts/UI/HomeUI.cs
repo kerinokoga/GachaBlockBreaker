@@ -1533,68 +1533,190 @@ public class HomeUI : MonoBehaviour
         scroll.content = contentRt;
         scroll.viewport = vpRt;
 
-        // ---- 行の生成 ----
+        // ---- 行の生成（キャラ単位。タップでそのキャラの衣装一覧へ） ----
         string selected = HomeCharManager.GetSelected();
         float rowH = 96f, padY = 10f;
         int rowIndex = 0;
 
-        // デフォルト（セラ）行（二つ名はキャラデータから取得）
+        // 現在の選択がどのキャラの衣装かを求める（""=セラのデフォルト）
+        string selOwner = "セラ";
+        if (!string.IsNullOrEmpty(selected))
+        {
+            selOwner = selected;
+            foreach (var v in HomeCharManager.Variants)
+                if (v.fileName == selected) { selOwner = v.baseChar; break; }
+        }
+
+        // そのキャラの衣装数（通常＋バリアント）
+        int CostumeCount(string charName)
+        {
+            int n = 1;
+            foreach (var v in HomeCharManager.Variants)
+                if (v.baseChar == charName) n++;
+            return n;
+        }
+        // 選択可能な衣装をひとつでも持つか（並び順用）
+        bool HasSelectable(CharacterData cd)
+        {
+            if (OrbManager.IsOwned(cd.characterName) && HomeCharManager.IsUnlocked(cd)
+                && HomeCharManager.HasVideo(cd.characterName)) return true;
+            foreach (var v in HomeCharManager.Variants)
+                if (v.baseChar == cd.characterName && HomeCharManager.IsVariantUnlocked(v))
+                    return true;
+            return false;
+        }
+
+        // セラ（デフォルト）行は常に先頭
         var seraCd = System.Array.Find(
             Resources.LoadAll<CharacterData>("Characters"), c => c.characterName == "セラ");
         string seraLabel = (seraCd != null && !string.IsNullOrEmpty(seraCd.title))
             ? $"{seraCd.title} セラ（デフォルト）" : "セラ（デフォルト）";
-        BuildHomeCharRow(contentRt, seraLabel, true, selected == "",
-            "", () => { HomeCharManager.SetSelected(""); SceneManager.LoadScene("HomeScene"); },
+        BuildCharGroupRow(contentRt, seraLabel, $"衣装{CostumeCount("セラ")}種",
+            selOwner == "セラ", () => ShowCostumePopup(seraCd, true),
             rowIndex++, rowH, padY);
 
-        // 全キャラ: 「選択できる（解放済み＋動画あり）」を先に、ロック中を後に。各グループ内はレア度の高い順
+        // 全キャラ: 選択できる衣装を持つキャラを先に、ロック中を後に。各グループ内はレア度の高い順
         var all = new List<CharacterData>(Resources.LoadAll<CharacterData>("Characters"));
+        all.RemoveAll(c => c == null || c.characterName == "セラ");
         all.Sort((a, b) =>
         {
-            bool aSel = OrbManager.IsOwned(a.characterName) && HomeCharManager.IsUnlocked(a)
-                        && HomeCharManager.HasVideo(a.characterName);
-            bool bSel = OrbManager.IsOwned(b.characterName) && HomeCharManager.IsUnlocked(b)
-                        && HomeCharManager.HasVideo(b.characterName);
+            bool aSel = HasSelectable(a), bSel = HasSelectable(b);
             if (aSel != bSel) return bSel.CompareTo(aSel); // 選択可能を前へ
             return b.rarity.CompareTo(a.rarity);
         });
         foreach (var cd in all)
         {
-            if (cd == null || cd.characterName == "セラ") continue;
+            var cdCopy = cd;
             string name = cd.characterName;
+            string dispName = string.IsNullOrEmpty(cd.title) ? name : $"{cd.title} {name}";
+            BuildCharGroupRow(contentRt, $"{dispName}（{cd.rarity}）",
+                $"衣装{CostumeCount(name)}種", selOwner == name,
+                () => ShowCostumePopup(cdCopy, false), rowIndex++, rowH, padY);
+        }
+
+        contentRt.sizeDelta = new Vector2(0f, rowIndex * (rowH + padY) + padY);
+
+        // とじる
+        MakeSettingsItem(dialog.transform, "とじる", 0.055f,
+            new Color(0.25f, 0.25f, 0.35f), new Color(0.45f, 0.45f, 0.6f, 0.6f),
+            () => Destroy(overlay));
+    }
+
+    /// <summary>
+    /// きせかえ一覧のキャラ行（タップで衣装一覧を開く）。
+    /// 現在選択中の衣装を持つキャラは「選択中」表示
+    /// </summary>
+    void BuildCharGroupRow(Transform parent, string label, string subText,
+        bool isCurrentOwner, UnityEngine.Events.UnityAction onOpen,
+        int index, float rowH, float padY)
+    {
+        var rowGo = new GameObject($"CharGroupRow_{index}");
+        rowGo.transform.SetParent(parent, false);
+        var img = rowGo.AddComponent<Image>();
+        img.color = isCurrentOwner ? new Color(0.35f, 0.2f, 0.45f, 0.95f)
+                                   : new Color(0.15f, 0.12f, 0.3f, 0.9f);
+        var rt = rowGo.GetComponent<RectTransform>();
+        rt.anchorMin = new Vector2(0f, 1f);
+        rt.anchorMax = new Vector2(1f, 1f);
+        rt.pivot = new Vector2(0.5f, 1f);
+        rt.anchoredPosition = new Vector2(0f, -(padY + index * (rowH + padY)));
+        rt.sizeDelta = new Vector2(0f, rowH);
+
+        rowGo.AddComponent<Button>().onClick.AddListener(onOpen);
+
+        var nameT = MakeText(rowGo.transform, label, 30, Color.white,
+            new Vector2(0.35f, 0.66f), new Vector2(500f, 38f));
+        nameT.alignment = TextAnchor.MiddleLeft;
+        nameT.resizeTextForBestFit = true;
+        nameT.resizeTextMinSize = 20;
+        nameT.resizeTextMaxSize = 30;
+
+        MakeText(rowGo.transform, isCurrentOwner ? "選択中 ▶" : "▶", 26,
+            isCurrentOwner ? new Color(0.5f, 1f, 0.6f) : new Color(1f, 0.85f, 0.3f),
+            new Vector2(0.87f, 0.5f), new Vector2(180f, 34f));
+
+        var subT = MakeText(rowGo.transform, subText, 22,
+            new Color(0.55f, 0.6f, 0.75f), new Vector2(0.35f, 0.26f), new Vector2(500f, 28f));
+        subT.alignment = TextAnchor.MiddleLeft;
+    }
+
+    /// <summary>
+    /// キャラの衣装一覧ポップアップ（通常＋バリアント）。
+    /// きせかえ一覧（キャラ選択）の上に重ねて表示する
+    /// </summary>
+    void ShowCostumePopup(CharacterData cd, bool isSera)
+    {
+        string name = isSera ? "セラ" : cd.characterName;
+        string selected = HomeCharManager.GetSelected();
+
+        // このキャラのバリアント
+        var variants = new List<HomeCharManager.Variant>();
+        foreach (var v in HomeCharManager.Variants)
+            if (v.baseChar == name) variants.Add(v);
+
+        var overlay = new GameObject("CostumeOverlay");
+        overlay.transform.SetParent(canvasRoot, false);
+        overlay.AddComponent<Image>().color = new Color(0f, 0f, 0f, 0.8f);
+        var ort = overlay.GetComponent<RectTransform>();
+        ort.anchorMin = Vector2.zero; ort.anchorMax = Vector2.one;
+        ort.offsetMin = ort.offsetMax = Vector2.zero;
+
+        float rowH = 96f, padY = 10f;
+        int rows = 1 + variants.Count;
+        float dialogH = 170f + rows * (rowH + padY) + 130f;
+
+        var dialog = new GameObject("Dialog");
+        dialog.transform.SetParent(overlay.transform, false);
+        dialog.AddComponent<Image>().color = new Color(0.75f, 0.3f, 0.6f, 0.55f);
+        var drt = dialog.GetComponent<RectTransform>();
+        drt.anchorMin = drt.anchorMax = new Vector2(0.5f, 0.5f);
+        drt.anchoredPosition = Vector2.zero;
+        drt.sizeDelta = new Vector2(900f, dialogH);
+
+        var dInner = new GameObject("Inner");
+        dInner.transform.SetParent(dialog.transform, false);
+        dInner.AddComponent<Image>().color = new Color(0.06f, 0.04f, 0.15f, 0.97f);
+        var diRt = dInner.GetComponent<RectTransform>();
+        diRt.anchorMin = Vector2.zero; diRt.anchorMax = Vector2.one;
+        diRt.offsetMin = new Vector2(4f, 4f); diRt.offsetMax = new Vector2(-4f, -4f);
+
+        var titleT = MakeText(dialog.transform, $"{name} の衣装", 40,
+            new Color(1f, 0.85f, 0.1f), new Vector2(0.5f, 1f), new Vector2(800f, 56f));
+        titleT.GetComponent<RectTransform>().anchoredPosition = new Vector2(0f, -60f);
+        AddShadow(titleT.gameObject);
+
+        // 行コンテナ（タイトル下〜とじる上）
+        var listGo = new GameObject("List");
+        listGo.transform.SetParent(dialog.transform, false);
+        var listRt = listGo.AddComponent<RectTransform>();
+        listRt.anchorMin = new Vector2(0.04f, 0f);
+        listRt.anchorMax = new Vector2(0.96f, 1f);
+        listRt.offsetMin = new Vector2(0f, 110f);
+        listRt.offsetMax = new Vector2(0f, -120f);
+
+        int rowIndex = 0;
+
+        // 通常衣装の行
+        if (isSera)
+        {
+            BuildHomeCharRow(listRt, "デフォルト", true, selected == "", "",
+                () => { HomeCharManager.SetSelected(""); SceneManager.LoadScene("HomeScene"); },
+                rowIndex++, rowH, padY);
+        }
+        else
+        {
             bool owned = OrbManager.IsOwned(name);
             bool unlocked = owned && HomeCharManager.IsUnlocked(cd);
             bool hasVideo = HomeCharManager.HasVideo(name);
-
-            // 二つ名付き表示名（例: 紅蓮の侍 レイ（SSR））
-            string dispName = string.IsNullOrEmpty(cd.title) ? name : $"{cd.title} {name}";
-
-            string label;
-            bool selectable = false;
-            string sub = "";
-            if (!unlocked)
-            {
-                label = $"{dispName}（{cd.rarity}）";
-                sub = HomeCharManager.UnlockConditionText(cd);
-            }
-            else if (!hasVideo)
-            {
-                label = $"{dispName}（{cd.rarity}）";
-                sub = "アニメ準備中";
-            }
-            else
-            {
-                label = $"{dispName}（{cd.rarity}）";
-                selectable = true;
-            }
-
-            BuildHomeCharRow(contentRt, label, selectable, selected == name, sub,
+            string sub = !unlocked ? HomeCharManager.UnlockConditionText(cd)
+                       : !hasVideo ? "アニメ準備中" : "";
+            BuildHomeCharRow(listRt, "通常", unlocked && hasVideo, selected == name, sub,
                 () => { HomeCharManager.SetSelected(name); SceneManager.LoadScene("HomeScene"); },
                 rowIndex++, rowH, padY);
         }
 
-        // ---- バリアントきせかえ（自己ベスト報酬の特別動画） ----
-        foreach (var v in HomeCharManager.Variants)
+        // バリアント衣装の行
+        foreach (var v in variants)
         {
             bool vUnlocked = OrbManager.IsOwned(v.baseChar) && HomeCharManager.IsVariantUnlocked(v);
             // 同梱はResources存在チェック、配信は常に利用可能（選択時にDL）
@@ -1602,7 +1724,6 @@ public class HomeUI : MonoBehaviour
             bool vSelected = selected == v.fileName;
             var vCopy = v;
 
-            string vLabel = $"★ {v.label}";
             string vSub;
             if (!vUnlocked) vSub = HomeCharManager.VariantConditionText(v);
             else if (!vHasVideo) vSub = "アニメ準備中";
@@ -1610,14 +1731,12 @@ public class HomeUI : MonoBehaviour
                 vSub = "選択するとダウンロードします（約2MB）";
             else vSub = "";
 
-            BuildHomeCharRow(contentRt, vLabel, vUnlocked && vHasVideo, vSelected,
+            BuildHomeCharRow(listRt, $"★ {v.label}", vUnlocked && vHasVideo, vSelected,
                 vSub, () => SelectVariant(vCopy), rowIndex++, rowH, padY);
         }
 
-        contentRt.sizeDelta = new Vector2(0f, rowIndex * (rowH + padY) + padY);
-
-        // とじる
-        MakeSettingsItem(dialog.transform, "とじる", 0.055f,
+        // とじる（キャラ選択に戻る）
+        MakeSettingsItem(dialog.transform, "もどる", 110f / dialogH,
             new Color(0.25f, 0.25f, 0.35f), new Color(0.45f, 0.45f, 0.6f, 0.6f),
             () => Destroy(overlay));
     }
