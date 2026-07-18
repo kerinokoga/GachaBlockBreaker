@@ -55,6 +55,9 @@ public static class EndlessGalleryManager
     public static string TotalFile(int n) => $"total_{n:D3}.jpg";
     public static string BestFile(int n)  => $"best_{n:D3}.jpg";
 
+    /// <summary>一覧セル用の軽量サムネイル（幅256px・約20KB）のファイル名</summary>
+    public static string ThumbFile(string file) => file.Replace(".jpg", "_thumb.jpg");
+
     public static string CachePath(string file) =>
         Path.Combine(Application.persistentDataPath, "gallery", file);
 

@@ -128,6 +128,27 @@ public class CollectionUI : MonoBehaviour
     readonly Dictionary<string, RawImage> galleryThumbs = new Dictionary<string, RawImage>();
     readonly Dictionary<string, Text> galleryLabels = new Dictionary<string, Text>();
 
+    // デコード済みサムネイルのメモリキャッシュ（ギャラリーを開き直しても再デコードしない）
+    readonly Dictionary<string, Texture2D> galleryTexCache = new Dictionary<string, Texture2D>();
+
+    /// <summary>
+    /// セル用サムネイルを読み込む。フレーム分散（delayFrames待ち）→
+    /// サムネイル→（無ければ）フル画像の順で試し、成功したらメモリキャッシュする
+    /// </summary>
+    IEnumerator LoadCellThumb(int delayFrames, string thumbFile, string fullFile,
+        System.Action<Texture2D> onDone)
+    {
+        for (int i = 0; i < delayFrames; i++) yield return null;
+
+        Texture2D result = null;
+        yield return EndlessGalleryManager.LoadImage(thumbFile, t => result = t);
+        if (result == null && fullFile != null)
+            yield return EndlessGalleryManager.LoadImage(fullFile, t => result = t);
+
+        if (result != null) galleryTexCache[thumbFile] = result;
+        onDone?.Invoke(result);
+    }
+
     void ShowEndlessGallery()
     {
         galleryThumbs.Clear();
@@ -303,8 +324,9 @@ public class CollectionUI : MonoBehaviour
         // ラベル（体数）。解放済みの画像セルは読み込み完了までの表示。
         // ※サムネイル読込より先に生成する（キャッシュ済みだと読込コールバックが
         //   同期実行されるため、後から生成するとラベルを消す処理が空振りする）
+        string thumbFile = file != null ? EndlessGalleryManager.ThumbFile(file) : null;
         bool loading = unlocked && !isKisekae && file != null
-            && !EndlessGalleryManager.IsCached(file);
+            && !galleryTexCache.ContainsKey(thumbFile);
         var t = new GameObject("Label").AddComponent<Text>();
         t.transform.SetParent(go.transform, false);
         t.text = unlocked
@@ -329,36 +351,49 @@ public class CollectionUI : MonoBehaviour
             && !string.IsNullOrEmpty(thumbVar.thumb))
         {
             var kRaw = MakeCellThumbSlot(go.transform);
-            StartCoroutine(EndlessGalleryManager.LoadImage(thumbVar.thumb, tex =>
+            void ApplyKisekaeThumb(Texture2D tex)
             {
                 if (kRaw == null || tex == null) return;
                 SetCellThumb(kRaw, tex);
                 // サムネイルが出たら文字は再生マークだけに
                 if (t != null) { t.text = "きせかえ▶"; t.fontSize = 24; }
-            }));
+            }
+            if (galleryTexCache.TryGetValue(thumbVar.thumb, out var kCached) && kCached != null)
+                ApplyKisekaeThumb(kCached);
+            else
+                StartCoroutine(LoadCellThumb(galleryThumbs.Count / 4, thumbVar.thumb, null,
+                    ApplyKisekaeThumb));
         }
 
         // サムネイル（解放済みの画像セルは自動で読み込む。
-        // キャッシュ済みは即表示、未取得はダウンロードして表示）
+        // メモリキャッシュ→軽量サムネ→フル画像の順。読み込みはフレーム分散）
         if (unlocked && !isKisekae && file != null)
         {
             var raw = MakeCellThumbSlot(go.transform);
             galleryThumbs[file] = raw;
 
-            string capturedLabel2 = label;
-            StartCoroutine(EndlessGalleryManager.LoadImage(file, tex =>
+            if (galleryTexCache.TryGetValue(thumbFile, out var cached) && cached != null)
             {
-                if (raw == null) return;
-                if (tex == null)
+                SetCellThumb(raw, cached);
+                t.gameObject.SetActive(false);
+            }
+            else
+            {
+                string capturedLabel2 = label;
+                StartCoroutine(LoadCellThumb(galleryThumbs.Count / 4, thumbFile, file, tex =>
                 {
-                    // 取得失敗（オフライン等）。タップで拡大表示から再試行できる
-                    if (t != null) t.text = $"{capturedLabel2}\nタップで表示";
-                    return;
-                }
-                SetCellThumb(raw, tex);
-                // サムネイル表示中は体数ラベルを消す
-                if (t != null) t.gameObject.SetActive(false);
-            }));
+                    if (raw == null) return;
+                    if (tex == null)
+                    {
+                        // 取得失敗（オフライン等）。タップで拡大表示から再試行できる
+                        if (t != null) t.text = $"{capturedLabel2}\nタップで表示";
+                        return;
+                    }
+                    SetCellThumb(raw, tex);
+                    // サムネイル表示中は体数ラベルを消す
+                    if (t != null) t.gameObject.SetActive(false);
+                }));
+            }
         }
 
         // ラベルをサムネイルより手前に（きせかえ▶等を画像の上に表示）
