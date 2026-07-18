@@ -176,9 +176,9 @@ public class CollectionUI : MonoBehaviour
         sr.content = contentRT;
         sr.viewport = vpRT;
 
-        // ---- セル配置（3列グリッド・16:9セル） ----
-        const float cell = 309f, gap = 22f;
-        const int cols = 3;
+        // ---- セル配置（4列グリッド・9:16縦長セル） ----
+        const float cell = 226f, gap = 22f;
+        const int cols = 4;
         float cellH = cell * CellAspect;
         float y = 20f;
 
@@ -220,20 +220,20 @@ public class CollectionUI : MonoBehaviour
             () => Destroy(overlay));
     }
 
-    // セルの縦横比（16:9）。高さ = 幅 × CellAspect
-    const float CellAspect = 9f / 16f;
+    // セルの縦横比（9:16縦長・イラストと同じ向き）。高さ = 幅 × CellAspect
+    const float CellAspect = 16f / 9f;
 
     /// <summary>
     /// セルのサムネイルにテクスチャを設定する。
-    /// 16:9セルに合わせてクロップし、縦横比の歪みを防ぐ。
-    /// 縦長イラストは上端（顔側）を基準に切り抜く
+    /// 9:16セルに合わせてクロップし、縦横比の歪みを防ぐ。
+    /// 縦長イラストはほぼ全体表示、横長のきせかえサムネは中央を切り抜く
     /// </summary>
     static void SetCellThumb(RawImage raw, Texture2D tex)
     {
         raw.texture = tex;
         raw.color = Color.white;
         float texAspect = (float)tex.width / tex.height;   // 幅/高さ
-        float cellAspect = 16f / 9f;
+        float cellAspect = 1f / CellAspect;
         if (texAspect >= cellAspect)
         {
             // セルより横長→左右を中央基準でカット
