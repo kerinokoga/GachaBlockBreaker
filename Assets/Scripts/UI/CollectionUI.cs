@@ -340,6 +340,35 @@ public class CollectionUI : MonoBehaviour
         rt.anchoredPosition = new Vector2(x, -y);
         rt.sizeDelta = new Vector2(cell, cell);
 
+        // きせかえセルのサムネイル（小さいjpgなので自動ダウンロードして表示）
+        if (unlocked && isKisekae
+            && HomeCharManager.TryGetVariantByBest(kisekaeBest, out var thumbVar)
+            && !string.IsNullOrEmpty(thumbVar.thumb))
+        {
+            var kThumbGo = new GameObject("Thumb");
+            kThumbGo.transform.SetParent(go.transform, false);
+            var kRaw = kThumbGo.AddComponent<RawImage>();
+            kRaw.color = Color.clear;
+            kRaw.raycastTarget = false;
+            var kTrt = kThumbGo.GetComponent<RectTransform>();
+            kTrt.anchorMin = Vector2.zero; kTrt.anchorMax = Vector2.one;
+            kTrt.offsetMin = new Vector2(6f, 6f); kTrt.offsetMax = new Vector2(-6f, -6f);
+            StartCoroutine(EndlessGalleryManager.LoadImage(thumbVar.thumb, tex =>
+            {
+                if (kRaw == null || tex == null) return;
+                kRaw.texture = tex;
+                kRaw.color = Color.white;
+                // サムネイルが出たら文字は体数＋再生マークだけに
+                var lbl = go != null ? go.transform.Find("Label") : null;
+                if (lbl != null)
+                {
+                    var lblT = lbl.GetComponent<Text>();
+                    lblT.text = $"{label}\nきせかえ▶";
+                    lblT.fontSize = 24;
+                }
+            }));
+        }
+
         // サムネイル枠（解放済みの画像セルは常に作成し、初ダウンロード時にも即反映できるようにする）
         if (unlocked && !isKisekae && file != null)
         {
@@ -478,11 +507,7 @@ public class CollectionUI : MonoBehaviour
     void ShowKisekaeVideo(int best)
     {
         // マイルストーンに対応するバリアントを検索
-        HomeCharManager.Variant v = default;
-        bool found = false;
-        foreach (var vv in HomeCharManager.Variants)
-            if (vv.requiredBest == best) { v = vv; found = true; break; }
-        if (!found)
+        if (!HomeCharManager.TryGetVariantByBest(best, out var v))
         {
             ShowGalleryNotice("このきせかえは準備中です");
             return;
@@ -542,6 +567,43 @@ public class CollectionUI : MonoBehaviour
             vp.Stop();
             if (rtex != null) { rtex.Release(); Destroy(rtex); }
             Destroy(viewer);
+        });
+
+        // ホームのきせかえに設定ボタン（右下）
+        var setGo = new GameObject("SetHomeBtn");
+        setGo.transform.SetParent(viewer.transform, false);
+        var setImg = setGo.AddComponent<Image>();
+        setImg.color = new Color(0.75f, 0.3f, 0.6f, 0.95f);
+        UISprites.Button(setImg);
+        var setBtn = setGo.AddComponent<Button>();
+        var setRt = setGo.GetComponent<RectTransform>();
+        setRt.anchorMin = setRt.anchorMax = new Vector2(0.76f, 0.095f);
+        setRt.anchoredPosition = Vector2.zero;
+        setRt.sizeDelta = new Vector2(400f, 76f);
+        var setLabel = MakeText(setGo.transform, "ホームのきせかえに設定", 26,
+            Color.white, new Vector2(0.5f, 0.5f), new Vector2(390f, 70f));
+        AddShadow(setLabel.gameObject, new Color(0f, 0f, 0f, 0.6f), new Vector2(2f, -2f));
+        if (HomeCharManager.GetSelected() == v.fileName)
+        {
+            setLabel.text = "設定中";
+            setBtn.interactable = false;
+        }
+        setBtn.onClick.AddListener(() =>
+        {
+            if (!HomeCharManager.IsVariantUnlocked(v))
+            {
+                ShowGalleryNotice($"{v.baseChar}を覚醒すると設定できます");
+                return;
+            }
+            if (v.streamed && !HomeCharManager.IsVariantCached(v.fileName))
+            {
+                ShowGalleryNotice("ダウンロード完了までお待ちください");
+                return;
+            }
+            HomeCharManager.SetSelected(v.fileName);
+            setLabel.text = "設定中";
+            setBtn.interactable = false;
+            ShowGalleryNotice("ホームのきせかえに設定しました♪");
         });
 
         void StartPlay()

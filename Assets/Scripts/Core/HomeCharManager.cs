@@ -58,33 +58,53 @@ public static class HomeCharManager
         public string label;      // きせかえ一覧での表示名
         public int requiredBest;  // 必要な自己ベスト（1ランの最高撃破数）
         public bool streamed;     // true = Firebase Storageから配信（初回選択時にDL＆キャッシュ）
+        public string thumb;      // ギャラリー用サムネイル（Storageのgallery/内のjpg）
     }
 
     public static readonly Variant[] Variants =
     {
         // アプリ同梱（容量が小さいため）
         new Variant { baseChar = "アカリ", fileName = "アカリ_dance",
-                      label = "アカリ（ダンス）", requiredBest = 10 },
+                      label = "アカリ（ダンス）", requiredBest = 10,
+                      thumb = "akari_dance_thumb.jpg" },
         new Variant { baseChar = "アカリ", fileName = "アカリ_swim",
-                      label = "アカリ（水着）", requiredBest = 20 },
+                      label = "アカリ（水着）", requiredBest = 20,
+                      thumb = "akari_swim_thumb.jpg" },
         // 配信（アプリ容量200MB制限のためStorageからDL。ファイル名は英字）
         new Variant { baseChar = "アカリ", fileName = "akari_robe",
-                      label = "アカリ（白ローブ）", requiredBest = 30, streamed = true },
+                      label = "アカリ（白ローブ）", requiredBest = 30, streamed = true,
+                      thumb = "akari_robe_thumb.jpg" },
         new Variant { baseChar = "セラ", fileName = "sera_bunny",
-                      label = "セラ（バニー）", requiredBest = 40, streamed = true },
+                      label = "セラ（バニー）", requiredBest = 40, streamed = true,
+                      thumb = "sera_bunny_thumb.jpg" },
         new Variant { baseChar = "アカリ", fileName = "akari_bikini",
-                      label = "アカリ（ビキニ）", requiredBest = 50, streamed = true },
+                      label = "アカリ（ビキニ）", requiredBest = 50, streamed = true,
+                      thumb = "akari_bikini_thumb.jpg" },
         new Variant { baseChar = "ルカ", fileName = "ruka_bunny",
-                      label = "ルカ（バニー）", requiredBest = 60, streamed = true },
+                      label = "ルカ（バニー）", requiredBest = 60, streamed = true,
+                      thumb = "ruka_bunny_thumb.jpg" },
         new Variant { baseChar = "ノア", fileName = "noa_dance",
-                      label = "ノア（体操着）", requiredBest = 70, streamed = true },
+                      label = "ノア（体操着）", requiredBest = 70, streamed = true,
+                      thumb = "noa_dance_thumb.jpg" },
         new Variant { baseChar = "ルカ", fileName = "ruka_robe",
-                      label = "ルカ（白ローブ）", requiredBest = 80, streamed = true },
+                      label = "ルカ（白ローブ）", requiredBest = 80, streamed = true,
+                      thumb = "ruka_robe_thumb.jpg" },
         new Variant { baseChar = "リコ", fileName = "riko_bunny",
-                      label = "リコ（バニー）", requiredBest = 90, streamed = true },
+                      label = "リコ（バニー）", requiredBest = 90, streamed = true,
+                      thumb = "riko_bunny_thumb.jpg" },
         new Variant { baseChar = "ナナ", fileName = "nana_bunny",
-                      label = "ナナ（バニーダンス）", requiredBest = 100, streamed = true },
+                      label = "ナナ（バニーダンス）", requiredBest = 100, streamed = true,
+                      thumb = "nana_bunny_thumb.jpg" },
     };
+
+    /// <summary>自己ベストのマイルストーンに対応するバリアントを返す</summary>
+    public static bool TryGetVariantByBest(int best, out Variant found)
+    {
+        foreach (var v in Variants)
+            if (v.requiredBest == best) { found = v; return true; }
+        found = default;
+        return false;
+    }
 
     // ---- 配信バリアントのダウンロード・キャッシュ ----
 
