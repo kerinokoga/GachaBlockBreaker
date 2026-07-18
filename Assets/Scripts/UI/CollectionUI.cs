@@ -211,95 +211,25 @@ public class CollectionUI : MonoBehaviour
 
         contentRT.sizeDelta = new Vector2(0f, y);
 
-        // ---- 一括ダウンロード（解放済みで未DLの画像＋きせかえ動画） ----
-        var pendingImgs = new List<string>();
-        foreach (int n in EndlessGalleryManager.TotalMilestones)
-            if (EndlessGalleryManager.IsTotalUnlocked(n)
-                && !EndlessGalleryManager.IsCached(EndlessGalleryManager.TotalFile(n)))
-                pendingImgs.Add(EndlessGalleryManager.TotalFile(n));
-        foreach (int m in EndlessGalleryManager.BestMilestones)
-            if (!EndlessGalleryManager.IsKisekaeMilestone(m)
-                && EndlessGalleryManager.IsBestUnlocked(m)
-                && !EndlessGalleryManager.IsCached(EndlessGalleryManager.BestFile(m)))
-                pendingImgs.Add(EndlessGalleryManager.BestFile(m));
-        var pendingVids = new List<HomeCharManager.Variant>();
-        foreach (var v in HomeCharManager.Variants)
-            if (v.streamed && HomeCharManager.IsVariantUnlocked(v)
-                && !HomeCharManager.IsVariantCached(v.fileName))
-                pendingVids.Add(v);
-
-        bool hasPending = pendingImgs.Count + pendingVids.Count > 0;
-        if (hasPending)
-        {
-            int count = pendingImgs.Count + pendingVids.Count;
-            int mb = Mathf.CeilToInt(pendingImgs.Count * 0.45f + pendingVids.Count * 2f);
-            var bGo = new GameObject("BulkDLBtn");
-            bGo.transform.SetParent(overlay.transform, false);
-            var bImg = bGo.AddComponent<Image>();
-            bImg.color = new Color(0.15f, 0.45f, 0.3f);
-            UISprites.Button(bImg);
-            var dlBtn = bGo.AddComponent<Button>();
-            var brt = bGo.GetComponent<RectTransform>();
-            brt.anchorMin = brt.anchorMax = new Vector2(0.3f, 0.055f);
-            brt.anchoredPosition = Vector2.zero;
-            brt.sizeDelta = new Vector2(460f, 76f);
-            var dlLabel = MakeText(bGo.transform,
-                $"一括ダウンロード（{count}件・約{mb}MB）", 26, Color.white,
-                new Vector2(0.5f, 0.5f), new Vector2(450f, 70f));
-            dlBtn.onClick.AddListener(() =>
-            {
-                dlBtn.interactable = false;
-                StartCoroutine(BulkDownloadGallery(pendingImgs, pendingVids, dlLabel));
-            });
-        }
-
-        // とじる（一括DLボタンがある間は右寄せ）
+        // とじる
         MakeStyledButton(overlay.transform, "とじる", new Color(0.25f, 0.25f, 0.35f),
             new Color(0.45f, 0.45f, 0.6f, 0.6f),
-            new Vector2(hasPending ? 0.77f : 0.5f, 0.055f), new Vector2(300f, 76f),
+            new Vector2(0.5f, 0.055f), new Vector2(300f, 76f),
             () => Destroy(overlay));
     }
 
     /// <summary>
-    /// 解放済みの未DL画像・きせかえ動画を順にダウンロードする。
-    /// 完了した画像はその場でセルにサムネイル反映する
+    /// セルのサムネイルにテクスチャを設定する。
+    /// 正方形セルに合わせて中央を正方形にクロップし、縦横比の歪みを防ぐ
     /// </summary>
-    IEnumerator BulkDownloadGallery(List<string> imgs,
-        List<HomeCharManager.Variant> vids, Text btnLabel)
+    static void SetCellThumb(RawImage raw, Texture2D tex)
     {
-        int total = imgs.Count + vids.Count, done = 0, failed = 0;
-        foreach (var f in imgs)
-        {
-            yield return EndlessGalleryManager.LoadImage(f, tex =>
-            {
-                if (tex == null) { failed++; return; }
-                if (galleryThumbs.TryGetValue(f, out var r) && r != null)
-                {
-                    r.texture = tex;
-                    r.color = Color.white;
-                }
-                if (galleryLabels.TryGetValue(f, out var l) && l != null)
-                {
-                    l.text = l.text.Split('\n')[0]; // 案内文を消して体数のみに
-                    l.fontSize = 26;
-                }
-            });
-            done++;
-            if (btnLabel != null) btnLabel.text = $"ダウンロード中... {done}/{total}";
-        }
-        foreach (var v in vids)
-        {
-            bool ok = false;
-            yield return EndlessGalleryManager.DownloadFile(
-                HomeCharManager.VariantUrl(v.fileName),
-                HomeCharManager.VariantCachePath(v.fileName),
-                r => ok = r);
-            if (!ok) failed++;
-            done++;
-            if (btnLabel != null) btnLabel.text = $"ダウンロード中... {done}/{total}";
-        }
-        if (btnLabel != null)
-            btnLabel.text = failed == 0 ? "ダウンロード完了！" : $"完了（{failed}件失敗）";
+        raw.texture = tex;
+        raw.color = Color.white;
+        float a = (float)tex.width / tex.height;
+        raw.uvRect = a >= 1f
+            ? new Rect((1f - 1f / a) / 2f, 0f, 1f / a, 1f)   // 横長→左右をカット
+            : new Rect(0f, (1f - a) / 2f, 1f, a);            // 縦長→上下をカット
     }
 
     /// <summary>ギャラリーのセクション見出しを配置し、次のY位置を返す</summary>
@@ -356,14 +286,13 @@ public class CollectionUI : MonoBehaviour
             StartCoroutine(EndlessGalleryManager.LoadImage(thumbVar.thumb, tex =>
             {
                 if (kRaw == null || tex == null) return;
-                kRaw.texture = tex;
-                kRaw.color = Color.white;
-                // サムネイルが出たら文字は体数＋再生マークだけに
+                SetCellThumb(kRaw, tex);
+                // サムネイルが出たら文字は再生マークだけに
                 var lbl = go != null ? go.transform.Find("Label") : null;
                 if (lbl != null)
                 {
                     var lblT = lbl.GetComponent<Text>();
-                    lblT.text = $"{label}\nきせかえ▶";
+                    lblT.text = "きせかえ▶";
                     lblT.fontSize = 24;
                 }
             }));
@@ -386,11 +315,11 @@ public class CollectionUI : MonoBehaviour
             if (EndlessGalleryManager.IsCached(file))
                 StartCoroutine(EndlessGalleryManager.LoadImage(file, tex =>
                 {
-                    if (raw != null && tex != null)
-                    {
-                        raw.texture = tex;
-                        raw.color = Color.white;
-                    }
+                    if (raw == null || tex == null) return;
+                    SetCellThumb(raw, tex);
+                    // サムネイル表示中は体数ラベルを消す
+                    if (galleryLabels.TryGetValue(file, out var l) && l != null)
+                        l.gameObject.SetActive(false);
                 }));
         }
 
@@ -486,17 +415,11 @@ public class CollectionUI : MonoBehaviour
                 raw.color = Color.white;
                 fitter.aspectRatio = (float)tex.width / tex.height;
             }
-            // 初ダウンロード時、一覧のセルにもサムネイルを即反映（案内文は体数のみに戻す）
+            // 初ダウンロード時、一覧のセルにもサムネイルを即反映（体数ラベルは消す）
             if (galleryThumbs.TryGetValue(file, out var cellThumb) && cellThumb != null)
-            {
-                cellThumb.texture = tex;
-                cellThumb.color = Color.white;
-            }
+                SetCellThumb(cellThumb, tex);
             if (galleryLabels.TryGetValue(file, out var cellLabel) && cellLabel != null)
-            {
-                cellLabel.text = label;
-                cellLabel.fontSize = 26;
-            }
+                cellLabel.gameObject.SetActive(false);
         }));
     }
 
