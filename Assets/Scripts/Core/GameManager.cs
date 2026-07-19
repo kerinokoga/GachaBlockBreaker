@@ -733,7 +733,7 @@ public class GameManager : MonoBehaviour
     /// 6体目以降は 0.15 ずつ上昇していく。※数値は後で調整
     /// </summary>
     private float EndlessHPMulFor(int waveIndex)
-        => waveIndex <= 4 ? 1f : 1f + 0.15f * (waveIndex - 4);
+        => waveIndex <= 4 ? 1f : 1f + 0.05f * (waveIndex - 4);
 
     /// <summary>
     /// エンドレスの難易度レイアウト（ブロック配置・HP・スピードブロック）を返す。
