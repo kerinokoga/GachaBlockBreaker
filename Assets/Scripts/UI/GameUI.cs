@@ -822,13 +822,13 @@ public class GameUI : MonoBehaviour
         if (damageText != null && CharacterManager.Instance != null)
         {
             float speedRatio = 1f;
-            float criticalMul = 1f;
             var ball = FindObjectOfType<BallController>();
-            if (ball != null)
-            {
-                speedRatio = ball.SpeedDamageRatio;
-                criticalMul = ball.IsCritical ? 2f : 1f;
-            }
+            if (ball != null) speedRatio = ball.SpeedDamageRatio;
+            // クリティカル倍率は連続コンボに応じて 2/4/8/16/32倍
+            // （コンボ表示と同じく、アクティブなボールの最大コンボを使う）
+            int combo = GameManager.Instance != null ? GameManager.Instance.MaxCritCombo : 0;
+            float criticalMul = combo > 0
+                ? (1 << Mathf.Min(combo, BallController.MaxCritCombo)) : 1f;
             float baseDmg = CharacterManager.Instance.BasePower
                           + CharacterManager.Instance.BonusDamage;
             float mul = CharacterManager.Instance.PassiveDamageMultiplier
