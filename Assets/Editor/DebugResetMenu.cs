@@ -21,6 +21,27 @@ public static class DebugResetMenu
             "完了しました。Play中の場合はシーンを読み込み直すと反映されます。", "OK");
     }
 
+    [MenuItem("Tools/デバッグ/エンドレス実績をリセット（ギャラリー解放テスト用）")]
+    public static void ResetEndless()
+    {
+        if (!EditorUtility.DisplayDialog("エンドレス実績リセット",
+            "エンドレスの累計撃破・自己ベスト・ギャラリー確認状態をリセットします。\n" +
+            "（リザルトの解放演出やバッジを最初から確認できます）実行しますか？",
+            "実行する", "キャンセル"))
+            return;
+
+        PlayerPrefs.DeleteKey("GachaBlock_EndlessTotalKills");
+        PlayerPrefs.DeleteKey("GachaBlock_EndlessBest");
+        PlayerPrefs.DeleteKey("GachaBlock_GallerySeenTotal");
+        PlayerPrefs.DeleteKey("GachaBlock_GallerySeenBest");
+        PlayerPrefs.DeleteKey("GachaBlock_GalleryViewTotal");
+        PlayerPrefs.DeleteKey("GachaBlock_GalleryViewBest");
+        PlayerPrefs.Save();
+        Debug.Log("[Debug] エンドレス実績をリセットしました");
+        EditorUtility.DisplayDialog("デバッグ",
+            "リセットしました。エンドレスを1回プレイすると\n累計1体などの解放演出がリザルトで確認できます。", "OK");
+    }
+
     [MenuItem("Tools/デバッグ/ステージ20を未クリアに戻す（初回報酬テスト用）")]
     public static void UnclearStage20()
     {
