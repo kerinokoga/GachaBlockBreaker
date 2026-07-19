@@ -79,10 +79,7 @@ public class GameUI : MonoBehaviour
             CharacterManager.Instance.OnUltUsed      += ShowUltBanner;
         }
 
-        // クリティカル表示購読
-        var ball = FindObjectOfType<BallController>();
-        if (ball != null)
-            ball.OnCriticalHit += ShowCriticalText;
+        // クリティカルコンボ表示は Update() で GameManager.MaxCritCombo をポーリング
 
         // SpeedUp表示購読
         SpeedBlock.OnSpeedUp += ShowSpeedUpText;
@@ -224,6 +221,51 @@ public class GameUI : MonoBehaviour
             AudioManager.Instance?.PlayVoice(
                 gameVoice, 1.5f, AudioManager.VoicePriority.High);
         }
+
+        overlay.ShowContinue("次へ", () =>
+        {
+            overlay.Close();
+            ShowGameScreenGuide_Page3();
+        });
+
+        overlay.ShowSkipButton(() =>
+        {
+            TutorialManager.Instance.SkipAll();
+            overlay.Close();
+            Time.timeScale = 1f;
+        });
+    }
+
+    /// <summary>
+    /// 段階5-Page3: 連続クリティカルコンボの解説（2ページ目）
+    /// </summary>
+    void ShowGameScreenGuide_Page3()
+    {
+        if (canvasRoot == null) { Time.timeScale = 1f; return; }
+
+        var overlay = TutorialOverlay.Create(canvasRoot);
+        overlay.HideCharacter();
+
+        overlay.SetBubbleAnchor(
+            new Vector2(0.05f, 0.2f),
+            new Vector2(0.95f, 0.8f));
+        overlay.SetMessageAlignment(TextAnchor.MiddleLeft);
+        overlay.SetMessage(
+            "それと『パドルの真ん中』の話、\n" +
+            "特別に詳しく教えてあげるわ\n" +
+            "\n" +
+            "・クリティカルヒット\n" +
+            "　真ん中でボールを打つと黄色くなって\n" +
+            "　ダメージ2倍＋ブロック貫通よ\n" +
+            "\n" +
+            "・連続クリティカル\n" +
+            "　連続で真ん中に当てるたびに\n" +
+            "　ダメージがさらに2倍ずつ増えるの\n" +
+            "　色も 黄→緑→紫→赤→虹 と変わって\n" +
+            "　5連続で最大32倍よ！\n" +
+            "\n" +
+            "　真ん中を外すかボールを落とすと\n" +
+            "　リセットだから集中して狙いなさい！");
 
         overlay.ShowContinue("わかった", () =>
         {
@@ -759,6 +801,9 @@ public class GameUI : MonoBehaviour
 
     void Update()
     {
+        // 連続クリティカルコンボの常時表示
+        UpdateComboDisplay();
+
         // ボスUI初期化（GameManager.Start後に1回だけ実行）
         if (!bossUIInitialized)
         {
@@ -1009,8 +1054,12 @@ public class GameUI : MonoBehaviour
             "当てるとクリティカル発動！\n" +
             "ボールがブロックを貫通して\n" +
             "一直線に壊していくよ！\n" +
-            "ダメージが2倍になる！\n" +
-            "次にパドルに当たると解除\n\n" +
+            "ダメージが2倍になる！\n\n" +
+            "さらに連続で真ん中に当てると\n" +
+            "ダメージが2倍ずつ増えていく！\n" +
+            "ボールの色が 黄→緑→紫→赤→虹\n" +
+            "と変わって5連続で最大32倍！\n" +
+            "真ん中を外す・ミスでリセット\n\n" +
             "--- 奥義の使い方 ---\n\n" +
             "ブロックを壊すと奥義ゲージが溜まる\n" +
             "ゲージが満タンになると\n" +
@@ -1052,9 +1101,13 @@ public class GameUI : MonoBehaviour
 
         pauseMenuPanel.SetActive(false);
 
-        // ---- クリティカル表示テキスト（画面中央、初期非表示）----
-        criticalText = MakeText(root, "クリティカル!", 60, Color.yellow,
-            new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(600f, 80f));
+        // ---- 連続クリティカルコンボ表示（画面上部・コンボ中のみ表示）----
+        // 文字色はボールのコンボ色（黄→緑→紫→赤→虹）と連動
+        criticalText = MakeText(root, "", 48, Color.yellow,
+            new Vector2(0.5f, 0.84f), Vector2.zero, new Vector2(900f, 70f));
+        var critOutline = criticalText.gameObject.AddComponent<Outline>();
+        critOutline.effectColor = new Color(0f, 0f, 0f, 0.8f);
+        critOutline.effectDistance = new Vector2(2f, -2f);
         criticalText.gameObject.SetActive(false);
 
         // ---- Speed Up 表示テキスト（画面中央やや下、初期非表示）----
@@ -1525,10 +1578,28 @@ public class GameUI : MonoBehaviour
     void OnRetireClicked() { }   // retire confirm handled by lambda above
     void OnHelpClicked()  { }    // help panel handled by lambda above
 
-    public void ShowCriticalText()
+    /// <summary>
+    /// 連続クリティカルコンボの常時表示を更新（Update から毎フレーム呼ぶ）。
+    /// コンボ中のボールがある間だけ表示し、色はボールのコンボ色と連動する
+    /// </summary>
+    void UpdateComboDisplay()
     {
-        if (criticalText != null)
-            StartCoroutine(CriticalTextCoroutine());
+        if (criticalText == null) return;
+        int combo = GameManager.Instance != null ? GameManager.Instance.MaxCritCombo : 0;
+        if (combo <= 0)
+        {
+            if (criticalText.gameObject.activeSelf)
+                criticalText.gameObject.SetActive(false);
+            return;
+        }
+        if (!criticalText.gameObject.activeSelf)
+            criticalText.gameObject.SetActive(true);
+
+        int mult = 1 << Mathf.Min(combo, BallController.MaxCritCombo);
+        criticalText.text = combo == 1
+            ? "クリティカル! ダメージ×2"
+            : $"{combo}連続クリティカル! ダメージ×{mult}";
+        criticalText.color = BallController.ComboColor(combo); // 5連続は虹色（毎フレーム変化）
     }
 
     void ShowSpeedUpText()
@@ -1553,23 +1624,6 @@ public class GameUI : MonoBehaviour
         }
         speedUpText.gameObject.SetActive(false);
         speedUpText.color = baseColor;
-    }
-
-    System.Collections.IEnumerator CriticalTextCoroutine()
-    {
-        criticalText.gameObject.SetActive(true);
-        // 1秒間表示してフェードアウト
-        float duration = 1.0f;
-        float elapsed = 0f;
-        while (elapsed < duration)
-        {
-            elapsed += Time.deltaTime;
-            float alpha = Mathf.Lerp(1f, 0f, elapsed / duration);
-            criticalText.color = new Color(1f, 1f, 0f, alpha);
-            yield return null;
-        }
-        criticalText.gameObject.SetActive(false);
-        criticalText.color = Color.yellow;
     }
 
     // ---- データ更新 ----

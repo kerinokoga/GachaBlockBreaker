@@ -283,8 +283,8 @@ public abstract class BlockBase : MonoBehaviour
         var ball = FindObjectOfType<BallController>();
         if (ball != null) speedRatio = ball.SpeedDamageRatio;
 
-        // クリティカル貫通中はダメージ2倍
-        float criticalMul = (ball != null && ball.IsCritical) ? 2f : 1f;
+        // クリティカル中は連続コンボ数に応じて 2/4/8/16/32倍
+        float criticalMul = (ball != null) ? ball.CritDamageMultiplier : 1f;
 
         // ダメージ = (3キャラのパワー合計 + ExtraDamage) × パッシブ倍率 × 奥義倍率 × 速度倍率 × クリティカル倍率
         float baseDmg = (CharacterManager.Instance?.BasePower ?? 1f)

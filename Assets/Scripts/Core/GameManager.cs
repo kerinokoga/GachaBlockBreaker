@@ -46,6 +46,19 @@ public class GameManager : MonoBehaviour
 
     // ---- 外部公開 ----
     public int CurrentStock => currentStock;
+
+    /// <summary>現在アクティブなボールの最大連続クリティカル数（コンボ表示用）</summary>
+    public int MaxCritCombo
+    {
+        get
+        {
+            int max = 0;
+            for (int i = 0; i < activeBalls.Count; i++)
+                if (activeBalls[i] != null && activeBalls[i].CritCombo > max)
+                    max = activeBalls[i].CritCombo;
+            return max;
+        }
+    }
     public int MaxStock => maxStock;
 
     // UI が購読するイベント
@@ -288,8 +301,7 @@ public class GameManager : MonoBehaviour
         clone.OnCriticalHit = null;
         clone.OnMissed += () => OnBallMissed(clone);
         clone.OnPaddleHit += OnPaddleHitForBoss;
-        var gameUI = FindObjectOfType<GameUI>();
-        if (gameUI != null) clone.OnCriticalHit += gameUI.ShowCriticalText;
+        // クリティカル表示は GameUI が MaxCritCombo をポーリングするため購読不要
 
         // パドル参照を設定
         if (paddle != null)

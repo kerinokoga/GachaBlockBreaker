@@ -19,6 +19,15 @@ public class BallController : MonoBehaviour
     private bool isLaunched = false;
     private bool isCritical = false;                     // クリティカル貫通中フラグ
     public bool IsCritical => isCritical;               // 外部参照用
+
+    // ---- 連続クリティカルコンボ ----
+    public const int MaxCritCombo = 5;                  // 5連続（×32）で頭打ち
+    private int critCombo = 0;                          // 現在の連続クリティカル数
+    public int CritCombo => isCritical ? critCombo : 0;
+
+    /// <summary>クリティカルのダメージ倍率（1回=×2、連続ごとに2倍、最大×32）</summary>
+    public float CritDamageMultiplier =>
+        isCritical ? (1 << Mathf.Min(critCombo, MaxCritCombo)) : 1f;
     public bool IsLaunched => isLaunched;               // 外部参照用
     private Transform paddleTransform;                   // 発射前にパドルに追従するため
     [HideInInspector] public bool isClone = false;       // 分裂で生成されたボールか
@@ -84,6 +93,10 @@ public class BallController : MonoBehaviour
             pos.y += 0.7f; // パドルの少し上
             transform.position = pos;
         }
+
+        // 5連続クリティカル中は虹色を毎フレーム更新
+        if (isCritical && critCombo >= MaxCritCombo && sr != null)
+            sr.color = RainbowColor();
     }
 
     // 壁境界定数（SceneSetup の壁位置に合わせる）
@@ -166,15 +179,18 @@ public class BallController : MonoBehaviour
                         AudioManager.Instance?.PlayPaddleHitSE();
 
                         float offset = Mathf.Clamp((ballX - paddleX) / halfW, -1f, 1f);
+                        float angleDeg = 90f - offset * 60f;
                         if (Mathf.Abs(offset) <= EffectiveCriticalRange)
                         {
+                            critCombo = Mathf.Min(critCombo + 1, MaxCritCombo);
                             isCritical = true;
                             SetPenetrate(true);
-                            if (sr != null) sr.color = Color.yellow;
+                            ApplyCritVisual();
                             OnCriticalHit?.Invoke();
+                            angleDeg += CritAngleJitter();
                         }
+                        else critCombo = 0;
 
-                        float angleDeg = 90f - offset * 60f;
                         float rad = angleDeg * Mathf.Deg2Rad;
                         rb.velocity = new Vector2(Mathf.Cos(rad), Mathf.Sin(rad)) * speed;
                         ClampAngle();
@@ -255,6 +271,7 @@ public class BallController : MonoBehaviour
         rb.velocity = Vector2.zero;
         SetPenetrate(false);
         EndCritical();
+        critCombo = 0; // ミス・ステージ遷移でコンボリセット
         // 透明化パルスの「透明フェーズ」で待機・非表示にされると、
         // コルーチンが止まったまま alpha=0 が残り、復活時に見えなくなるため必ず戻す
         if (sr != null && sr.color.a < 1f)
@@ -292,17 +309,21 @@ public class BallController : MonoBehaviour
             // -1（左端）〜 +1（右端）に正規化
             float offset = Mathf.Clamp((hitX - paddleX) / halfW, -1f, 1f);
 
-            // 中央クリティカル範囲でクリティカル貫通発動
-            if (Mathf.Abs(offset) <= EffectiveCriticalRange)
-            {
-                isCritical = true;
-                SetPenetrate(true);
-                if (sr != null) sr.color = Color.yellow;
-                OnCriticalHit?.Invoke();
-            }
-
             // 中央=90°（真上）、左端=150°、右端=30°
             float angleDeg = 90f - offset * 60f;
+
+            // 中央クリティカル範囲でクリティカル貫通発動（連続でコンボ加算）
+            if (Mathf.Abs(offset) <= EffectiveCriticalRange)
+            {
+                critCombo = Mathf.Min(critCombo + 1, MaxCritCombo);
+                isCritical = true;
+                SetPenetrate(true);
+                ApplyCritVisual();
+                OnCriticalHit?.Invoke();
+                angleDeg += CritAngleJitter();
+            }
+            else critCombo = 0;
+
             float rad = angleDeg * Mathf.Deg2Rad;
             rb.velocity = new Vector2(Mathf.Cos(rad), Mathf.Sin(rad)) * speed;
             ClampAngle();
@@ -354,15 +375,19 @@ public class BallController : MonoBehaviour
                 float halfW = other.bounds.extents.x;
                 float hitX = transform.position.x;
                 float offset = Mathf.Clamp((hitX - paddleX) / halfW, -1f, 1f);
+                bool center = Mathf.Abs(offset) <= EffectiveCriticalRange;
+                if (center) critCombo = Mathf.Min(critCombo + 1, MaxCritCombo);
+                else critCombo = 0;
 
-                // 先に速度を上方向に設定
+                // 先に速度を上方向に設定（中央ヒットは角度ゆらぎ付き）
                 float angleDeg = 90f - offset * 60f;
+                if (center) angleDeg += CritAngleJitter();
                 float rad = angleDeg * Mathf.Deg2Rad;
                 rb.velocity = new Vector2(Mathf.Cos(rad), Mathf.Sin(rad)) * speed;
                 ClampAngle();
 
                 // 再度クリティカル判定（1フレーム遅延で貫通有効化）
-                if (Mathf.Abs(offset) <= EffectiveCriticalRange)
+                if (center)
                 {
                     StartCoroutine(DelayedPenetrate());
                     OnCriticalHit?.Invoke();
@@ -429,13 +454,44 @@ public class BallController : MonoBehaviour
         yield return new WaitForFixedUpdate();
         isCritical = true;
         SetPenetrate(true);
-        if (sr != null) sr.color = Color.yellow;
+        ApplyCritVisual();
     }
 
     /// <summary>
     /// 外部から角度補正を適用する（分裂直後など、速度を直接書き換えた後に呼ぶ）
     /// </summary>
     public void ApplyClampAngle() => ClampAngle();
+
+    // ---- 連続クリティカルの色・角度ゆらぎ ----
+
+    /// <summary>コンボ数に応じたボール・表示色（1=黄, 2=緑, 3=紫, 4=赤, 5=虹）</summary>
+    public static Color ComboColor(int combo)
+    {
+        switch (Mathf.Clamp(combo, 1, MaxCritCombo))
+        {
+            case 1: return Color.yellow;
+            case 2: return new Color(0.35f, 1f, 0.4f);
+            case 3: return new Color(0.75f, 0.4f, 1f);
+            case 4: return new Color(1f, 0.25f, 0.25f);
+            default: return RainbowColor();
+        }
+    }
+
+    /// <summary>虹色（時間でHSVを回す。5連続以上のボールとコンボ表示に使用）</summary>
+    public static Color RainbowColor()
+        => Color.HSVToRGB((Time.time * 0.8f) % 1f, 0.7f, 1f);
+
+    void ApplyCritVisual()
+    {
+        if (sr != null) sr.color = ComboColor(critCombo);
+    }
+
+    /// <summary>
+    /// 中央ヒット時の反射角ゆらぎ（±4〜6°）。
+    /// 真上90°固定だとパドルを動かさず垂直往復でコンボが維持できてしまうため
+    /// </summary>
+    static float CritAngleJitter()
+        => Random.Range(4f, 6f) * (Random.value < 0.5f ? -1f : 1f);
 
     /// <summary>
     /// originalColor の外部参照用（分裂クローンの状態継承に使用）
@@ -455,15 +511,17 @@ public class BallController : MonoBehaviour
 
         if (source.IsCritical)
         {
-            // クリティカル状態も引き継ぐ：ダメージ2倍 + 貫通 + 黄色
+            // クリティカル状態も引き継ぐ：コンボ数・倍率・貫通・色
             isCritical = true;
+            critCombo = Mathf.Max(1, source.critCombo);
             SetPenetrate(true);
-            if (sr != null) sr.color = Color.yellow;
+            ApplyCritVisual();
         }
         else
         {
             // 通常状態：色を本来の色に戻す
             isCritical = false;
+            critCombo = 0;
             if (sr != null) sr.color = originalColor;
         }
 
