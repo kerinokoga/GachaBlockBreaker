@@ -591,16 +591,11 @@ public class CharaManageUI : MonoBehaviour
         lvlTxt.verticalOverflow = VerticalWrapMode.Truncate;
         AddOutline(lvlTxt.gameObject);
 
-        // パワー（ダメージ）— 長文なので2行に分けて表示（パッシブ1・2の両方を集計）
-        int passiveDmg = 0;
-        float dmgMulti = 1f;
-        if (cd.passiveType  == PassiveEffectType.ExtraDamage)  passiveDmg += (int)cd.passiveValue;
-        if (cd.passiveType2 == PassiveEffectType.ExtraDamage)  passiveDmg += (int)cd.passiveValue2;
-        if (cd.passiveType  == PassiveEffectType.BallDamageUp) dmgMulti   *= cd.passiveValue;
-        if (cd.passiveType2 == PassiveEffectType.BallDamageUp) dmgMulti   *= cd.passiveValue2;
-        float totalDmg = (charPower + passiveDmg) * dmgMulti;
+        // パワー（基礎値のみ表示）
+        // ※パッシブは戦闘時に「編成3体のパワー合計」へ適用されるため、
+        //   自分のパワーにだけ掛けた擬似合計を出すと実際の効果と食い違う
         var pwTxt = MakeText(dp,
-            $"パワー: {totalDmg:F1}\n(基礎{charPower:F1} + 追加{passiveDmg}) × {dmgMulti:F1}",
+            $"パワー: {charPower:F1}\n※パッシブスキルは編成3体の合計に適用",
             24, new Color(1f, 0.7f, 0.3f),
             new Vector2(0.5f, 0.525f), new Vector2(780f, 70f));
         pwTxt.horizontalOverflow = HorizontalWrapMode.Wrap;
