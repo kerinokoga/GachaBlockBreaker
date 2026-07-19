@@ -433,6 +433,10 @@ public class GameManager : MonoBehaviour
             }
         }
         // オリジナルボールをリセット
+        // ※DeathZone 内に残った位置のまま再アクティブ化するとトリガーが
+        //   再発火するため、有効化の前にパドル上へ移動しておく
+        if (paddle != null)
+            ball.transform.position = paddle.transform.position + Vector3.up * 0.5f;
         ball.gameObject.SetActive(true);
         ball.ResetBall();
         ball.SetPaddle(paddle.transform);

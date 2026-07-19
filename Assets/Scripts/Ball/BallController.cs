@@ -318,6 +318,12 @@ public class BallController : MonoBehaviour
         // DeathZone 判定（貫通モード中でも有効）
         if (other.CompareTag("DeathZone"))
         {
+            // 未発射（パドル追従中）は無視する。
+            // 分裂中に落ちた本体は DeathZone 内の位置のまま非表示待機し、
+            // ミス処理後の SetActive(true) で物理が再登録されて
+            // OnTriggerEnter が再発火することがある（1ミスで2ストック減る原因）
+            if (!isLaunched) return;
+
             isLaunched = false;
             rb.velocity = Vector2.zero;
             SetPenetrate(false);
