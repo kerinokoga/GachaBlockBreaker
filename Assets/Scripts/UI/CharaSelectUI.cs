@@ -434,7 +434,7 @@ public class CharaSelectUI : MonoBehaviour
         detailRarity  = MakeText(dpInner.transform, "", 34, new Color(1f, 0.9f, 0.2f),
             new Vector2(0.5f, 0.755f), new Vector2(900f, 48f));
         detailRarity.horizontalOverflow = HorizontalWrapMode.Wrap;
-        detailRarity.verticalOverflow = VerticalWrapMode.Truncate;
+        detailRarity.verticalOverflow = VerticalWrapMode.Overflow; // 1行固定。Truncateだと行高>枠で行ごと消える
         AddOutlineCS(detailRarity.gameObject);
 
         // パッシブ：複合の場合は2行になりうるので Wrap で枠内に収める

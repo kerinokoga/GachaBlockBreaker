@@ -575,7 +575,7 @@ public class CharaManageUI : MonoBehaviour
         var rarTxt = MakeText(dp, $"[{rarStr}] {stars}", 36, rarCol,
             new Vector2(0.5f, 0.67f), new Vector2(780f, 48f));
         rarTxt.horizontalOverflow = HorizontalWrapMode.Wrap;
-        rarTxt.verticalOverflow = VerticalWrapMode.Truncate;
+        rarTxt.verticalOverflow = VerticalWrapMode.Overflow; // 1行固定。Truncateだと行高>枠で行ごと消える
         AddOutline(rarTxt.gameObject);
 
         // ── ステータス区切り線 ──
@@ -609,7 +609,9 @@ public class CharaManageUI : MonoBehaviour
         var psHead = MakeText(dp, "◆ パッシブスキル", 32, new Color(0.4f, 0.95f, 1f),
             new Vector2(0.5f, 0.425f), new Vector2(780f, 44f));
         psHead.horizontalOverflow = HorizontalWrapMode.Wrap;
-        psHead.verticalOverflow = VerticalWrapMode.Truncate;
+        // 見出しは1行固定。フォントの行高(約1.4倍)が枠44pxを超え
+        // Truncateだと行ごと消えるため Overflow にする
+        psHead.verticalOverflow = VerticalWrapMode.Overflow;
         AddOutline(psHead.gameObject);
 
         // パッシブスキル本文（複合は2行）
@@ -629,7 +631,7 @@ public class CharaManageUI : MonoBehaviour
         var ultHead = MakeText(dp, "✦ 奥義", 32, new Color(1f, 0.85f, 0.3f),
             new Vector2(0.5f, 0.265f), new Vector2(780f, 44f));
         ultHead.horizontalOverflow = HorizontalWrapMode.Wrap;
-        ultHead.verticalOverflow = VerticalWrapMode.Truncate;
+        ultHead.verticalOverflow = VerticalWrapMode.Overflow; // 見出しは1行固定のためOverflow
         AddOutline(ultHead.gameObject);
 
         // 奥義本文（BallSplit など長文があるので2行想定。複合奥義は2行で表示）
@@ -649,7 +651,7 @@ public class CharaManageUI : MonoBehaviour
             var descHead = MakeText(dp, "▼ 説明", 28, new Color(0.85f, 0.85f, 1f),
                 new Vector2(0.5f, 0.108f), new Vector2(780f, 40f));
             descHead.horizontalOverflow = HorizontalWrapMode.Wrap;
-            descHead.verticalOverflow = VerticalWrapMode.Truncate;
+            descHead.verticalOverflow = VerticalWrapMode.Overflow; // 見出しは1行固定のためOverflow
             AddOutline(descHead.gameObject);
             var descText = MakeText(dp, cd.description, 22, new Color(0.85f, 0.85f, 0.9f),
                 new Vector2(0.5f, 0.05f), new Vector2(780f, 80f));
