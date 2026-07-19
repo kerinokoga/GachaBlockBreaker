@@ -456,8 +456,12 @@ public class StageManager : MonoBehaviour
             }
         }
 
-        // ボール透明化攻撃は廃止（連続クリティカルのボール色表示と
-        // 点滅が紛らわしいため。TriggerBallTransparency は未使用のまま残置）
+        // 裏ステージ専用: フェーズ 1〜3 のどれでもボール透明化を仕掛ける
+        if (tru && phase >= 1)
+        {
+            StartCoroutine(TriggerBallTransparency());
+            actions.Add("ボール透明化 5秒");
+        }
 
         // GameUI に通知（キャラアイコン上に表示）
         if (actions.Count > 0)
