@@ -928,7 +928,10 @@ public class CharaSelectUI : MonoBehaviour
             return;
         }
 
-        if (!StaminaManager.HasStamina(stage))
+        // エンドレスの中断再開はスタミナ消費なし（中断時に消費済みの同一ラン）
+        bool endlessResume = ResultData.IsEndless && ResultData.EndlessResume;
+
+        if (!endlessResume && !StaminaManager.HasStamina(stage))
         {
             ShowStaminaPopup();
             return;
@@ -939,9 +942,13 @@ public class CharaSelectUI : MonoBehaviour
                        && TutorialManager.Instance.CurrentStep == TutorialManager.Step.CharaSelect;
 
         // スタミナ消費確認ポップアップ
-        ShowConfirmPopup($"スタミナを{cost}消費して開始します", "はい", "いいえ", () =>
+        ShowConfirmPopup(
+            endlessResume
+                ? $"中断した続き（{EndlessManager.SuspendScore}体撃破）から開始します\n（スタミナ消費なし）"
+                : $"スタミナを{cost}消費して開始します",
+            "はい", "いいえ", () =>
         {
-            StaminaManager.TryConsume(stage);
+            if (!endlessResume) StaminaManager.TryConsume(stage);
             RefreshStaminaText();
 
             for (int i = 0; i < 3; i++)

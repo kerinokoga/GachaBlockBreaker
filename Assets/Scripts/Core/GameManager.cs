@@ -116,19 +116,40 @@ public class GameManager : MonoBehaviour
             StageData stageData = null;
             if (ResultData.IsEndless)
             {
-                // エンドレス: 1体目（レイアウト=ステージ10相当、キャラはランダム抽選）
-                endlessWave = 0;
-                ResultData.EndlessScore = 0;
                 endlessRng = new System.Random();
                 EndlessManager.OnChallengeStarted(); // 本日初回なら100オーブ付与
-                stageData = PickEndlessLayout(0);
-                endlessCharSource = PickEndlessCharSource(bossOnly: false); // 1体目はボスステージではない
+
+                if (ResultData.EndlessResume && EndlessManager.HasSuspendData)
+                {
+                    // 中断データから再開（ウェーブ・スコア・ストックを復元して消費）
+                    int rWave, rScore, rStock;
+                    EndlessManager.LoadSuspend(out rWave, out rScore, out rStock);
+                    EndlessManager.ClearSuspend();
+                    endlessWave = rWave;
+                    ResultData.EndlessScore = rScore;
+                    currentStock = Mathf.Clamp(rStock, 1, maxStock);
+                    OnStockChanged?.Invoke(currentStock);
+                    stageData = PickEndlessLayout(endlessWave);
+                    endlessCharSource = PickEndlessCharSource(
+                        bossOnly: (endlessWave + 1) % 5 == 0);
+                    Debug.Log($"[Endless] 中断から再開: {endlessWave + 1}体目 スコア={rScore} ストック={currentStock}");
+                }
+                else
+                {
+                    // 1体目から開始（レイアウト=ステージ10相当、キャラはランダム抽選）
+                    endlessWave = 0;
+                    ResultData.EndlessScore = 0;
+                    stageData = PickEndlessLayout(0);
+                    endlessCharSource = PickEndlessCharSource(bossOnly: false); // 1体目はボスステージではない
+                }
+                ResultData.EndlessResume = false;
+
                 if (stageData != null)
                 {
                     // BGM は抽選キャラのステージのものを使用（毎回変化して単調にならない）
                     ResultData.StageNumber = endlessCharSource != null
                         ? endlessCharSource.stageNumber : stageData.stageNumber;
-                    stageManager.SetEndlessHPMultiplier(EndlessHPMulFor(0));
+                    stageManager.SetEndlessHPMultiplier(EndlessHPMulFor(endlessWave));
                     stageManager.SetEndlessCharSource(endlessCharSource);
                 }
             }
@@ -851,6 +872,31 @@ public class GameManager : MonoBehaviour
             ball.transform.position = new Vector3(9999f, 9999f, 0f);
             ball.gameObject.SetActive(false);
             ball.ResetBall();
+        }
+
+        // ---- 撃破ごとの選択メニュー（次に進む／中断／あきらめる）----
+        var interludeUI = FindObjectOfType<GameUI>();
+        if (interludeUI != null)
+        {
+            int choice = -1;
+            interludeUI.ShowEndlessInterludeMenu(
+                ResultData.EndlessScore, endlessWave + 1, c => choice = c);
+            while (choice < 0) yield return null;
+
+            if (choice == 1)
+            {
+                // 中断: 進行をセーブしてホームへ（ホームのエンドレスモードから再開できる）
+                EndlessManager.SaveSuspend(endlessWave, ResultData.EndlessScore, currentStock);
+                Time.timeScale = 1f;
+                SceneManager.LoadScene("HomeScene");
+                yield break;
+            }
+            if (choice == 2)
+            {
+                // あきらめる: その時点でスコア確定→リザルトへ
+                GameOver();
+                yield break;
+            }
         }
 
         // 次のレイアウトとキャラを選出（5の倍数ステージはボスキャラ4人から抽選）

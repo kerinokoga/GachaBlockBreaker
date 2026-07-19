@@ -1747,6 +1747,13 @@ public class HomeUI : MonoBehaviour
             return;
         }
 
+        // 中断データがあれば再開確認を先に表示
+        if (EndlessManager.IsUnlocked && EndlessManager.HasSuspendData)
+        {
+            ShowEndlessResumePopup();
+            return;
+        }
+
         var overlay = new GameObject("EndlessOverlay");
         overlay.transform.SetParent(canvasRoot, false);
         overlay.AddComponent<Image>().color = new Color(0f, 0f, 0f, 0.75f);
@@ -1851,6 +1858,64 @@ public class HomeUI : MonoBehaviour
         MakeSettingsItem(dialog.transform, "とじる", 0.12f,
             new Color(0.25f, 0.25f, 0.35f), new Color(0.45f, 0.45f, 0.6f, 0.6f),
             () => Destroy(overlay));
+    }
+
+    /// <summary>
+    /// エンドレスの中断データがあるときの再開確認ポップアップ。
+    /// 再開する＝続きから／最初からはじめる＝中断データを破棄して通常の挑戦画面へ
+    /// </summary>
+    void ShowEndlessResumePopup()
+    {
+        var overlay = new GameObject("EndlessResumeOverlay");
+        overlay.transform.SetParent(canvasRoot, false);
+        overlay.AddComponent<Image>().color = new Color(0f, 0f, 0f, 0.8f);
+        var ort = overlay.GetComponent<RectTransform>();
+        ort.anchorMin = Vector2.zero; ort.anchorMax = Vector2.one;
+        ort.offsetMin = ort.offsetMax = Vector2.zero;
+
+        var dialog = new GameObject("Dialog");
+        dialog.transform.SetParent(overlay.transform, false);
+        dialog.AddComponent<Image>().color = new Color(0.55f, 0.15f, 0.55f, 0.55f);
+        var drt = dialog.GetComponent<RectTransform>();
+        drt.anchorMin = drt.anchorMax = new Vector2(0.5f, 0.5f);
+        drt.anchoredPosition = Vector2.zero;
+        drt.sizeDelta = new Vector2(820f, 640f);
+
+        var dInner = new GameObject("Inner");
+        dInner.transform.SetParent(dialog.transform, false);
+        dInner.AddComponent<Image>().color = new Color(0.06f, 0.04f, 0.15f, 0.97f);
+        var diRt = dInner.GetComponent<RectTransform>();
+        diRt.anchorMin = Vector2.zero; diRt.anchorMax = Vector2.one;
+        diRt.offsetMin = new Vector2(4f, 4f); diRt.offsetMax = new Vector2(-4f, -4f);
+
+        var titleT = MakeText(dialog.transform, "✦ エンドレスモード ✦", 40,
+            new Color(1f, 0.85f, 0.1f), new Vector2(0.5f, 0.87f), new Vector2(760f, 56f));
+        AddShadow(titleT.gameObject);
+
+        var msgT = MakeText(dialog.transform,
+            $"中断したデータがあります。\n再開しますか？\n\n（{EndlessManager.SuspendScore}体撃破 の続きから）",
+            32, Color.white, new Vector2(0.5f, 0.62f), new Vector2(740f, 220f));
+        msgT.lineSpacing = 1.3f;
+
+        // 再開する（中断の続きから。スタミナ消費なし）
+        MakeSettingsItem(dialog.transform, "再開する", 0.32f,
+            new Color(0.7f, 0.3f, 0.1f), new Color(1f, 0.55f, 0.2f, 0.6f),
+            () =>
+            {
+                ResultData.IsEndless = true;
+                ResultData.EndlessResume = true;
+                SceneManager.LoadScene("CharaSelectScene");
+            });
+
+        // 最初からはじめる（中断データを破棄して通常の挑戦画面へ）
+        MakeSettingsItem(dialog.transform, "最初からはじめる", 0.14f,
+            new Color(0.25f, 0.25f, 0.35f), new Color(0.45f, 0.45f, 0.6f, 0.6f),
+            () =>
+            {
+                EndlessManager.ClearSuspend();
+                Destroy(overlay);
+                ShowEndlessPopup();
+            });
     }
 
     /// <summary>エンドレスの全国ランキング（TOP10＋自分の順位）ポップアップ</summary>

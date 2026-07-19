@@ -22,6 +22,42 @@ public static class EndlessManager
     /// <summary>エンドレスが解放されているか（ステージ5クリア）</summary>
     public static bool IsUnlocked => ProgressManager.IsCleared(UnlockStage);
 
+    // ---- 中断セーブ（撃破ごとの選択メニューから「中断」で保存） ----
+
+    const string KeySuspendWave  = "GachaBlock_EndlessSuspendWave";
+    const string KeySuspendScore = "GachaBlock_EndlessSuspendScore";
+    const string KeySuspendStock = "GachaBlock_EndlessSuspendStock";
+
+    /// <summary>中断データが存在するか</summary>
+    public static bool HasSuspendData => PlayerPrefs.HasKey(KeySuspendWave);
+
+    /// <summary>中断時点の撃破数（再開確認ポップアップの表示用）</summary>
+    public static int SuspendScore => PlayerPrefs.GetInt(KeySuspendScore, 0);
+
+    public static void SaveSuspend(int wave, int score, int stock)
+    {
+        PlayerPrefs.SetInt(KeySuspendWave, wave);
+        PlayerPrefs.SetInt(KeySuspendScore, score);
+        PlayerPrefs.SetInt(KeySuspendStock, stock);
+        PlayerPrefs.Save();
+        Debug.Log($"[Endless] 中断セーブ: wave={wave} score={score} stock={stock}");
+    }
+
+    public static void LoadSuspend(out int wave, out int score, out int stock)
+    {
+        wave  = PlayerPrefs.GetInt(KeySuspendWave, 0);
+        score = PlayerPrefs.GetInt(KeySuspendScore, 0);
+        stock = PlayerPrefs.GetInt(KeySuspendStock, 3);
+    }
+
+    public static void ClearSuspend()
+    {
+        PlayerPrefs.DeleteKey(KeySuspendWave);
+        PlayerPrefs.DeleteKey(KeySuspendScore);
+        PlayerPrefs.DeleteKey(KeySuspendStock);
+        PlayerPrefs.Save();
+    }
+
     /// <summary>
     /// 挑戦開始時に呼ぶ（GameManager のエンドレス初期化から）。
     /// 本日初回ならプレゼントボックスへ100オーブを付与する。

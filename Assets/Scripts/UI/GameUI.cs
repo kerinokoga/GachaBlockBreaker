@@ -63,7 +63,10 @@ public class GameUI : MonoBehaviour
             // 段階5-D / 5-E: チュートリアル復活＆打数補充イベント
             GameManager.Instance.OnTutorialRevive      += OnTutorialReviveHandler;
             GameManager.Instance.OnTutorialTurnsRefill += OnTutorialTurnsRefillHandler;
-            UpdateStockDisplay(GameManager.Instance.MaxStock);
+            // エンドレス再開時は残ストックが最大値未満のことがあるため CurrentStock を優先
+            // （GameManager.Start 未実行で 0 の場合のみ MaxStock にフォールバック）
+            UpdateStockDisplay(GameManager.Instance.CurrentStock > 0
+                ? GameManager.Instance.CurrentStock : GameManager.Instance.MaxStock);
             UpdateDestroyRate(0f);
         }
 
@@ -1577,6 +1580,131 @@ public class GameUI : MonoBehaviour
 
     void OnRetireClicked() { }   // retire confirm handled by lambda above
     void OnHelpClicked()  { }    // help panel handled by lambda above
+
+    // ============================================================
+    // エンドレス: 撃破ごとの選択メニュー（次に進む／中断／あきらめる）
+    // ============================================================
+
+    /// <summary>
+    /// エンドレスで1体撃破（裏ボスなら裏撃破後）ごとに表示する選択メニュー。
+    /// onChoice: 0=次に進む, 1=中断（セーブ）, 2=あきらめる（ゲームオーバー）
+    /// 次に進むは即決定、中断・あきらめるは確認ポップアップを挟む
+    /// </summary>
+    public void ShowEndlessInterludeMenu(int score, int nextEnemyNumber,
+        System.Action<int> onChoice)
+    {
+        var overlay = new GameObject("EndlessInterlude");
+        overlay.transform.SetParent(canvasRoot, false);
+        overlay.AddComponent<Image>().color = new Color(0f, 0f, 0f, 0.82f);
+        var ort = overlay.GetComponent<RectTransform>();
+        ort.anchorMin = Vector2.zero; ort.anchorMax = Vector2.one;
+        ort.offsetMin = ort.offsetMax = Vector2.zero;
+
+        var titleT = MakeText(overlay.transform, $"{score}体撃破！", 56,
+            new Color(1f, 0.85f, 0.1f), new Vector2(0.5f, 0.68f), Vector2.zero,
+            new Vector2(800f, 80f));
+        var titleShadow = titleT.gameObject.AddComponent<Shadow>();
+        titleShadow.effectColor = new Color(0f, 0f, 0f, 0.8f);
+        titleShadow.effectDistance = new Vector2(3f, -3f);
+
+        MakeText(overlay.transform, $"次は {nextEnemyNumber}体目", 30,
+            new Color(0.8f, 0.8f, 0.95f), new Vector2(0.5f, 0.615f), Vector2.zero,
+            new Vector2(600f, 44f));
+
+        // ボタン生成ヘルパー
+        Button MakeMenuBtn(string label, Color col, float y, int fontSize = 32)
+        {
+            var go = new GameObject(label + "Btn");
+            go.transform.SetParent(overlay.transform, false);
+            var img = go.AddComponent<Image>();
+            img.color = col;
+            UISprites.Button(img);
+            var btn = go.AddComponent<Button>();
+            var rt = go.GetComponent<RectTransform>();
+            rt.anchorMin = rt.anchorMax = new Vector2(0.5f, y);
+            rt.anchoredPosition = Vector2.zero;
+            rt.sizeDelta = new Vector2(560f, 92f);
+            var t = MakeText(go.transform, label, fontSize, Color.white,
+                new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(540f, 80f));
+            var sh = t.gameObject.AddComponent<Shadow>();
+            sh.effectColor = new Color(0f, 0f, 0f, 0.7f);
+            sh.effectDistance = new Vector2(2f, -2f);
+            return btn;
+        }
+
+        // 次に進む（確認なし）
+        MakeMenuBtn("次に進む", new Color(0.15f, 0.6f, 0.3f), 0.5f, 36)
+            .onClick.AddListener(() =>
+            {
+                Destroy(overlay);
+                onChoice(0);
+            });
+
+        // 中断（確認あり）
+        MakeMenuBtn("中断（セーブして終了）", new Color(0.15f, 0.35f, 0.65f), 0.39f)
+            .onClick.AddListener(() =>
+            {
+                ShowInterludeConfirm(overlay.transform,
+                    "ここまでの記録をセーブして\n中断しますか？\n\n（ホーム画面のエンドレスモードから\n続きを再開できます）",
+                    () => { Destroy(overlay); onChoice(1); });
+            });
+
+        // あきらめる（確認あり）
+        MakeMenuBtn("あきらめる", new Color(0.55f, 0.18f, 0.18f), 0.28f)
+            .onClick.AddListener(() =>
+            {
+                ShowInterludeConfirm(overlay.transform,
+                    "ここで挑戦を終了しますか？\n\n（スコアが確定して\nリザルト画面に進みます）",
+                    () => { Destroy(overlay); onChoice(2); });
+            });
+    }
+
+    /// <summary>選択メニュー用の確認ポップアップ（はい／いいえ）</summary>
+    void ShowInterludeConfirm(Transform parent, string message, System.Action onYes)
+    {
+        var pop = new GameObject("InterludeConfirm");
+        pop.transform.SetParent(parent, false);
+        pop.AddComponent<Image>().color = new Color(0f, 0f, 0f, 0.85f);
+        var prt = pop.GetComponent<RectTransform>();
+        prt.anchorMin = Vector2.zero; prt.anchorMax = Vector2.one;
+        prt.offsetMin = prt.offsetMax = Vector2.zero;
+
+        var box = new GameObject("Box");
+        box.transform.SetParent(pop.transform, false);
+        var boxImg = box.AddComponent<Image>();
+        boxImg.color = new Color(0.08f, 0.05f, 0.18f, 0.98f);
+        UISprites.Button(boxImg);
+        var brt = box.GetComponent<RectTransform>();
+        brt.anchorMin = brt.anchorMax = new Vector2(0.5f, 0.5f);
+        brt.anchoredPosition = Vector2.zero;
+        brt.sizeDelta = new Vector2(780f, 520f);
+
+        var msgT = MakeText(box.transform, message, 30, Color.white,
+            new Vector2(0.5f, 0.62f), Vector2.zero, new Vector2(700f, 280f));
+        msgT.lineSpacing = 1.25f;
+
+        Button MakeConfirmBtn(string label, Color col, float x)
+        {
+            var go = new GameObject(label + "Btn");
+            go.transform.SetParent(box.transform, false);
+            var img = go.AddComponent<Image>();
+            img.color = col;
+            UISprites.Button(img);
+            var btn = go.AddComponent<Button>();
+            var rt = go.GetComponent<RectTransform>();
+            rt.anchorMin = rt.anchorMax = new Vector2(x, 0.16f);
+            rt.anchoredPosition = Vector2.zero;
+            rt.sizeDelta = new Vector2(280f, 84f);
+            MakeText(go.transform, label, 32, Color.white,
+                new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(260f, 70f));
+            return btn;
+        }
+
+        MakeConfirmBtn("はい", new Color(0.65f, 0.25f, 0.2f), 0.28f)
+            .onClick.AddListener(() => { Destroy(pop); onYes(); });
+        MakeConfirmBtn("いいえ", new Color(0.3f, 0.3f, 0.4f), 0.72f)
+            .onClick.AddListener(() => Destroy(pop));
+    }
 
     /// <summary>
     /// 連続クリティカルコンボの常時表示を更新（Update から毎フレーム呼ぶ）。
