@@ -591,11 +591,11 @@ public class CharaManageUI : MonoBehaviour
         lvlTxt.verticalOverflow = VerticalWrapMode.Truncate;
         AddOutline(lvlTxt.gameObject);
 
-        // パワー（基礎値のみ表示）
-        // ※パッシブは戦闘時に「編成3体のパワー合計」へ適用されるため、
-        //   自分のパワーにだけ掛けた擬似合計を出すと実際の効果と食い違う
+        // ダメージ（このキャラ単体の基礎値のみ表示）
+        // ※パッシブは戦闘時に「編成3体のダメージ合計」へ適用されるため、
+        //   自分の値にだけ掛けた擬似合計を出すと実際の効果と食い違う
         var pwTxt = MakeText(dp,
-            $"パワー: {charPower:F1}\n※パッシブスキルは編成3体の合計に適用",
+            $"ダメージ: {charPower:F1}\n※パッシブスキルは編成3体の合計ダメージに適用",
             24, new Color(1f, 0.7f, 0.3f),
             new Vector2(0.5f, 0.525f), new Vector2(780f, 70f));
         pwTxt.horizontalOverflow = HorizontalWrapMode.Wrap;
