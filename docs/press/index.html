@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>プレスキット | ぶろっくぶれいかー♡ | Kerino Game</title>
+<meta name="description" content="『ぶろっくぶれいかー♡』のプレスキット。メディア向けのゲーム紹介文・スクリーンショット・ロゴ・PVなどの素材をダウンロードできます。">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Kerino Game">
+<meta property="og:title" content="プレスキット | ぶろっくぶれいかー♡">
+<meta property="og:description" content="美少女×ブロック崩し『ぶろっくぶれいかー♡』のメディア向け素材ページ。紹介文・スクリーンショット・PVを掲載しています。">
+<meta property="og:url" content="https://kerinogame.com/press/">
+<meta property="og:image" content="https://kerinogame.com/assets/game_banner.jpg">
+<meta property="og:locale" content="ja_JP">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" type="image/png" href="../assets/logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@500;700;800&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0918;
+    --bg2: #161028;
+    --panel: rgba(255, 255, 255, 0.04);
+    --border: rgba(255, 255, 255, 0.09);
+    --accent: #ff6fae;
+    --accent2: #a06bff;
+    --gold: #ffd84d;
+    --text: #f0edf8;
+    --sub: #a89fc0;
+    --radius: 18px;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Noto Sans JP", "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
+    line-height: 1.9;
+    overflow-x: hidden;
+  }
+  h1, h2, h3, .brand { font-family: "M PLUS Rounded 1c", "Noto Sans JP", sans-serif; }
+
+  header {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 24px;
+    background: rgba(13, 9, 24, 0.8);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+  }
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 800;
+    font-size: 1.15rem;
+    color: #fff;
+    text-decoration: none;
+  }
+  .brand img { width: 34px; height: 34px; border-radius: 8px; }
+  .brand span { color: var(--accent); }
+  nav a {
+    color: var(--sub);
+    text-decoration: none;
+    font-size: 0.92rem;
+    font-weight: 500;
+  }
+  nav a:hover { color: var(--accent); }
+
+  .page-hero {
+    padding: 140px 20px 50px;
+    text-align: center;
+    background:
+      radial-gradient(ellipse 70% 55% at 50% -5%, rgba(160, 107, 255, 0.22), transparent),
+      var(--bg);
+  }
+  .page-hero .tag { color: var(--accent); font-weight: 700; letter-spacing: 0.35em; font-size: 0.85rem; }
+  .page-hero h1 { font-size: clamp(1.9rem, 6vw, 3rem); font-weight: 800; color: #fff; margin-top: 10px; }
+  .page-hero p { color: var(--sub); margin-top: 14px; font-size: 0.95rem; }
+
+  .container { max-width: 940px; margin: 0 auto; padding: 0 22px; }
+  section { padding: 56px 0; }
+  .sec-title {
+    font-size: clamp(1.3rem, 4vw, 1.6rem);
+    font-weight: 800;
+    color: #fff;
+    margin-bottom: 26px;
+    border-left: 5px solid var(--accent);
+    padding-left: 14px;
+    line-height: 1.4;
+  }
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 26px 30px;
+  }
+  .panel + .panel { margin-top: 18px; }
+
+  table.info { width: 100%; border-collapse: collapse; }
+  table.info th, table.info td { text-align: left; padding: 13px 6px; vertical-align: top; }
+  table.info tr + tr th, table.info tr + tr td { border-top: 1px solid var(--border); }
+  table.info th { color: var(--sub); font-weight: 500; white-space: nowrap; padding-right: 26px; width: 9em; }
+  table.info a { color: var(--accent); text-decoration: none; }
+  table.info a:hover { text-decoration: underline; }
+
+  .copy-label { color: var(--sub); font-size: 0.82rem; margin-bottom: 6px; }
+  .desc-block {
+    background: rgba(0,0,0,0.3);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 20px;
+    font-size: 0.93rem;
+    white-space: pre-wrap;
+    margin-bottom: 20px;
+  }
+  details.desc-long summary {
+    cursor: pointer;
+    color: var(--accent);
+    font-weight: 700;
+    margin-bottom: 12px;
+  }
+
+  .shot-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+  }
+  @media (max-width: 700px) { .shot-grid { grid-template-columns: repeat(2, 1fr); } }
+  .shot-grid a {
+    display: block;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    background: var(--bg2);
+  }
+  .shot-grid img { width: 100%; display: block; transition: transform 0.3s; }
+  .shot-grid a:hover img { transform: scale(1.04); }
+
+  .logo-row { display: flex; flex-wrap: wrap; gap: 18px; }
+  .logo-item {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px;
+    text-align: center;
+    flex: 1 1 240px;
+  }
+  .logo-item img { max-width: 100%; border-radius: 10px; }
+  .logo-item .cap { color: var(--sub); font-size: 0.82rem; margin-top: 10px; }
+  .logo-item .cap a { color: var(--accent); text-decoration: none; }
+
+  video { width: 100%; max-width: 640px; border-radius: var(--radius); border: 1px solid var(--border); display: block; margin: 0 auto; }
+
+  .btn {
+    display: inline-block;
+    padding: 14px 38px;
+    border-radius: 999px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    color: #fff;
+    font-weight: 700;
+    text-decoration: none;
+    box-shadow: 0 8px 30px rgba(255, 111, 174, 0.35);
+    transition: transform 0.2s;
+  }
+  .btn:hover { transform: translateY(-2px); }
+  .note { color: var(--sub); font-size: 0.88rem; }
+  .note li { margin-left: 1.4em; }
+
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 34px 20px 44px;
+    text-align: center;
+    color: var(--sub);
+    font-size: 0.85rem;
+  }
+  footer a { color: var(--sub); text-decoration: none; margin: 0 12px; }
+  footer a:hover { color: var(--accent); }
+</style>
+</head>
+<body>
+
+<header>
+  <a class="brand" href="../">
+    <img src="../assets/logo.png" alt="Kerino Game">
+    Kerino <span>Game</span>
+  </a>
+  <nav><a href="../">トップへ戻る</a></nav>
+</header>
+
+<div class="page-hero">
+  <div class="tag">PRESS KIT</div>
+  <h1>ぶろっくぶれいかー♡<br>プレスキット</h1>
+  <p>メディア・ブログ・動画等でご紹介いただくための素材ページです。</p>
+</div>
+
+<section>
+  <div class="container">
+    <h2 class="sec-title">掲載について</h2>
+    <div class="panel note">
+      <ul>
+        <li>本ページの素材は、ゲームの紹介を目的とした記事・動画・SNS投稿等に<strong>事前連絡なしで自由にご利用いただけます</strong>。</li>
+        <li>スクリーンショットや動画の切り抜き・トリミングなど、紹介に必要な範囲での加工は問題ありません。</li>
+        <li>公序良俗に反する利用、ゲーム内容と誤解を招く形での利用はご遠慮ください。</li>
+        <li>取材・レビュー用の追加素材のご希望は <a href="mailto:info@kerinogame.com" style="color: var(--accent);">info@kerinogame.com</a> までお気軽にどうぞ。</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section style="background: var(--bg2);">
+  <div class="container">
+    <h2 class="sec-title">基本情報</h2>
+    <div class="panel">
+      <table class="info">
+        <tr><th>タイトル</th><td>ぶろっくぶれいかー♡</td></tr>
+        <tr><th>ジャンル</th><td>美少女×ブロック崩し（キャラクター収集・育成）</td></tr>
+        <tr><th>価格</th><td>基本プレイ無料（一部アプリ内課金あり）</td></tr>
+        <tr><th>対応プラットフォーム</th><td>Android（Google Play）</td></tr>
+        <tr><th>配信日</th><td>2026年8月1日（事前登録受付中）</td></tr>
+        <tr><th>ストアページ</th><td><a href="https://play.google.com/store/apps/details?id=com.kerinogame.gachablockbreaker" target="_blank" rel="noopener">Google Play</a></td></tr>
+        <tr><th>開発・運営</th><td>Kerino Game（個人開発）</td></tr>
+        <tr><th>公式サイト</th><td><a href="https://kerinogame.com">https://kerinogame.com</a></td></tr>
+        <tr><th>お問い合わせ</th><td><a href="mailto:info@kerinogame.com">info@kerinogame.com</a></td></tr>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="container">
+    <h2 class="sec-title">ゲーム紹介文</h2>
+
+    <div class="copy-label">ショート版（記事の見出し・リード向け）</div>
+    <div class="desc-block">美少女キャラと遊ぶ爽快ブロック崩し！奥義で大逆転、仲間を集めて全国ランキングに挑戦。基本プレイ無料。</div>
+
+    <div class="copy-label">ミドル版（紹介記事向け・約300字）</div>
+    <div class="desc-block">『ぶろっくぶれいかー♡』は、かわいい女の子たちと一緒に遊ぶ美少女×ブロック崩しゲーム。操作はパドルを動かすだけの簡単操作で、ブロックをどんどん破壊する爽快感が味わえる。
+個性豊かな20人のキャラクターはそれぞれ固有の「奥義」を持ち、ボールの分裂・貫通・パワーアップなどで一発逆転が狙える。ステージを攻略するとキャラクターの新しいイラストが解放され、お気に入りのキャラはホーム画面に「きせかえ」して特別なアニメーションで出迎えてくれる。
+撃破数を競う「エンドレスモード」では全国ランキングに挑戦可能。基本プレイ無料で、1ステージ数分から遊べる。</div>
+
+    <details class="desc-long">
+      <summary>ロング版を表示（ストア掲載文・約1,300字）</summary>
+      <div class="desc-block">◆美少女×ブロック崩し『ぶろっくぶれいかー♡』◆
+
+かわいい女の子たちと一緒に遊ぶ、新感覚の爽快ブロック崩しゲーム！
+個性豊かな20人のキャラクターを集めて、自分だけの最強パーティでステージに挑もう。
+ブロック崩しが好きな人も、キャラクター集めが好きな人も、スキマ時間にサクッと遊びたい人も楽しめる基本プレイ無料のカジュアルゲームです。
+
+▍簡単操作で爽快プレイ
+操作は指1本、パドルを動かすだけ！
+だれでもすぐに遊べるシンプル操作で、ブロックをどんどん破壊する爽快感を楽しめます。
+ステージを進めると手ごわいギミックも登場。パーティ編成と奥義の使いどころが攻略のカギ！
+
+▍個性豊かな20人のキャラクター
+炎・水・光…さまざまな属性の女の子たちが登場！
+キャラクターごとに固有の「奥義」を持っていて、ボールの分裂、貫通、パワーアップ、回復などバトルを一発逆転できる必殺技が使えます。
+奥義発動時には迫力のスペシャルアニメーションも！
+
+▍集めて、育てて、きせかえて
+ガチャで新しい仲間をお迎えしよう。オーブはログインボーナスやデイリーミッションで毎日もらえる！
+ステージを攻略すると、キャラクターの新しいイラストが解放されていきます。
+お気に入りの子はホーム画面に「きせかえ」して、いつでも一緒。特別なアニメーションで出迎えてくれます♡
+
+▍エンドレスモードで全国ランキングに挑戦
+どこまで勝ち進めるかを競う「エンドレスモード」搭載！
+撃破数で全国のプレイヤーとランキングを競おう。あなたは何体倒せる？
+
+▍基本情報
+・価格：基本プレイ無料（一部アプリ内課金あり）
+・ジャンル：ブロック崩し×キャラクター収集
+・プレイ時間：1ステージ数分から</div>
+    </details>
+  </div>
+</section>
+
+<section style="background: var(--bg2);">
+  <div class="container">
+    <h2 class="sec-title">PV（30秒トレーラー）</h2>
+    <video src="./img/pv_30sec.mp4" controls preload="metadata"></video>
+    <p class="note" style="text-align: center; margin-top: 14px;">
+      動画ファイルは <a href="./img/pv_30sec.mp4" download style="color: var(--accent);">こちらからダウンロード</a> できます（MP4・約11MB）。
+    </p>
+  </div>
+</section>
+
+<section>
+  <div class="container">
+    <h2 class="sec-title">スクリーンショット</h2>
+    <p class="note" style="margin-bottom: 18px;">クリックで原寸表示（1080×2340）。</p>
+    <div class="shot-grid">
+      <a href="./img/screenshot_01.jpg" target="_blank"><img src="./img/screenshot_01.jpg" alt="スクリーンショット1" loading="lazy"></a>
+      <a href="./img/screenshot_02.jpg" target="_blank"><img src="./img/screenshot_02.jpg" alt="スクリーンショット2" loading="lazy"></a>
+      <a href="./img/screenshot_03.jpg" target="_blank"><img src="./img/screenshot_03.jpg" alt="スクリーンショット3" loading="lazy"></a>
+      <a href="./img/screenshot_04.jpg" target="_blank"><img src="./img/screenshot_04.jpg" alt="スクリーンショット4" loading="lazy"></a>
+      <a href="./img/screenshot_05.jpg" target="_blank"><img src="./img/screenshot_05.jpg" alt="スクリーンショット5" loading="lazy"></a>
+      <a href="./img/screenshot_06.jpg" target="_blank"><img src="./img/screenshot_06.jpg" alt="スクリーンショット6" loading="lazy"></a>
+      <a href="./img/screenshot_07.jpg" target="_blank"><img src="./img/screenshot_07.jpg" alt="スクリーンショット7" loading="lazy"></a>
+      <a href="./img/screenshot_08.jpg" target="_blank"><img src="./img/screenshot_08.jpg" alt="スクリーンショット8" loading="lazy"></a>
+    </div>
+  </div>
+</section>
+
+<section style="background: var(--bg2);">
+  <div class="container">
+    <h2 class="sec-title">ロゴ・キービジュアル</h2>
+    <div class="logo-row">
+      <div class="logo-item">
+        <img src="./img/icon_512.png" alt="アプリアイコン" style="max-width: 200px;">
+        <div class="cap">アプリアイコン（512×512 PNG）<br><a href="./img/icon_512.png" download>ダウンロード</a></div>
+      </div>
+      <div class="logo-item">
+        <img src="./img/feature_graphic.png" alt="キービジュアル">
+        <div class="cap">キービジュアル（1024×500 PNG）<br><a href="./img/feature_graphic.png" download>ダウンロード</a></div>
+      </div>
+      <div class="logo-item">
+        <img src="../assets/game_banner.jpg" alt="ゲームバナー">
+        <div class="cap">ゲームバナー（JPG）<br><a href="../assets/game_banner.jpg" download>ダウンロード</a></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="container" style="text-align: center;">
+    <h2 class="sec-title" style="text-align: left;">素材一式ダウンロード</h2>
+    <p class="note" style="margin-bottom: 24px;">紹介文・スクリーンショット・アイコン・キービジュアル・PVをまとめてダウンロードできます。</p>
+    <a class="btn" href="./presskit_blockbreaker.zip" download>プレスキット一式（ZIP・約17MB）</a>
+  </div>
+</section>
+
+<footer>
+  <div class="links">
+    <a href="../">トップ</a>
+    <a href="../legal.html">利用規約・プライバシーポリシー</a>
+  </div>
+  &copy; 2026 Kerino Game
+</footer>
+
+</body>
+</html>
