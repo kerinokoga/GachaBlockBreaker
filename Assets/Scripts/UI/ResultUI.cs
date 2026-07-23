@@ -215,20 +215,20 @@ public class ResultUI : MonoBehaviour
 
         if (isEndless)
         {
-            // ---- エンドレス結果表示 ----
+            // ---- エンドレス結果表示（新デザイン: スコア大表示＋金色の数値）----
             MakeText(canvasRoot, "ENDLESS RESULT",
-                64, new Color(0.85f, 0.45f, 1f), new Vector2(0.5f, 0.74f), new Vector2(800f, 90f));
+                48, new Color(0.929f, 0.576f, 0.694f), new Vector2(0.5f, 0.75f), new Vector2(800f, 70f));
 
             MakeText(canvasRoot, $"{ResultData.EndlessScore} ステージ突破！",
-                56, new Color(1f, 0.9f, 0.2f), new Vector2(0.5f, 0.64f), new Vector2(800f, 80f));
+                64, Color.white, new Vector2(0.5f, 0.655f), new Vector2(800f, 90f));
 
             MakeText(canvasRoot,
                 endlessNewBest
-                    ? "★ 自己ベスト更新！"
+                    ? "自己ベスト更新！"
                     : $"自己ベスト: {PlayerPrefs.GetInt("GachaBlock_EndlessBest", 0)} ステージ",
                 40,
-                endlessNewBest ? new Color(0.4f, 1f, 0.6f) : new Color(0.7f, 0.8f, 0.9f),
-                new Vector2(0.5f, 0.555f), new Vector2(700f, 60f));
+                new Color(0.980f, 0.780f, 0.460f),
+                new Vector2(0.5f, 0.565f), new Vector2(700f, 60f));
 
             // 全国順位（非同期取得）
             // 順位は「今回のスコアと自己ベストの大きい方」＝ランキング登録値を基準にする
@@ -237,7 +237,7 @@ public class ResultUI : MonoBehaviour
                 PlayerPrefs.GetInt("GachaBlock_EndlessBest", 0));
 
             var rankT = MakeText(canvasRoot, "全国順位: 取得中...",
-                36, Color.white, new Vector2(0.5f, 0.475f), new Vector2(800f, 55f));
+                36, new Color(0.980f, 0.780f, 0.460f), new Vector2(0.5f, 0.475f), new Vector2(800f, 55f));
 
             // ギャラリー・きせかえの新規解放通知（解放イラストのサムネイル付き）
             int newKisekae;
@@ -256,24 +256,32 @@ public class ResultUI : MonoBehaviour
                 AddShadow(unlockT.gameObject);
 
                 // 解放されたイラスト・きせかえのサムネイルを最大5枚並べる
+                // zoomFiles = タップで拡大表示するファイル（イラストは高解像度版、きせかえはサムネ）
                 var thumbFiles = new System.Collections.Generic.List<string>();
+                var zoomFiles = new System.Collections.Generic.List<string>();
                 foreach (var f in newImgFiles)
+                {
                     thumbFiles.Add(EndlessGalleryManager.ThumbFile(f));
+                    zoomFiles.Add(f);
+                }
                 foreach (int b in newKiseBests)
                     if (HomeCharManager.TryGetVariantByBest(b, out var kv)
                         && !string.IsNullOrEmpty(kv.thumb))
+                    {
                         thumbFiles.Add(kv.thumb);
+                        zoomFiles.Add(kv.thumb);
+                    }
 
                 int show = Mathf.Min(5, thumbFiles.Count);
                 const float thumbW = 100f, thumbH = 178f, thumbGap = 12f;
                 float rowW = show * thumbW + (show - 1) * thumbGap;
                 for (int i = 0; i < show; i++)
                 {
+                    string zoomFile = zoomFiles[i];
                     var tGo = new GameObject("UnlockThumb");
                     tGo.transform.SetParent(canvasRoot, false);
                     var rawT = tGo.AddComponent<RawImage>();
                     rawT.color = new Color(1f, 1f, 1f, 0.12f); // 読み込みまでは薄枠
-                    rawT.raycastTarget = false;
                     var trt = tGo.GetComponent<RectTransform>();
                     trt.anchorMin = trt.anchorMax = new Vector2(0.5f, 0.315f);
                     trt.anchoredPosition =
@@ -290,6 +298,10 @@ public class ResultUI : MonoBehaviour
                             ? new Rect((1f - ca / ta) / 2f, 0f, ca / ta, 1f)
                             : new Rect(0f, 1f - ta / ca, 1f, ta / ca);
                     }));
+                    // タップで拡大表示（高解像度版が未キャッシュならサムネで代替）
+                    var thumbBtn = tGo.AddComponent<Button>();
+                    thumbBtn.transition = Selectable.Transition.None;
+                    thumbBtn.onClick.AddListener(() => ShowUnlockZoom(zoomFile, rawT.texture));
                 }
                 if (thumbFiles.Count > show)
                 {
@@ -299,6 +311,9 @@ public class ResultUI : MonoBehaviour
                         new Vector2(rowW / 2f + 50f, 0f);
                     AddShadow(moreT.gameObject);
                 }
+
+                MakeText(canvasRoot, "タップで拡大表示", 22,
+                    new Color(0.55f, 0.53f, 0.60f), new Vector2(0.5f, 0.262f), new Vector2(400f, 30f));
             }
 
             // スコア0＝ランキング未登録。順位を計算すると「4位/3人中」のような
@@ -377,10 +392,24 @@ public class ResultUI : MonoBehaviour
                 new Color(1f, 0.9f, 0.2f), new Vector2(0.5f, 0.30f), new Vector2(600f, 55f));
         }
 
-        // RETRY ボタン
-        MakeButton(canvasRoot, "リトライ", new Color(0.2f, 0.5f, 1f),
-            new Vector2(0.5f, 0.20f), new Vector2(360f, 90f),
-            () => OnRetryClicked());
+        // RETRY ボタン（エンドレスは「もう一度挑戦」・ピンクの主ボタン。スタミナ不足時はグレー表示）
+        if (isEndless)
+        {
+            bool canRetry = StaminaManager.HasStamina(stage);
+            MakeButton(canvasRoot, "もう一度挑戦",
+                canRetry ? new Color(0.831f, 0.325f, 0.494f) : new Color(0.35f, 0.33f, 0.38f),
+                new Vector2(0.5f, 0.215f), new Vector2(420f, 90f),
+                () => OnRetryClicked()); // 不足時はタップでスタミナ回復案内が出る
+            MakeText(canvasRoot, $"（スタミナ{EndlessManager.StaminaCost}消費）",
+                24, new Color(0.55f, 0.53f, 0.60f),
+                new Vector2(0.5f, 0.163f), new Vector2(400f, 34f));
+        }
+        else
+        {
+            MakeButton(canvasRoot, "リトライ", new Color(0.2f, 0.5f, 1f),
+                new Vector2(0.5f, 0.20f), new Vector2(360f, 90f),
+                () => OnRetryClicked());
+        }
 
         // HOME ボタン
         MakeButton(canvasRoot, "ホーム", new Color(0.3f, 0.3f, 0.35f),
@@ -397,6 +426,54 @@ public class ResultUI : MonoBehaviour
 
         // 全画面イラストパネル（初期非表示）
         BuildFullscreenPanel();
+    }
+
+    /// <summary>
+    /// 解放サムネイルのタップ拡大表示。高解像度版をキャッシュ/DLから読み込み、
+    /// 取得できない間（またはオフライン時）はサムネイルのテクスチャを代わりに表示する。
+    /// タップで閉じる。
+    /// </summary>
+    void ShowUnlockZoom(string file, Texture fallbackTex)
+    {
+        var panel = new GameObject("UnlockZoom");
+        panel.transform.SetParent(canvasRoot, false);
+        var bg = panel.AddComponent<Image>();
+        bg.color = new Color(0.02f, 0.01f, 0.05f, 0.96f);
+        var prt = panel.GetComponent<RectTransform>();
+        prt.anchorMin = Vector2.zero; prt.anchorMax = Vector2.one;
+        prt.offsetMin = prt.offsetMax = Vector2.zero;
+
+        var imgGo = new GameObject("ZoomImage");
+        imgGo.transform.SetParent(panel.transform, false);
+        var raw = imgGo.AddComponent<RawImage>();
+        raw.texture = fallbackTex;
+        raw.color = fallbackTex != null ? Color.white : new Color(1f, 1f, 1f, 0.1f);
+        raw.raycastTarget = false;
+        var irt = imgGo.GetComponent<RectTransform>();
+        irt.anchorMin = new Vector2(0.03f, 0.06f);
+        irt.anchorMax = new Vector2(0.97f, 0.94f);
+        irt.offsetMin = irt.offsetMax = Vector2.zero;
+        var fitter = imgGo.AddComponent<AspectRatioFitter>();
+        fitter.aspectMode = AspectRatioFitter.AspectMode.FitInParent;
+        if (fallbackTex != null)
+            fitter.aspectRatio = (float)fallbackTex.width / fallbackTex.height;
+
+        MakeText(panel.transform, "タップで戻る", 28, new Color(1f, 1f, 1f, 0.6f),
+            new Vector2(0.5f, 0.03f), new Vector2(400f, 40f));
+
+        // 高解像度版を非同期で読み込んで差し替え
+        StartCoroutine(EndlessGalleryManager.LoadImage(file, tex =>
+        {
+            if (raw == null || tex == null) return;
+            raw.texture = tex;
+            raw.color = Color.white;
+            if (fitter != null)
+                fitter.aspectRatio = (float)tex.width / tex.height;
+        }));
+
+        var closeBtn = panel.AddComponent<Button>();
+        closeBtn.transition = Selectable.Transition.None;
+        closeBtn.onClick.AddListener(() => Destroy(panel));
     }
 
     void BuildFullscreenPanel()

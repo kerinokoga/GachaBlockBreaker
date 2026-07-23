@@ -287,13 +287,16 @@ public abstract class BlockBase : MonoBehaviour
         float criticalMul = (ball != null) ? ball.CritDamageMultiplier : 1f;
 
         // ダメージ = (3キャラのパワー合計 + ExtraDamage) × パッシブ倍率 × 奥義倍率 × 速度倍率 × クリティカル倍率
+        //          × エンドレス強化カード倍率（エンドレス外では常に1）
+        // 小数のまま全て掛け合わせ、最後に1回だけ切り上げる（小さい%強化が丸めで消えないように）
         float baseDmg = (CharacterManager.Instance?.BasePower ?? 1f)
                       + (CharacterManager.Instance?.BonusDamage ?? 0);
         float mul   = (CharacterManager.Instance?.PassiveDamageMultiplier ?? 1f)
                     * (CharacterManager.Instance?.UltDamageMultiplier ?? 1f)
                     * speedRatio
-                    * criticalMul;
-        TakeDamage((int)System.Math.Ceiling(baseDmg * mul));
+                    * criticalMul
+                    * EndlessBuffManager.DamageMultiplier;
+        TakeDamage(Mathf.Max(1, (int)System.Math.Ceiling(baseDmg * mul)));
     }
 }
 

@@ -97,7 +97,10 @@ public class GameManager : MonoBehaviour
         // BallController のミスイベントを購読
         if (ball != null)
         {
-            ball.speed = 8.5f; // Inspector値を上書きして確実に初期速度を設定
+            // Inspector値を上書きして確実に初期速度を設定。
+            // baseSpeed も同時に更新しないと SpeedDamageRatio が 1 からずれて
+            // 全ダメージが (8.5/Inspector値) 倍に狂う（キャラ選択画面との表示差の原因だった）
+            ball.SetInitialSpeed(8.5f);
             ball.OnMissed += () => OnBallMissed(ball);
             ball.OnPaddleHit += OnPaddleHitForBoss;
             ball.SetPaddle(paddle.transform);
@@ -118,20 +121,28 @@ public class GameManager : MonoBehaviour
             {
                 endlessRng = new System.Random();
                 EndlessManager.OnChallengeStarted(); // 本日初回なら100オーブ付与
+                EndlessBuffManager.StartRun();       // 強化カード状態を初期化して有効化
 
                 if (ResultData.EndlessResume && EndlessManager.HasSuspendData)
                 {
                     // 中断データから再開（ウェーブ・スコア・ストックを復元して消費）
                     int rWave, rScore, rStock;
                     EndlessManager.LoadSuspend(out rWave, out rScore, out rStock);
+                    EndlessBuffManager.LoadSuspend();        // 永続効果＋提示中カード（ClearSuspend より先に読む）
+                    EndlessManager.RestorePartyFromSuspend(); // 中断時の編成で固定（途中の編成替え防止）
+                    endlessResumeGauges = EndlessManager.LoadSuspendGauges(); // 奥義ゲージ（UI初期化後に反映）
                     EndlessManager.ClearSuspend();
                     endlessWave = rWave;
                     ResultData.EndlessScore = rScore;
+                    // 中断時のストックが初期上限3を超えていても削らない
+                    // （回復カードやExtraStockで増えた分を維持。上限は仕様どおり7）
+                    maxStock = Mathf.Clamp(Mathf.Max(maxStock, rStock), 1, 7);
                     currentStock = Mathf.Clamp(rStock, 1, maxStock);
                     OnStockChanged?.Invoke(currentStock);
                     stageData = PickEndlessLayout(endlessWave);
                     endlessCharSource = PickEndlessCharSource(
                         bossOnly: (endlessWave + 1) % 5 == 0);
+                    endlessResumeCardPending = true; // 中断時に提示していたカードの選択から再開
                     Debug.Log($"[Endless] 中断から再開: {endlessWave + 1}体目 スコア={rScore} ストック={currentStock}");
                 }
                 else
@@ -155,6 +166,8 @@ public class GameManager : MonoBehaviour
             }
             else
             {
+                // 通常ステージ: エンドレスの強化カード効果が漏れないよう必ずリセット
+                EndlessBuffManager.ResetAll();
                 foreach (var s in allStages)
                     if (s.stageNumber == ResultData.StageNumber) { stageData = s; break; }
             }
@@ -211,7 +224,10 @@ public class GameManager : MonoBehaviour
         if (ResultData.IsEndless) ApplyEndlessCharVisuals();
 
         // Phase 2: キャラクターマネージャー初期化（パッシブ適用）
-        CharacterManager.Instance?.Initialize(ball, this);
+        // エンドレス再開時は gm を渡さない = ExtraStock（開始時ストック+N）を再適用しない。
+        // 渡すと中断→再開を繰り返すたびにストックが水増しされてしまう
+        // （ストックは中断セーブから復元済みで、初回適用分はその中に含まれている）
+        CharacterManager.Instance?.Initialize(ball, endlessResumeCardPending ? null : this);
 
         // クリティカルゾーンサイズをパッシブに合わせて更新
         if (paddle != null) paddle.UpdateCriticalZoneSize();
@@ -223,6 +239,65 @@ public class GameManager : MonoBehaviour
 
         // ステージ開始ボイス（敵キャラ）— シーン遷移タイミングで再生
         PlayEnemyVoice(cd => cd.voiceStageStart, AudioManager.VoicePriority.Mid);
+
+        // エンドレス再開時: 中断時に提示していた強化カードの選択から始める
+        if (ResultData.IsEndless && endlessResumeCardPending)
+            StartCoroutine(ResumeEndlessCardSelect());
+    }
+
+    // ---- エンドレス再開時のカード選択 ----
+
+    private bool endlessResumeCardPending;
+    private float[] endlessResumeGauges; // 中断時の奥義ゲージ（UI初期化後に復元）
+
+    /// <summary>
+    /// 中断→再開時のカード選択。中断時はカード選択前に保存されるため、
+    /// 保存されていた同じ3枚を提示してから Ready にする。
+    /// ステージは構築済みなので、構築時に反映される効果（集中打・弱体）は後追い適用する。
+    /// </summary>
+    private IEnumerator ResumeEndlessCardSelect()
+    {
+        endlessResumeCardPending = false;
+        CurrentState = GameState.Paused; // 待機フレーム中も発射不可にしてから GameUI を待つ
+        yield return null; // GameUI 初期化待ち
+
+        // 奥義ゲージを中断時の値へ復元（GameUI のイベント購読が済んでから行い、表示にも反映させる）
+        if (endlessResumeGauges != null && CharacterManager.Instance != null)
+        {
+            for (int i = 0; i < 3; i++)
+                CharacterManager.Instance.SetGaugeRaw(i, endlessResumeGauges[i]);
+            endlessResumeGauges = null;
+        }
+
+        var ui = FindObjectOfType<GameUI>();
+        if (ui == null) { CurrentState = GameState.Ready; yield break; }
+        var cards = EndlessBuffManager.GetOrDrawPresentedCards(currentStock);
+        int choice = -1;
+        ui.ShowEndlessCardMenu(ResultData.EndlessScore, endlessWave + 1, cards, c => choice = c);
+        while (choice < 0) yield return null;
+
+        if (choice == 3)
+        {
+            // もう一度中断: 同じ内容を保存し直してホームへ
+            EndlessManager.SaveSuspend(endlessWave, ResultData.EndlessScore, currentStock);
+            EndlessBuffManager.SaveSuspend();
+            Time.timeScale = 1f;
+            SceneManager.LoadScene("HomeScene");
+            yield break;
+        }
+        if (choice == 4)
+        {
+            GameOver();
+            yield break;
+        }
+
+        EndlessBuffManager.ApplyCard(cards[choice]);
+        // 構築時反映の効果を後追い適用
+        if (EndlessBuffManager.WaveTurnsBonus > 0)
+            stageManager?.RefillBossTurns(EndlessBuffManager.WaveTurnsBonus);
+        stageManager?.ApplyEndlessBossWeakenNow();
+        paddle?.UpdateCriticalZoneSize();
+        CurrentState = GameState.Ready;
     }
 
     // ---- 入力 ----
@@ -311,7 +386,7 @@ public class GameManager : MonoBehaviour
         if (clone == null) { Destroy(cloneGo); return null; }
 
         clone.isClone = true;
-        clone.speed = source.speed;
+        clone.CopySpeedState(source); // 速度と基準速度の両方を引き継ぐ（加速中の分裂でも倍率が揃う）
 
         // クリティカル状態・originalColor をオリジナルから引き継ぐ
         clone.InheritStateFromSource(source);
@@ -385,6 +460,17 @@ public class GameManager : MonoBehaviour
     {
         CurrentState = GameState.Miss;
         paddle?.SetActive(false);
+
+        // エンドレスの不死身カード: このステージ中はストックが減らない
+        // （バリア奥義より先に判定し、バリアを無駄に消費させない）
+        if (EndlessBuffManager.ImmortalActive)
+        {
+            yield return new WaitForSeconds(0.3f);
+            ResetToSingleBall();
+            paddle?.SetActive(true);
+            CurrentState = GameState.Ready;
+            yield break;
+        }
 
         // Phase 2: BarrierShot 奥義がアクティブならミスをキャンセル
         if (CharacterManager.Instance != null && CharacterManager.Instance.ConsumeBarrier())
@@ -671,10 +757,15 @@ public class GameManager : MonoBehaviour
         yield return new WaitForSeconds(0.5f);
 
         // ステージ再構築（裏配置 + Boss HP×2）
+        // エンドレスの弱体カードは構築中の ApplyBossWeaken で裏ボスにも適用される
         triggered30 = false;
         triggered60 = false;
         stageManager.paddleRef = paddle;
         stageManager.RebuildAsTrueStage();
+
+        // 集中打カード: 裏ステージでも打数+N（同一ウェーブ内なので効果継続）
+        if (EndlessBuffManager.WaveTurnsBonus > 0)
+            stageManager.RefillBossTurns(EndlessBuffManager.WaveTurnsBonus);
 
         // 新しい Boss のイベント購読をやり直し
         stageManager.OnBossTurnExpired -= OnBossTurnExpired;
@@ -834,6 +925,9 @@ public class GameManager : MonoBehaviour
         endlessWave++;
         Debug.Log($"[Endless] ステージ突破 スコア={ResultData.EndlessScore} 次={endlessWave + 1}体目");
 
+        // 次ステージ限定カード効果はここで終了（裏ボス込みのウェーブ完全終了時のみ。裏突入では消えない）
+        EndlessBuffManager.ClearWaveEffects();
+
         // デイリーミッション（エンドレスの1ステージ突破もクリア扱い）
         DailyMissionManager.ReportStageClear();
 
@@ -874,29 +968,35 @@ public class GameManager : MonoBehaviour
             ball.ResetBall();
         }
 
-        // ---- 撃破ごとの選択メニュー（次に進む／中断／あきらめる）----
+        // ---- 撃破ごとの強化カード選択メニュー（カード3枚／中断／リタイア）----
         var interludeUI = FindObjectOfType<GameUI>();
         if (interludeUI != null)
         {
+            var cards = EndlessBuffManager.GetOrDrawPresentedCards(currentStock);
             int choice = -1;
-            interludeUI.ShowEndlessInterludeMenu(
-                ResultData.EndlessScore, endlessWave + 1, c => choice = c);
+            interludeUI.ShowEndlessCardMenu(
+                ResultData.EndlessScore, endlessWave + 1, cards, c => choice = c);
             while (choice < 0) yield return null;
 
-            if (choice == 1)
+            if (choice == 3)
             {
-                // 中断: 進行をセーブしてホームへ（ホームのエンドレスモードから再開できる）
+                // 中断: 進行＋永続効果＋提示中の3枚をセーブしてホームへ
+                // （再開時は同じ3枚から選び直し＝引き直し悪用防止）
                 EndlessManager.SaveSuspend(endlessWave, ResultData.EndlessScore, currentStock);
+                EndlessBuffManager.SaveSuspend();
                 Time.timeScale = 1f;
                 SceneManager.LoadScene("HomeScene");
                 yield break;
             }
-            if (choice == 2)
+            if (choice == 4)
             {
-                // あきらめる: その時点でスコア確定→リザルトへ
+                // リタイア: その時点でスコア確定→リザルトへ
                 GameOver();
                 yield break;
             }
+
+            // カード選択（0〜2）: 効果を適用してから次ウェーブを構築する
+            EndlessBuffManager.ApplyCard(cards[choice]);
         }
 
         // 次のレイアウトとキャラを選出（5の倍数ステージはボスキャラ4人から抽選）
@@ -915,12 +1015,20 @@ public class GameManager : MonoBehaviour
         ResultData.IsTrueStageClear = false;
 
         // 再構築（HP倍率・キャラ差し替えを更新してから）
+        // 弱体カードは構築中の ApplyBossWeaken でボスHPに反映される
         triggered30 = false;
         triggered60 = false;
         stageManager.SetEndlessHPMultiplier(EndlessHPMulFor(endlessWave));
         stageManager.SetEndlessCharSource(endlessCharSource);
         stageManager.paddleRef = paddle;
         stageManager.BuildStage(next);
+
+        // 集中打カード: 打数+N（構築で打数がリセットされた後に加算）
+        if (EndlessBuffManager.WaveTurnsBonus > 0)
+            stageManager.RefillBossTurns(EndlessBuffManager.WaveTurnsBonus);
+
+        // 範囲拡大・覚醒カードのクリティカルゾーン表示を更新
+        paddle?.UpdateCriticalZoneSize();
 
         // Boss イベントの購読やり直し
         stageManager.OnBossTurnExpired -= OnBossTurnExpired;

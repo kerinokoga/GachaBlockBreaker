@@ -40,6 +40,7 @@ public class BossBlock : BlockBase
     // 制限ターン（パドルヒット回数）
     public int maxTurns = 30;  // StageManager から設定
     public bool IsAlive => currentHP > 0;
+    public int CurrentHP => currentHP;   // エンドレス弱体カードの後追い適用用
 
     protected override void Start()
     {

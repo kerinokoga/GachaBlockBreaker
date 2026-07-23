@@ -188,6 +188,8 @@ public class StageManager : MonoBehaviour
                         bossHP = Mathf.Max(1, Mathf.RoundToInt(bossHP * stageData.trueBossHPMul));
                     // エンドレスのスケーリング倍率を適用
                     bossHP = Mathf.Max(1, Mathf.RoundToInt(bossHP * endlessHPMul));
+                    // エンドレスの弱体カード: ボスHPのみ 1/N（最低1保証・エンドレス外は素通し）
+                    bossHP = EndlessBuffManager.ApplyBossWeaken(bossHP);
                     boss.SetHP(bossHP);
                     boss.difficulty = (stageData.stageNumber - 1) / 5 + 1; // 1~4
                     boss.OnBossAttack += HandleBossAttack;
@@ -381,6 +383,22 @@ public class StageManager : MonoBehaviour
         bossRemainingTurns += amount;
         BossMaxTurns = Mathf.Max(BossMaxTurns, bossRemainingTurns);
         OnBossTurnChanged?.Invoke(bossRemainingTurns, BossMaxTurns);
+    }
+
+    /// <summary>
+    /// エンドレス再開時用: 構築済みのボスに弱体カード（1/N）を後追い適用する。
+    /// 通常フローでは構築時に ApplyBossWeaken 済みなので呼ばない
+    /// （再開時はステージ構築→カード選択の順になるため後追いが必要）。
+    /// </summary>
+    public void ApplyEndlessBossWeakenNow()
+    {
+        if (activeBoss == null) return;
+        int weakened = EndlessBuffManager.ApplyBossWeaken(activeBoss.CurrentHP);
+        if (weakened != activeBoss.CurrentHP)
+        {
+            activeBoss.SetHP(weakened);
+            Debug.Log($"[Endless] 弱体カードをボスへ後追い適用: HP={weakened}");
+        }
     }
 
     // ==== ボス攻撃処理 ====

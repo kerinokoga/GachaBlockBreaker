@@ -23,6 +23,8 @@ public class HomeUI : MonoBehaviour
         DailyMissionManager.CheckReset();
         // ホームに戻った時点で通常モードへ（エンドレスは「挑戦する」でのみ true）
         ResultData.IsEndless = false;
+        // エンドレスの強化カード効果が通常プレイへ漏れないようリセット
+        EndlessBuffManager.ResetAll();
         // 進行状況をクラウドへバックアップ（ホーム到達ごと・非同期）
         CloudSaveManager.Save();
         BuildUI();
@@ -1799,32 +1801,21 @@ public class HomeUI : MonoBehaviour
 
         // ルール説明
         var ruleT = MakeText(dialog.transform,
-            "襲いくる敵を何ステージ突破できるか挑戦！\n" +
-            "進むほど敵が強くなっていく\n" +
-            "5の倍数ステージはボス（裏ボスあり・突破で+2）\n" +
-            "ストック3、全ロストでスコア確定",
-            26, new Color(0.85f, 0.85f, 0.95f), new Vector2(0.5f, 0.81f), new Vector2(820f, 160f));
-        ruleT.lineSpacing = 1.4f;
-
-        // 本日の報酬状態
-        bool rewarded = EndlessManager.HasChallengedToday;
-        var rewardT = MakeText(dialog.transform,
-            rewarded
-                ? "本日の初回チャレンジ報酬: 獲得済み"
-                : $"本日の初回チャレンジ報酬: {EndlessManager.DailyFirstReward}オーブ",
-            28, rewarded ? new Color(0.6f, 0.6f, 0.7f) : new Color(0.4f, 0.95f, 0.6f),
-            new Vector2(0.5f, 0.675f), new Vector2(820f, 40f));
-        AddShadow(rewardT.gameObject);
+            "強くなっていく敵を何ステージ突破できるか挑戦！\n" +
+            "ステージごとに強化カードを選んで強くなろう！\n" +
+            "たくさん撃破してコレクション解放しよう♪",
+            26, new Color(0.85f, 0.85f, 0.95f), new Vector2(0.5f, 0.79f), new Vector2(820f, 130f));
+        ruleT.lineSpacing = 1.5f;
 
         // 自己ベスト・全国ランク
         int best = PlayerPrefs.GetInt("GachaBlock_EndlessBest", 0);
         MakeText(dialog.transform,
             best > 0 ? $"自己ベスト: {best} ステージ" : "自己ベスト: ---",
-            30, new Color(0.4f, 0.9f, 1f), new Vector2(0.5f, 0.615f), new Vector2(820f, 44f));
+            30, new Color(0.980f, 0.780f, 0.460f), new Vector2(0.5f, 0.655f), new Vector2(820f, 44f));
 
         var myRankT = MakeText(dialog.transform,
             best > 0 ? "全国ランク: 取得中..." : "全国ランク: ---",
-            30, new Color(1f, 0.75f, 0.3f), new Vector2(0.5f, 0.555f), new Vector2(820f, 44f));
+            30, new Color(0.980f, 0.780f, 0.460f), new Vector2(0.5f, 0.59f), new Vector2(820f, 44f));
         if (best > 0)
         {
             RankingManager.GetEndlessMyRank(best, (rank, total) =>
@@ -1898,13 +1889,17 @@ public class HomeUI : MonoBehaviour
         msgT.lineSpacing = 1.3f;
 
         // 再開する（中断の続きから。スタミナ消費なし）
+        // キャラ選択は挟まず直接ゲームへ（中断時と同じ編成で再開。入替による仕切り直しを防ぐ）
         MakeSettingsItem(dialog.transform, "再開する", 0.32f,
             new Color(0.7f, 0.3f, 0.1f), new Color(1f, 0.55f, 0.2f, 0.6f),
             () =>
             {
                 ResultData.IsEndless = true;
                 ResultData.EndlessResume = true;
-                SceneManager.LoadScene("CharaSelectScene");
+                // 編成の復元はシーン読み込み前に行う。GameScene 側の復元だけだと
+                // 先に初期化が走る UI（スロットアイコン等）が古い編成を読んでしまう
+                EndlessManager.RestorePartyFromSuspend();
+                SceneManager.LoadScene("GameScene");
             });
 
         // 最初からはじめる（中断データを破棄して通常の挑戦画面へ）

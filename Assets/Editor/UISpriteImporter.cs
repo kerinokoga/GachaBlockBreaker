@@ -21,6 +21,16 @@ public class UISpriteImporter : AssetPostprocessor
             imp.alphaIsTransparency = true;
             imp.textureCompression = TextureImporterCompression.Uncompressed; // 小さいUI素材は無圧縮で綺麗に
         }
+        else if (p.Contains("Assets/Resources/CardIcons/"))
+        {
+            // エンドレス強化カードのアイコン（白線画・色乗算用）
+            var imp = (TextureImporter)assetImporter;
+            imp.textureType = TextureImporterType.Sprite;
+            imp.spriteImportMode = SpriteImportMode.Single;
+            imp.mipmapEnabled = false;
+            imp.alphaIsTransparency = true;
+            imp.textureCompression = TextureImporterCompression.Uncompressed;
+        }
         else if (p.Contains("Assets/Resources/Blocks/"))
         {
             // ブロックタイル: 256x128 を PPU128 で 2x1 ユニットに（旧 _temp スプライトと同サイズ）

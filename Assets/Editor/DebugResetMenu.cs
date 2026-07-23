@@ -21,6 +21,18 @@ public static class DebugResetMenu
             "完了しました。Play中の場合はシーンを読み込み直すと反映されます。", "OK");
     }
 
+    [MenuItem("Tools/デバッグ/エンドレス強化カード全種テストを切替")]
+    public static void ToggleEndlessCardDebug()
+    {
+        EndlessBuffManager.DebugDrawAll = !EndlessBuffManager.DebugDrawAll;
+        Debug.Log($"[Debug] エンドレス強化カード全種テスト: {(EndlessBuffManager.DebugDrawAll ? "ON（カタログ順に3枚ずつ提示）" : "OFF（通常抽選）")}");
+        EditorUtility.DisplayDialog("エンドレス強化カード",
+            EndlessBuffManager.DebugDrawAll
+                ? "ON: 撃破ごとにカタログ順で3枚ずつ提示されます（全22種の表示確認用）。"
+                : "OFF: 通常のレア度抽選（R87% / SR10% / SSR3%）に戻しました。",
+            "OK");
+    }
+
     [MenuItem("Tools/デバッグ/エンドレス実績をリセット（ギャラリー解放テスト用）")]
     public static void ResetEndless()
     {

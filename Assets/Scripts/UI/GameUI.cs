@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
+using System.Collections.Generic;
 
 /// <summary>
 /// ゲーム中の UI をランタイムで構築・管理する
@@ -330,14 +331,17 @@ public class GameUI : MonoBehaviour
         if (cd == null) return;
 
         // 複合奥義は「効果1 ＆ 効果2」でバナー表示
-        string effectLine = GetUltEffectText(cd.ultimateType, cd.ultimateValue, cd.ultimateDuration);
+        // エンドレスの奥義延長カード分を反映（効果本体の CharacterManager 側と同じ延長値）
+        float dur1 = EndlessBuffManager.ExtendUltDuration(cd.ultimateDuration);
+        float dur2 = EndlessBuffManager.ExtendUltDuration(cd.ultimateDuration2);
+        string effectLine = GetUltEffectText(cd.ultimateType, cd.ultimateValue, dur1);
         if (cd.ultimateType2 != UltimateSkillType.None)
-            effectLine += " ＆ " + GetUltEffectText(cd.ultimateType2, cd.ultimateValue2, cd.ultimateDuration2);
+            effectLine += " ＆ " + GetUltEffectText(cd.ultimateType2, cd.ultimateValue2, dur2);
         StartCoroutine(UltBannerCoroutine($"{cd.characterName}の奥義！", effectLine));
 
         // 持続系奥義は効果内容 + 残り時間も表示（案D）。複合の追加効果分も個別に表示
-        StartUltTimerIfDurational(cd.ultimateType, cd.ultimateValue, cd.ultimateDuration);
-        StartUltTimerIfDurational(cd.ultimateType2, cd.ultimateValue2, cd.ultimateDuration2);
+        StartUltTimerIfDurational(cd.ultimateType, cd.ultimateValue, dur1);
+        StartUltTimerIfDurational(cd.ultimateType2, cd.ultimateValue2, dur2);
     }
 
     /// <summary>持続系（ダメージUP/貫通）ならタイマー表示を開始する</summary>
@@ -836,8 +840,9 @@ public class GameUI : MonoBehaviour
                           + CharacterManager.Instance.BonusDamage;
             float mul = CharacterManager.Instance.PassiveDamageMultiplier
                       * CharacterManager.Instance.UltDamageMultiplier
-                      * speedRatio * criticalMul;
-            int dmg = (int)System.Math.Ceiling(baseDmg * mul);
+                      * speedRatio * criticalMul
+                      * EndlessBuffManager.DamageMultiplier; // 強化カード分（エンドレス外は1）
+            int dmg = Mathf.Max(1, (int)System.Math.Ceiling(baseDmg * mul));
             damageText.text = $"ヒットダメージ：{dmg}";
         }
 
@@ -939,45 +944,45 @@ public class GameUI : MonoBehaviour
             new Vector2(1f, 1f));
         pauseBtn.GetComponent<Button>().onClick.AddListener(OnPauseButtonClicked);
 
-        // ---- PauseMenu パネル----
-        pauseMenuPanel = MakePanel(root, new Color(0f, 0f, 0f, 0.88f));
+        // ---- PauseMenu パネル（濃紺紫の統一デザイン）----
+        pauseMenuPanel = MakePanel(root, new Color(0.102f, 0.063f, 0.157f, 0.97f)); // #1A1028
 
-        MakeText(pauseMenuPanel.transform, "PAUSE", 60, new Color(1f, 0.9f, 0.2f),
-            new Vector2(0.5f, 0.78f), Vector2.zero, new Vector2(400f, 80f));
+        MakeText(pauseMenuPanel.transform, "ポーズ", 48, Color.white,
+            new Vector2(0.5f, 0.82f), Vector2.zero, new Vector2(400f, 70f));
 
-        MakeButton(pauseMenuPanel.transform, "つづける", 36, new Color(0.2f, 0.5f, 1f),
-            new Vector2(0.5f, 0.64f), Vector2.zero, new Vector2(320f, 72f))
-            .GetComponent<Button>().onClick.AddListener(OnResumeClicked);
-
-        var retireGo = MakeButton(pauseMenuPanel.transform, "あきらめる", 36, new Color(0.85f, 0.2f, 0.2f),
-            new Vector2(0.5f, 0.52f), Vector2.zero, new Vector2(320f, 72f));
-        retireGo.GetComponent<Button>().onClick.AddListener(OnRetireClicked);
-
-        MakeButton(pauseMenuPanel.transform, "あそびかた", 36, new Color(0.3f, 0.3f, 0.4f),
-            new Vector2(0.5f, 0.40f), Vector2.zero, new Vector2(320f, 72f))
-            .GetComponent<Button>().onClick.AddListener(OnHelpClicked);
+        // 設定パネル（音量3種＋奥義アニメの背景ボックス）
+        var settingsBox = new GameObject("SettingsBox");
+        settingsBox.transform.SetParent(pauseMenuPanel.transform, false);
+        var sbImg = settingsBox.AddComponent<Image>();
+        sbImg.color = new Color(0.141f, 0.094f, 0.220f, 0.98f); // #241838
+        sbImg.raycastTarget = false;
+        UISprites.Button(sbImg);
+        var sbRT = settingsBox.GetComponent<RectTransform>();
+        sbRT.anchorMin = new Vector2(0.5f, 0.40f);
+        sbRT.anchorMax = new Vector2(0.5f, 0.76f);
+        sbRT.anchoredPosition = Vector2.zero;
+        sbRT.sizeDelta = new Vector2(760f, 0f);
 
         // BGM スライダー
-        CreateVolumeSlider(pauseMenuPanel.transform, "BGM", 0.32f,
+        CreateVolumeSlider(pauseMenuPanel.transform, "BGM", 0.70f,
             PlayerPrefs.GetFloat("BGMVolume", 1f),
             v => { PlayerPrefs.SetFloat("BGMVolume", v); AudioManager.Instance?.SetBGMVolume(v); });
 
         // SE スライダー
-        CreateVolumeSlider(pauseMenuPanel.transform, "SE", 0.22f,
+        CreateVolumeSlider(pauseMenuPanel.transform, "SE", 0.62f,
             PlayerPrefs.GetFloat("SEVolume", 1f),
             v => { PlayerPrefs.SetFloat("SEVolume", v); AudioManager.Instance?.SetSEVolume(v); });
 
         // ボイス スライダー
-        CreateVolumeSlider(pauseMenuPanel.transform, "ボイス", 0.12f,
+        CreateVolumeSlider(pauseMenuPanel.transform, "ボイス", 0.54f,
             PlayerPrefs.GetFloat("VoiceVolume", 1f),
             v => { PlayerPrefs.SetFloat("VoiceVolume", v); AudioManager.Instance?.SetVoiceVolume(v); });
 
         // 奥義アニメ ON/OFF トグル
-        // 注意: この下の [2] インデックス参照（あそびかたボタン）より後に追加すること
         var ultAnimGo = MakeButton(pauseMenuPanel.transform,
-            $"奥義アニメ: {(UltAnimationManager.Enabled ? "ON" : "OFF")}", 30,
-            new Color(0.4f, 0.3f, 0.65f),
-            new Vector2(0.5f, 0.04f), Vector2.zero, new Vector2(360f, 64f));
+            $"奥義アニメ: {(UltAnimationManager.Enabled ? "ON" : "OFF")}", 28,
+            new Color(0.227f, 0.165f, 0.322f),
+            new Vector2(0.5f, 0.445f), Vector2.zero, new Vector2(360f, 64f));
         var ultAnimTxt = ultAnimGo.GetComponentInChildren<Text>();
         ultAnimGo.GetComponent<Button>().onClick.AddListener(() =>
         {
@@ -986,14 +991,28 @@ public class GameUI : MonoBehaviour
                 ultAnimTxt.text = $"奥義アニメ: {(UltAnimationManager.Enabled ? "ON" : "OFF")}";
         });
 
+        // つづける（ピンクの主ボタン）
+        MakeButton(pauseMenuPanel.transform, "つづける", 36, new Color(0.831f, 0.325f, 0.494f),
+            new Vector2(0.5f, 0.32f), Vector2.zero, new Vector2(420f, 88f))
+            .GetComponent<Button>().onClick.AddListener(OnResumeClicked);
+
+        // 操作説明・リタイア（横並びのサブボタン）
+        MakeButton(pauseMenuPanel.transform, "操作説明", 30, new Color(0.227f, 0.165f, 0.322f),
+            new Vector2(0.30f, 0.22f), Vector2.zero, new Vector2(300f, 76f))
+            .GetComponent<Button>().onClick.AddListener(OnHelpClicked);
+
+        var retireGo = MakeButton(pauseMenuPanel.transform, "リタイア", 30, new Color(0.45f, 0.14f, 0.14f),
+            new Vector2(0.70f, 0.22f), Vector2.zero, new Vector2(300f, 76f));
+        retireGo.GetComponent<Button>().onClick.AddListener(OnRetireClicked);
+
         // リタイヤ確認ダイアログ
-        var retireConfirm = MakePanel(root, new Color(0f, 0f, 0f, 0.92f));
-        MakeText(retireConfirm.transform, "あきらめますか？", 40, Color.white,
+        var retireConfirm = MakePanel(root, new Color(0.06f, 0.035f, 0.10f, 0.94f));
+        MakeText(retireConfirm.transform, "リタイアしますか？", 40, Color.white,
             new Vector2(0.5f, 0.57f), Vector2.zero, new Vector2(500f, 60f));
-        MakeButton(retireConfirm.transform, "はい", 36, new Color(0.85f, 0.2f, 0.2f),
+        MakeButton(retireConfirm.transform, "はい", 36, new Color(0.831f, 0.325f, 0.494f),
             new Vector2(0.32f, 0.45f), Vector2.zero, new Vector2(200f, 65f))
             .GetComponent<Button>().onClick.AddListener(() => GameManager.Instance?.Retire());
-        MakeButton(retireConfirm.transform, "いいえ", 36, new Color(0.2f, 0.5f, 1f),
+        MakeButton(retireConfirm.transform, "いいえ", 36, new Color(0.227f, 0.165f, 0.322f),
             new Vector2(0.68f, 0.45f), Vector2.zero, new Vector2(200f, 65f))
             .GetComponent<Button>().onClick.AddListener(() => retireConfirm.SetActive(false));
         retireConfirm.SetActive(false);
@@ -1582,81 +1601,256 @@ public class GameUI : MonoBehaviour
     void OnHelpClicked()  { }    // help panel handled by lambda above
 
     // ============================================================
-    // エンドレス: 撃破ごとの選択メニュー（次に進む／中断／あきらめる）
+    // エンドレス: 撃破ごとの強化カード選択メニュー
     // ============================================================
 
+    static readonly Color CardPanelBG   = new Color(0.141f, 0.094f, 0.220f, 0.98f); // #241838
+    static readonly Color FrameColorR   = new Color(0.216f, 0.541f, 0.867f);        // 青
+    static readonly Color FrameColorSR  = new Color(0.937f, 0.624f, 0.153f);        // 金
+    static readonly Color GoldText      = new Color(0.980f, 0.780f, 0.460f);        // 数値の金色
+    static readonly Color PinkAccent    = new Color(0.929f, 0.576f, 0.694f);        // 見出しピンク
+    static readonly Color PinkButton    = new Color(0.831f, 0.325f, 0.494f);        // 主ボタン
+
     /// <summary>
-    /// エンドレスで1体撃破（裏ボスなら裏撃破後）ごとに表示する選択メニュー。
-    /// onChoice: 0=次に進む, 1=中断（セーブ）, 2=あきらめる（ゲームオーバー）
-    /// 次に進むは即決定、中断・あきらめるは確認ポップアップを挟む
+    /// エンドレスで1体撃破（裏ボスなら裏撃破後）ごとに表示する強化カード選択メニュー。
+    /// onChoice: 0〜2=カード選択（適用は呼び出し側）, 3=中断（セーブ）, 4=リタイア
+    /// カードは確認ポップアップ（はい/いいえ）で確定。中断・リタイアも確認あり。
     /// </summary>
-    public void ShowEndlessInterludeMenu(int score, int nextEnemyNumber,
-        System.Action<int> onChoice)
+    public void ShowEndlessCardMenu(int score, int nextEnemyNumber,
+        List<EndlessBuffManager.Card> cards, System.Action<int> onChoice)
     {
-        var overlay = new GameObject("EndlessInterlude");
+        var overlay = new GameObject("EndlessCardMenu");
         overlay.transform.SetParent(canvasRoot, false);
-        overlay.AddComponent<Image>().color = new Color(0f, 0f, 0f, 0.82f);
+        var overlayImg = overlay.AddComponent<Image>();
+        var overlayBGColor = new Color(0.06f, 0.035f, 0.10f, 0.94f);
+        overlayImg.color = overlayBGColor;
         var ort = overlay.GetComponent<RectTransform>();
         ort.anchorMin = Vector2.zero; ort.anchorMax = Vector2.one;
         ort.offsetMin = ort.offsetMax = Vector2.zero;
 
-        var titleT = MakeText(overlay.transform, $"{score}体撃破！", 56,
-            new Color(1f, 0.85f, 0.1f), new Vector2(0.5f, 0.68f), Vector2.zero,
-            new Vector2(800f, 80f));
+        // メニュー一式のコンテナ（背景タップのイラスト鑑賞モードでまとめて非表示にする）
+        var content = new GameObject("Content");
+        content.transform.SetParent(overlay.transform, false);
+        var contentRT = content.AddComponent<RectTransform>();
+        contentRT.anchorMin = Vector2.zero; contentRT.anchorMax = Vector2.one;
+        contentRT.offsetMin = contentRT.offsetMax = Vector2.zero;
+        var contentGroup = content.AddComponent<CanvasGroup>();
+
+        // ---- 見出し ----
+        MakeText(content.transform, $"{score}体撃破！ 次は {nextEnemyNumber}体目", 30,
+            new Color(0.957f, 0.753f, 0.820f), new Vector2(0.5f, 0.92f), Vector2.zero,
+            new Vector2(800f, 44f));
+        var titleT = MakeText(content.transform, "強化カードをえらんでね♡", 44,
+            Color.white, new Vector2(0.5f, 0.875f), Vector2.zero, new Vector2(800f, 60f));
         var titleShadow = titleT.gameObject.AddComponent<Shadow>();
         titleShadow.effectColor = new Color(0f, 0f, 0f, 0.8f);
         titleShadow.effectDistance = new Vector2(3f, -3f);
 
-        MakeText(overlay.transform, $"次は {nextEnemyNumber}体目", 30,
-            new Color(0.8f, 0.8f, 0.95f), new Vector2(0.5f, 0.615f), Vector2.zero,
-            new Vector2(600f, 44f));
+        // ---- 取得した永続効果（1つも無ければ非表示）----
+        var permLines = new List<(string label, string value)>();
+        if (EndlessBuffManager.PermanentDamagePct > 0)
+            permLines.Add(("ヒットダメージ", $"+{EndlessBuffManager.PermanentDamagePct}%"));
+        if (EndlessBuffManager.PermanentCritPct > 0)
+            permLines.Add(("クリティカル範囲", $"+{EndlessBuffManager.PermanentCritPct:0.#}%"));
+        if (EndlessBuffManager.PermanentUltSec > 0)
+            permLines.Add(("奥義効果時間", $"+{EndlessBuffManager.PermanentUltSec:0.#}秒"));
+        if (permLines.Count > 0)
+        {
+            float panelH = 70f + permLines.Count * 44f;
+            var panel = new GameObject("PermPanel");
+            panel.transform.SetParent(content.transform, false);
+            var pImg = panel.AddComponent<Image>();
+            pImg.color = CardPanelBG;
+            pImg.raycastTarget = false; // 背景タップ（イラスト鑑賞）を遮らない
+            UISprites.Button(pImg);
+            var pRT = panel.GetComponent<RectTransform>();
+            pRT.anchorMin = pRT.anchorMax = new Vector2(0.5f, 0.80f);
+            pRT.anchoredPosition = new Vector2(0f, -panelH / 2f);
+            pRT.sizeDelta = new Vector2(720f, panelH);
 
-        // ボタン生成ヘルパー
-        Button MakeMenuBtn(string label, Color col, float y, int fontSize = 32)
+            MakeText(panel.transform, "取得した永続効果", 24, PinkAccent,
+                new Vector2(0.5f, 1f), new Vector2(0f, -34f), new Vector2(680f, 34f));
+            for (int i = 0; i < permLines.Count; i++)
+            {
+                float y = -70f - i * 44f + 22f;
+                var lT = MakeText(panel.transform, permLines[i].label, 26, Color.white,
+                    new Vector2(0f, 1f), new Vector2(200f, y), new Vector2(340f, 40f));
+                lT.alignment = TextAnchor.MiddleLeft;
+                var vT = MakeText(panel.transform, permLines[i].value, 26, GoldText,
+                    new Vector2(1f, 1f), new Vector2(-160f, y), new Vector2(260f, 40f));
+                vT.alignment = TextAnchor.MiddleRight;
+            }
+        }
+
+        // ---- カード3枚（永続効果パネルとの間に余裕を持たせて中央よりやや下に配置）----
+        const float cardW = 310f, cardH = 470f, cardGap = 26f;
+        float rowW = cards.Count * cardW + (cards.Count - 1) * cardGap;
+        for (int i = 0; i < cards.Count; i++)
+        {
+            var card = cards[i];
+            int index = i;
+            float x = -rowW / 2f + cardW / 2f + i * (cardW + cardGap);
+
+            // 外枠（レア度色。SSRは虹色アニメ）
+            var frame = new GameObject($"Card{i}");
+            frame.transform.SetParent(content.transform, false);
+            var fImg = frame.AddComponent<Image>();
+            fImg.color = card.rarity == EndlessBuffManager.Rarity.R ? FrameColorR
+                       : card.rarity == EndlessBuffManager.Rarity.SR ? FrameColorSR
+                       : Color.white; // SSR はコルーチンで虹色に更新
+            UISprites.Button(fImg);
+            var fRT = frame.GetComponent<RectTransform>();
+            fRT.anchorMin = fRT.anchorMax = new Vector2(0.5f, 0.47f);
+            fRT.anchoredPosition = new Vector2(x, 0f);
+            fRT.sizeDelta = new Vector2(cardW, cardH);
+            if (card.rarity == EndlessBuffManager.Rarity.SSR)
+                StartCoroutine(RainbowFrame(fImg));
+
+            // 内側パネル
+            var inner = new GameObject("Inner");
+            inner.transform.SetParent(frame.transform, false);
+            var iImg = inner.AddComponent<Image>();
+            iImg.color = CardPanelBG;
+            iImg.raycastTarget = false;
+            UISprites.Button(iImg);
+            var iRT = inner.GetComponent<RectTransform>();
+            iRT.anchorMin = Vector2.zero; iRT.anchorMax = Vector2.one;
+            iRT.offsetMin = new Vector2(8f, 8f); iRT.offsetMax = new Vector2(-8f, -8f);
+
+            // アイコン（白線画をレア度色で乗算）
+            var iconSprite = Resources.Load<Sprite>("CardIcons/" + EndlessBuffManager.IconKey(card.id));
+            if (iconSprite != null)
+            {
+                var iconGo = new GameObject("Icon");
+                iconGo.transform.SetParent(inner.transform, false);
+                var iconImg = iconGo.AddComponent<Image>();
+                iconImg.sprite = iconSprite;
+                iconImg.preserveAspect = true;
+                iconImg.raycastTarget = false;
+                iconImg.color = card.rarity == EndlessBuffManager.Rarity.R
+                        ? new Color(0.52f, 0.72f, 0.95f)
+                    : card.rarity == EndlessBuffManager.Rarity.SR
+                        ? new Color(0.98f, 0.78f, 0.46f)
+                        : new Color(0.93f, 0.58f, 0.69f);
+                var iconRT = iconGo.GetComponent<RectTransform>();
+                iconRT.anchorMin = iconRT.anchorMax = new Vector2(0.5f, 0.83f);
+                iconRT.anchoredPosition = Vector2.zero;
+                iconRT.sizeDelta = new Vector2(96f, 96f);
+            }
+
+            // カード名
+            var nameT = MakeText(inner.transform, card.cardName, 34, Color.white,
+                new Vector2(0.5f, 0.645f), Vector2.zero, new Vector2(280f, 50f));
+            var nSh = nameT.gameObject.AddComponent<Shadow>();
+            nSh.effectColor = new Color(0f, 0f, 0f, 0.7f);
+            nSh.effectDistance = new Vector2(2f, -2f);
+
+            // 効果説明
+            var effT = MakeText(inner.transform, card.effectText, 26,
+                new Color(0.85f, 0.85f, 0.95f), new Vector2(0.5f, 0.40f), Vector2.zero,
+                new Vector2(272f, 170f));
+            effT.lineSpacing = 1.2f;
+
+            // 種別タグ（即時／永続／次だけ）
+            var tag = new GameObject("Tag");
+            tag.transform.SetParent(inner.transform, false);
+            var tImg = tag.AddComponent<Image>();
+            tImg.color = new Color(0.227f, 0.165f, 0.322f);
+            tImg.raycastTarget = false;
+            UISprites.Button(tImg);
+            var tRT = tag.GetComponent<RectTransform>();
+            tRT.anchorMin = tRT.anchorMax = new Vector2(0.5f, 0.12f);
+            tRT.anchoredPosition = Vector2.zero;
+            tRT.sizeDelta = new Vector2(160f, 48f);
+            MakeText(tag.transform, EndlessBuffManager.KindTag(card.kind), 24,
+                card.kind == EndlessBuffManager.CardKind.NextWave ? PinkAccent
+                    : new Color(0.83f, 0.82f, 0.78f),
+                new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(150f, 40f));
+
+            // タップ → 確認ポップアップ → はい で確定
+            var btn = frame.AddComponent<Button>();
+            btn.onClick.AddListener(() =>
+            {
+                ShowInterludeConfirm(overlay.transform,
+                    $"「{card.cardName}」を取得して\n次に進みますか？",
+                    () => { Destroy(overlay); onChoice(index); });
+            });
+        }
+
+        // ---- 案内文 ----
+        MakeText(content.transform, "カードをタップして次に進む", 24,
+            new Color(0.55f, 0.53f, 0.60f), new Vector2(0.5f, 0.235f), Vector2.zero,
+            new Vector2(600f, 36f));
+
+        // ---- 中断・リタイア ----
+        Button MakeSubBtn(string label, Color col, float ax)
         {
             var go = new GameObject(label + "Btn");
-            go.transform.SetParent(overlay.transform, false);
+            go.transform.SetParent(content.transform, false);
             var img = go.AddComponent<Image>();
             img.color = col;
             UISprites.Button(img);
             var btn = go.AddComponent<Button>();
             var rt = go.GetComponent<RectTransform>();
-            rt.anchorMin = rt.anchorMax = new Vector2(0.5f, y);
+            rt.anchorMin = rt.anchorMax = new Vector2(ax, 0.155f);
             rt.anchoredPosition = Vector2.zero;
-            rt.sizeDelta = new Vector2(560f, 92f);
-            var t = MakeText(go.transform, label, fontSize, Color.white,
-                new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(540f, 80f));
-            var sh = t.gameObject.AddComponent<Shadow>();
-            sh.effectColor = new Color(0f, 0f, 0f, 0.7f);
-            sh.effectDistance = new Vector2(2f, -2f);
+            rt.sizeDelta = new Vector2(400f, 84f);
+            MakeText(go.transform, label, 28, Color.white,
+                new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(380f, 70f));
             return btn;
         }
 
-        // 次に進む（確認なし）
-        MakeMenuBtn("次に進む", new Color(0.15f, 0.6f, 0.3f), 0.5f, 36)
-            .onClick.AddListener(() =>
-            {
-                Destroy(overlay);
-                onChoice(0);
-            });
-
-        // 中断（確認あり）
-        MakeMenuBtn("中断（セーブして終了）", new Color(0.15f, 0.35f, 0.65f), 0.39f)
+        MakeSubBtn("中断してセーブ", new Color(0.15f, 0.35f, 0.65f), 0.29f)
             .onClick.AddListener(() =>
             {
                 ShowInterludeConfirm(overlay.transform,
                     "ここまでの記録をセーブして\n中断しますか？\n\n（ホーム画面のエンドレスモードから\n続きを再開できます）",
-                    () => { Destroy(overlay); onChoice(1); });
+                    () => { Destroy(overlay); onChoice(3); });
             });
 
-        // あきらめる（確認あり）
-        MakeMenuBtn("あきらめる", new Color(0.55f, 0.18f, 0.18f), 0.28f)
+        MakeSubBtn("リタイア", new Color(0.55f, 0.18f, 0.18f), 0.71f)
             .onClick.AddListener(() =>
             {
                 ShowInterludeConfirm(overlay.transform,
                     "ここで挑戦を終了しますか？\n\n（スコアが確定して\nリザルト画面に進みます）",
-                    () => { Destroy(overlay); onChoice(2); });
+                    () => { Destroy(overlay); onChoice(4); });
             });
+
+        // ---- 背景タップでイラスト鑑賞モード（カード・ボタン以外をタップ → UIを消して全画面表示）----
+        // テキストのレイキャストを無効化して、空きエリアのタップが背景まで届くようにする
+        foreach (var txt in content.GetComponentsInChildren<Text>(true))
+            txt.raycastTarget = false;
+
+        var viewHint = MakeText(overlay.transform, "タップで戻る", 26,
+            new Color(1f, 1f, 1f, 0.6f), new Vector2(0.5f, 0.04f), Vector2.zero,
+            new Vector2(400f, 40f));
+        viewHint.raycastTarget = false;
+        viewHint.gameObject.SetActive(false);
+
+        bool viewingIllust = false;
+        var bgBtn = overlay.AddComponent<Button>();
+        bgBtn.transition = Selectable.Transition.None;
+        bgBtn.onClick.AddListener(() =>
+        {
+            viewingIllust = !viewingIllust;
+            contentGroup.alpha = viewingIllust ? 0f : 1f;
+            contentGroup.interactable = !viewingIllust;
+            contentGroup.blocksRaycasts = !viewingIllust;
+            overlayImg.color = viewingIllust ? new Color(0f, 0f, 0f, 0f) : overlayBGColor;
+            viewHint.gameObject.SetActive(viewingIllust);
+        });
+    }
+
+    /// <summary>SSRカードの虹色フレームアニメーション（色相を一周させ続ける）</summary>
+    System.Collections.IEnumerator RainbowFrame(Image img)
+    {
+        float hue = 0f;
+        while (img != null)
+        {
+            hue = (hue + Time.unscaledDeltaTime * 0.35f) % 1f;
+            img.color = Color.HSVToRGB(hue, 0.55f, 1f);
+            yield return null;
+        }
     }
 
     /// <summary>選択メニュー用の確認ポップアップ（はい／いいえ）</summary>
@@ -1672,7 +1866,7 @@ public class GameUI : MonoBehaviour
         var box = new GameObject("Box");
         box.transform.SetParent(pop.transform, false);
         var boxImg = box.AddComponent<Image>();
-        boxImg.color = new Color(0.08f, 0.05f, 0.18f, 0.98f);
+        boxImg.color = CardPanelBG;
         UISprites.Button(boxImg);
         var brt = box.GetComponent<RectTransform>();
         brt.anchorMin = brt.anchorMax = new Vector2(0.5f, 0.5f);
@@ -1700,9 +1894,9 @@ public class GameUI : MonoBehaviour
             return btn;
         }
 
-        MakeConfirmBtn("はい", new Color(0.65f, 0.25f, 0.2f), 0.28f)
+        MakeConfirmBtn("はい", PinkButton, 0.28f)
             .onClick.AddListener(() => { Destroy(pop); onYes(); });
-        MakeConfirmBtn("いいえ", new Color(0.3f, 0.3f, 0.4f), 0.72f)
+        MakeConfirmBtn("いいえ", new Color(0.227f, 0.165f, 0.322f), 0.72f)
             .onClick.AddListener(() => Destroy(pop));
     }
 
@@ -2004,12 +2198,12 @@ public class GameUI : MonoBehaviour
         float initialValue, UnityEngine.Events.UnityAction<float> onChanged)
     {
         // ラベル（左寄せ）
-        var labelT = MakeText(parent, label, 30, new Color(0.7f, 0.9f, 1f),
+        var labelT = MakeText(parent, label, 30, Color.white,
             new Vector2(0.15f, yAnchor + 0.04f), Vector2.zero, new Vector2(160f, 40f));
 
         // パーセント表示（右寄せ、ラベルと同じ行）
         var pctT = MakeText(parent, $"{Mathf.RoundToInt(initialValue * 100)}%", 28,
-            new Color(0.4f, 0.95f, 0.6f),
+            new Color(0.980f, 0.780f, 0.460f),
             new Vector2(0.88f, yAnchor + 0.04f), Vector2.zero, new Vector2(120f, 40f));
 
         // スライダー（ラベル行の下）
@@ -2040,7 +2234,7 @@ public class GameUI : MonoBehaviour
         var fillGo = new GameObject("Fill");
         fillGo.transform.SetParent(fillArea.transform, false);
         var fillImg = fillGo.AddComponent<Image>();
-        fillImg.color = new Color(0.4f, 0.2f, 0.8f, 0.9f);
+        fillImg.color = new Color(0.831f, 0.325f, 0.494f, 0.95f); // ピンク（新デザイン統一色）
         var fillRt = fillGo.GetComponent<RectTransform>();
         fillRt.anchorMin = Vector2.zero; fillRt.anchorMax = Vector2.one;
         fillRt.offsetMin = fillRt.offsetMax = Vector2.zero;

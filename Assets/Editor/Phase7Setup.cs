@@ -12,7 +12,6 @@ public static class Phase7Setup
     static readonly string StageFolder = "Assets/Resources/Stages";
 
     // ---- ブロック種別ショートカット ----
-    static readonly BlockType N = BlockType.Normal;
     static readonly BlockType D = BlockType.Durable;
     static readonly BlockType E = BlockType.Explosion;
     static readonly BlockType C = BlockType.Chain;

@@ -40,13 +40,15 @@ public class BallController : MonoBehaviour
     /// <summary>現在速度 / 基準速度（1.0 以上なら速度ボーナス）</summary>
     public float SpeedDamageRatio => (baseSpeed > 0f) ? speed / baseSpeed : 1f;
 
-    /// <summary>有効クリティカル範囲（パッシブボーナス込み）</summary>
+    /// <summary>有効クリティカル範囲（パッシブボーナス＋エンドレス強化カード込み）</summary>
     private float EffectiveCriticalRange
     {
         get
         {
+            // 覚醒カード: パドル全面がクリティカル範囲
+            if (EndlessBuffManager.FullCritActive) return 1f;
             float bonus = (CharacterManager.Instance != null) ? CharacterManager.Instance.CriticalRangeBonus : 0f;
-            return BaseCriticalRange + bonus;
+            return BaseCriticalRange + bonus + EndlessBuffManager.CritRangeBonus;
         }
     }
 
@@ -289,6 +291,24 @@ public class BallController : MonoBehaviour
     public void ResetSpeedToBase()
     {
         if (baseSpeed > 0f) speed = baseSpeed;
+    }
+
+    /// <summary>
+    /// ステージ開始時の初期化用: 速度と基準速度（ダメージ倍率の分母）を同時に設定する。
+    /// Awake は Inspector 値で baseSpeed を記録してしまうため、
+    /// speed だけ上書きすると SpeedDamageRatio が 1 からずれてダメージが狂う。
+    /// </summary>
+    public void SetInitialSpeed(float s)
+    {
+        speed = s;
+        baseSpeed = s;
+    }
+
+    /// <summary>分裂クローン用: 現在速度と基準速度をオリジナルから引き継ぐ（加速ボーナスも同じにする）</summary>
+    public void CopySpeedState(BallController src)
+    {
+        speed = src.speed;
+        baseSpeed = src.baseSpeed;
     }
 
     void OnCollisionEnter2D(Collision2D collision)

@@ -8,7 +8,6 @@ public class PaddleController : MonoBehaviour
 {
     [Header("パドル設定")]
     [SerializeField] private float halfWidth = 4.5f;    // 画面端の移動制限（カメラ幅に合わせる）
-    [SerializeField] private float smoothSpeed = 0.4f; // 追従の滑らかさ（大きいほど素早い）
 
     private Camera mainCamera;
     private float targetX;
@@ -74,6 +73,9 @@ public class PaddleController : MonoBehaviour
         float critRange = 0.03f;
         if (CharacterManager.Instance != null)
             critRange += CharacterManager.Instance.CriticalRangeBonus;
+        // エンドレス強化カード分（範囲拡大・覚醒。エンドレス外は0）
+        critRange += EndlessBuffManager.CritRangeBonus;
+        if (EndlessBuffManager.FullCritActive) critRange = 1f;
         criticalZoneTransform.localScale = new Vector3(critRange, 1f, 1f);
     }
 

@@ -8,7 +8,7 @@ using System;
 public static class EndlessManager
 {
     public const int DailyFirstReward = 100; // 1日初回チャレンジ報酬（オーブ）
-    public const int StaminaCost = 3;        // 1回の挑戦で消費するスタミナ
+    public const int StaminaCost = 5;        // 1回の挑戦で消費するスタミナ
     public const int UnlockStage = 5;        // このステージをクリアで解放
 
     const string KeyLastChallenge = "GachaBlock_EndlessLastChallenge";
@@ -24,9 +24,11 @@ public static class EndlessManager
 
     // ---- 中断セーブ（撃破ごとの選択メニューから「中断」で保存） ----
 
-    const string KeySuspendWave  = "GachaBlock_EndlessSuspendWave";
-    const string KeySuspendScore = "GachaBlock_EndlessSuspendScore";
-    const string KeySuspendStock = "GachaBlock_EndlessSuspendStock";
+    const string KeySuspendWave   = "GachaBlock_EndlessSuspendWave";
+    const string KeySuspendScore  = "GachaBlock_EndlessSuspendScore";
+    const string KeySuspendStock  = "GachaBlock_EndlessSuspendStock";
+    const string KeySuspendParty  = "GachaBlock_EndlessSuspendParty";
+    const string KeySuspendGauges = "GachaBlock_EndlessSuspendGauges";
 
     /// <summary>中断データが存在するか</summary>
     public static bool HasSuspendData => PlayerPrefs.HasKey(KeySuspendWave);
@@ -39,8 +41,47 @@ public static class EndlessManager
         PlayerPrefs.SetInt(KeySuspendWave, wave);
         PlayerPrefs.SetInt(KeySuspendScore, score);
         PlayerPrefs.SetInt(KeySuspendStock, stock);
+        // 挑戦中の編成も保存（再開時に固定復元。途中の編成替え・アプリ再起動後の編成消失を防ぐ）
+        PlayerPrefs.SetString(KeySuspendParty,
+            string.Join("\t", ResultData.SelectedCharacterNames));
+        // 奥義ゲージも保存（中断した瞬間と同じ状態で再開できるように）
+        var cm = CharacterManager.Instance;
+        if (cm != null)
+            PlayerPrefs.SetString(KeySuspendGauges,
+                $"{cm.GetGaugeRaw(0):0.##},{cm.GetGaugeRaw(1):0.##},{cm.GetGaugeRaw(2):0.##}");
         PlayerPrefs.Save();
         Debug.Log($"[Endless] 中断セーブ: wave={wave} score={score} stock={stock}");
+    }
+
+    /// <summary>
+    /// 中断時の奥義ゲージ（3スロット分）を読み出す。保存が無ければ null。
+    /// ClearSuspend より先に呼ぶこと。
+    /// </summary>
+    public static float[] LoadSuspendGauges()
+    {
+        string s = PlayerPrefs.GetString(KeySuspendGauges, "");
+        if (string.IsNullOrEmpty(s)) return null;
+        var parts = s.Split(',');
+        if (parts.Length < 3) return null;
+        var g = new float[3];
+        for (int i = 0; i < 3; i++)
+            float.TryParse(parts[i], out g[i]);
+        return g;
+    }
+
+    /// <summary>
+    /// 中断時の編成を ResultData に復元する（再開時に LoadSuspend と合わせて呼ぶ）。
+    /// これにより中断中に通常ステージを別編成でプレイしていても、
+    /// エンドレスは中断時と同じ編成で再開される。
+    /// </summary>
+    public static void RestorePartyFromSuspend()
+    {
+        string s = PlayerPrefs.GetString(KeySuspendParty, "");
+        if (string.IsNullOrEmpty(s)) return; // 旧バージョンの中断データには無い
+        var parts = s.Split('\t');
+        for (int i = 0; i < 3 && i < parts.Length; i++)
+            ResultData.SelectedCharacterNames[i] = parts[i];
+        Debug.Log($"[Endless] 中断時の編成を復元: {s.Replace("\t", " / ")}");
     }
 
     public static void LoadSuspend(out int wave, out int score, out int stock)
@@ -55,6 +96,9 @@ public static class EndlessManager
         PlayerPrefs.DeleteKey(KeySuspendWave);
         PlayerPrefs.DeleteKey(KeySuspendScore);
         PlayerPrefs.DeleteKey(KeySuspendStock);
+        PlayerPrefs.DeleteKey(KeySuspendParty);
+        PlayerPrefs.DeleteKey(KeySuspendGauges);
+        EndlessBuffManager.ClearSuspendData(); // 強化カードの中断データも一緒に消す
         PlayerPrefs.Save();
     }
 

@@ -172,6 +172,23 @@ public class CharacterManager : MonoBehaviour
         AudioManager.Instance?.PlayUltReadySE();
     }
 
+    /// <summary>指定スロットの現在ゲージ値（エンドレスの中断セーブ用）</summary>
+    public float GetGaugeRaw(int slot)
+        => (slot >= 0 && slot < 3) ? gauges[slot] : 0f;
+
+    /// <summary>
+    /// 指定スロットのゲージ値を直接設定する（エンドレスの中断→再開の復元用）。
+    /// UI更新イベントを発火し、満タンなら OnUltReady も発火する（復元なのでSEは鳴らさない）。
+    /// </summary>
+    public void SetGaugeRaw(int slot, float value)
+    {
+        if (slot < 0 || slot >= 3) return;
+        gauges[slot] = Mathf.Clamp(value, 0f, MaxGauge);
+        OnGaugeChanged?.Invoke(slot, gauges[slot] / MaxGauge);
+        if (gauges[slot] >= MaxGauge)
+            OnUltReady?.Invoke(slot);
+    }
+
     /// <summary>
     /// ブロックが破壊されるたびに GameManager から呼ばれる
     /// </summary>
@@ -268,6 +285,9 @@ public class CharacterManager : MonoBehaviour
     /// <summary>単一の奥義効果を適用する（複合奥義では2回呼ばれる）</summary>
     void ApplyUltEffect(UltimateSkillType type, float value, float duration)
     {
+        // エンドレスの奥義延長カード（持続時間のある効果のみ・エンドレス外は素通し）
+        duration = EndlessBuffManager.ExtendUltDuration(duration);
+
         switch (type)
         {
             case UltimateSkillType.PowerBurst:
