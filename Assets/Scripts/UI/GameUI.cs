@@ -950,7 +950,8 @@ public class GameUI : MonoBehaviour
         MakeText(pauseMenuPanel.transform, "ポーズ", 48, Color.white,
             new Vector2(0.5f, 0.82f), Vector2.zero, new Vector2(400f, 70f));
 
-        // 設定パネル（音量3種＋奥義アニメの背景ボックス）
+        // 設定パネル（モックアップ準拠: 左ラベル＋右コントロールの行構成。
+        // 行はすべて settingsBox の子にして位置ズレを防ぐ）
         var settingsBox = new GameObject("SettingsBox");
         settingsBox.transform.SetParent(pauseMenuPanel.transform, false);
         var sbImg = settingsBox.AddComponent<Image>();
@@ -958,48 +959,32 @@ public class GameUI : MonoBehaviour
         sbImg.raycastTarget = false;
         UISprites.Button(sbImg);
         var sbRT = settingsBox.GetComponent<RectTransform>();
-        sbRT.anchorMin = new Vector2(0.5f, 0.40f);
-        sbRT.anchorMax = new Vector2(0.5f, 0.76f);
+        sbRT.anchorMin = sbRT.anchorMax = new Vector2(0.5f, 0.595f);
         sbRT.anchoredPosition = Vector2.zero;
-        sbRT.sizeDelta = new Vector2(760f, 0f);
+        sbRT.sizeDelta = new Vector2(840f, 420f);
 
-        // BGM スライダー
-        CreateVolumeSlider(pauseMenuPanel.transform, "BGM", 0.70f,
+        MakeSettingsSliderRow(settingsBox.transform, "BGM", -66f,
             PlayerPrefs.GetFloat("BGMVolume", 1f),
             v => { PlayerPrefs.SetFloat("BGMVolume", v); AudioManager.Instance?.SetBGMVolume(v); });
-
-        // SE スライダー
-        CreateVolumeSlider(pauseMenuPanel.transform, "SE", 0.62f,
+        MakeSettingsSliderRow(settingsBox.transform, "SE", -158f,
             PlayerPrefs.GetFloat("SEVolume", 1f),
             v => { PlayerPrefs.SetFloat("SEVolume", v); AudioManager.Instance?.SetSEVolume(v); });
-
-        // ボイス スライダー
-        CreateVolumeSlider(pauseMenuPanel.transform, "ボイス", 0.54f,
+        MakeSettingsSliderRow(settingsBox.transform, "ボイス", -250f,
             PlayerPrefs.GetFloat("VoiceVolume", 1f),
             v => { PlayerPrefs.SetFloat("VoiceVolume", v); AudioManager.Instance?.SetVoiceVolume(v); });
-
-        // 奥義アニメ ON/OFF トグル
-        var ultAnimGo = MakeButton(pauseMenuPanel.transform,
-            $"奥義アニメ: {(UltAnimationManager.Enabled ? "ON" : "OFF")}", 28,
-            new Color(0.227f, 0.165f, 0.322f),
-            new Vector2(0.5f, 0.445f), Vector2.zero, new Vector2(360f, 64f));
-        var ultAnimTxt = ultAnimGo.GetComponentInChildren<Text>();
-        ultAnimGo.GetComponent<Button>().onClick.AddListener(() =>
-        {
-            UltAnimationManager.Enabled = !UltAnimationManager.Enabled;
-            if (ultAnimTxt != null)
-                ultAnimTxt.text = $"奥義アニメ: {(UltAnimationManager.Enabled ? "ON" : "OFF")}";
-        });
+        MakeUltAnimToggleRow(settingsBox.transform, -348f);
 
         // つづける（ピンクの主ボタン）
         MakeButton(pauseMenuPanel.transform, "つづける", 36, new Color(0.831f, 0.325f, 0.494f),
             new Vector2(0.5f, 0.32f), Vector2.zero, new Vector2(420f, 88f))
             .GetComponent<Button>().onClick.AddListener(OnResumeClicked);
 
-        // 操作説明・リタイア（横並びのサブボタン）
-        MakeButton(pauseMenuPanel.transform, "操作説明", 30, new Color(0.227f, 0.165f, 0.322f),
+        // あそびかた・リタイア（横並びのサブボタン）
+        // あそびかたパネルはこの後で生成されるため、開く処理は helpOpenBtn へ後から配線する
+        var helpOpenBtn = MakeButton(pauseMenuPanel.transform, "あそびかた", 30,
+            new Color(0.227f, 0.165f, 0.322f),
             new Vector2(0.30f, 0.22f), Vector2.zero, new Vector2(300f, 76f))
-            .GetComponent<Button>().onClick.AddListener(OnHelpClicked);
+            .GetComponent<Button>();
 
         var retireGo = MakeButton(pauseMenuPanel.transform, "リタイア", 30, new Color(0.45f, 0.14f, 0.14f),
             new Vector2(0.70f, 0.22f), Vector2.zero, new Vector2(300f, 76f));
@@ -1016,7 +1001,11 @@ public class GameUI : MonoBehaviour
             new Vector2(0.68f, 0.45f), Vector2.zero, new Vector2(200f, 65f))
             .GetComponent<Button>().onClick.AddListener(() => retireConfirm.SetActive(false));
         retireConfirm.SetActive(false);
-        retireGo.GetComponent<Button>().onClick.AddListener(() => retireConfirm.SetActive(true));
+        retireGo.GetComponent<Button>().onClick.AddListener(() =>
+        {
+            retireConfirm.SetActive(true);
+            retireConfirm.transform.SetAsLastSibling(); // ポーズパネルより前面に
+        });
 
         // ヘルプパネル
         var helpPanel = MakePanel(root, new Color(0f, 0f, 0.1f, 0.96f));
@@ -1051,75 +1040,43 @@ public class GameUI : MonoBehaviour
         contentRT.anchorMin = new Vector2(0f, 1f);
         contentRT.anchorMax = new Vector2(1f, 1f);
         contentRT.pivot = new Vector2(0.5f, 1f);
-        contentRT.sizeDelta = new Vector2(0f, 2200f);
 
         scrollRect.content = contentRT;
         scrollRect.viewport = vpRT;
         scrollRect.vertical = true;
         scrollRect.horizontal = false;
-        scrollRect.movementType = ScrollRect.MovementType.Elastic;
+        scrollRect.movementType = ScrollRect.MovementType.Clamped; // 端で弾かれて戻らないように
+        scrollRect.scrollSensitivity = 40f;
 
-        string helpContent =
-            "スワイプでパドルを左右に動かし\n" +
-            "ボールを落とさないようにしよう！\n" +
-            "全てのブロックを壊せばクリア！\n\n" +
-            "パドルの左右の端に当てると\n" +
-            "ボールが斜めに飛ぶよ！\n\n" +
-            "--- ブロックの種類 ---\n\n" +
-            "通常ブロック（白）\n  1回当てると壊れる\n\n" +
-            "耐久ブロック（黄〜紫）\n  HPが表示され、0になると壊れる\n  色が濃いほどHPが高い\n\n" +
-            "速度ブロック（紫）\n  壊すとボールが加速する\n  速いほどダメージUp！注意！\n\n" +
-            "ボスブロック（赤/大型）\n  各ステージに登場！\n  HPバー付きの大型ブロック\n  HPが減ると攻撃してくる！\n" +
-            "  ・パドルが一時的に縮小\n  ・上からブロックが降ってくる\n  ・高難度ではスピードブロックも！\n\n" +
-            "--- クリティカル ---\n\n" +
-            "パドルのど真ん中にボールを\n" +
-            "当てるとクリティカル発動！\n" +
-            "ボールがブロックを貫通して\n" +
-            "一直線に壊していくよ！\n" +
-            "ダメージが2倍になる！\n\n" +
-            "さらに連続で真ん中に当てると\n" +
-            "ダメージが2倍ずつ増えていく！\n" +
-            "ボールの色が 黄→緑→紫→赤→虹\n" +
-            "と変わって5連続で最大32倍！\n" +
-            "真ん中を外す・ミスでリセット\n\n" +
-            "--- 奥義の使い方 ---\n\n" +
-            "ブロックを壊すと奥義ゲージが溜まる\n" +
-            "ゲージが満タンになると\n" +
-            "キャラアイコンが点滅して発動可能！\n" +
-            "タップで奥義を発動！\n\n" +
-            "キャラごとに奥義が異なるよ\n" +
-            "・パワーバースト: 一定時間ダメージUP\n" +
-            "・全体攻撃: 全ブロックにダメージ\n" +
-            "・ストック回復 +N\n" +
-            "・バリア: 次の1ミスをキャンセル\n" +
-            "・貫通: 一定時間ボールがブロックを貫通\n" +
-            "・分裂: ボールを2つに分裂\n" +
-            "  （分裂したボールも再分裂可能）\n\n" +
-            "--- キャラ編成 ---\n\n" +
-            "3人まで編成可能！\n" +
-            "パッシブスキルで戦力アップ！\n" +
-            "強化・覚醒でさらに強くなる！\n\n" +
-            "--- ガチャ ---\n\n" +
-            "オーブを使ってキャラを入手！\n" +
-            "同じキャラが出ると強化素材に\n" +
-            "10連で SR 以上1体確定！";
+        // 説明文はホームの「あそびかた」と共通（HelpTextData）
+        string helpContent = HelpTextData.Body;
 
         var helpTxt = MakeText(contentGo.transform, helpContent,
-            30, Color.white, new Vector2(0.5f, 1f), new Vector2(0f, -20f), new Vector2(650f, 2500f));
+            30, Color.white, new Vector2(0.5f, 1f), new Vector2(0f, -20f), new Vector2(650f, 100f));
         helpTxt.alignment = TextAnchor.UpperCenter;
+        helpTxt.lineSpacing = 1.1f; // ホームのあそびかたと同じ行間に統一
         var helpTxtRT = helpTxt.GetComponent<RectTransform>();
         helpTxtRT.anchorMin = new Vector2(0.5f, 1f);
         helpTxtRT.anchorMax = new Vector2(0.5f, 1f);
         helpTxtRT.pivot = new Vector2(0.5f, 1f);
+
+        // スクロール範囲は文章量から自動計算（文章が増えても修正不要・余白も広めに確保）
+        float helpTextH = helpTxt.preferredHeight;
+        helpTxtRT.sizeDelta = new Vector2(650f, helpTextH + 60f);
+        contentRT.sizeDelta = new Vector2(0f, helpTextH + 200f);
 
         MakeButton(helpPanel.transform, "とじる", 34, new Color(0.3f, 0.3f, 0.4f),
             new Vector2(0.5f, 0.06f), Vector2.zero, new Vector2(220f, 65f))
             .GetComponent<Button>().onClick.AddListener(() => helpPanel.SetActive(false));
         helpPanel.SetActive(false);
 
-        // HelpClicked が helpPanel を開く
-        pauseMenuPanel.GetComponentsInChildren<Button>(true)[2]
-            .onClick.AddListener(() => helpPanel.SetActive(true));
+        // あそびかたボタンにパネルを開く処理を直接配線
+        // （旧実装のボタンインデックス決め打ち [2] はボタン構成変更で壊れるため廃止）
+        helpOpenBtn.onClick.AddListener(() =>
+        {
+            helpPanel.SetActive(true);
+            helpPanel.transform.SetAsLastSibling(); // ポーズパネルより前面に
+        });
 
         pauseMenuPanel.SetActive(false);
 
@@ -1588,7 +1545,13 @@ public class GameUI : MonoBehaviour
     public void OnPauseButtonClicked()
     {
         GameManager.Instance?.Pause();
-        if (pauseMenuPanel != null) pauseMenuPanel.SetActive(true);
+        if (pauseMenuPanel != null)
+        {
+            pauseMenuPanel.SetActive(true);
+            // 最前面へ（奥義ボタン等はポーズパネルより後に生成されるため、
+            // これをしないと暗幕の上に描画されタップも受け取ってしまう）
+            pauseMenuPanel.transform.SetAsLastSibling();
+        }
     }
 
     void OnResumeClicked()
@@ -1637,11 +1600,14 @@ public class GameUI : MonoBehaviour
         var contentGroup = content.AddComponent<CanvasGroup>();
 
         // ---- 見出し ----
-        MakeText(content.transform, $"{score}体撃破！ 次は {nextEnemyNumber}体目", 30,
-            new Color(0.957f, 0.753f, 0.820f), new Vector2(0.5f, 0.92f), Vector2.zero,
-            new Vector2(800f, 44f));
-        var titleT = MakeText(content.transform, "強化カードをえらんでね♡", 44,
-            Color.white, new Vector2(0.5f, 0.875f), Vector2.zero, new Vector2(800f, 60f));
+        var scoreT = MakeText(content.transform, $"{score}体撃破！ 次は {nextEnemyNumber}体目", 60,
+            new Color(0.957f, 0.753f, 0.820f), new Vector2(0.5f, 0.90f), Vector2.zero,
+            new Vector2(1040f, 80f));
+        var scoreSh = scoreT.gameObject.AddComponent<Shadow>();
+        scoreSh.effectColor = new Color(0f, 0f, 0f, 0.8f);
+        scoreSh.effectDistance = new Vector2(3f, -3f);
+        var titleT = MakeText(content.transform, "強化カードをえらんでね♡", 68,
+            Color.white, new Vector2(0.5f, 0.835f), Vector2.zero, new Vector2(1040f, 90f));
         var titleShadow = titleT.gameObject.AddComponent<Shadow>();
         titleShadow.effectColor = new Color(0f, 0f, 0f, 0.8f);
         titleShadow.effectDistance = new Vector2(3f, -3f);
@@ -1656,7 +1622,8 @@ public class GameUI : MonoBehaviour
             permLines.Add(("奥義効果時間", $"+{EndlessBuffManager.PermanentUltSec:0.#}秒"));
         if (permLines.Count > 0)
         {
-            float panelH = 70f + permLines.Count * 44f;
+            // 見出し行（-54）と1行目（-132）の間をしっかり空けて被りを防ぐ
+            float panelH = 132f + permLines.Count * 66f;
             var panel = new GameObject("PermPanel");
             panel.transform.SetParent(content.transform, false);
             var pImg = panel.AddComponent<Image>();
@@ -1664,26 +1631,26 @@ public class GameUI : MonoBehaviour
             pImg.raycastTarget = false; // 背景タップ（イラスト鑑賞）を遮らない
             UISprites.Button(pImg);
             var pRT = panel.GetComponent<RectTransform>();
-            pRT.anchorMin = pRT.anchorMax = new Vector2(0.5f, 0.80f);
+            pRT.anchorMin = pRT.anchorMax = new Vector2(0.5f, 0.795f);
             pRT.anchoredPosition = new Vector2(0f, -panelH / 2f);
-            pRT.sizeDelta = new Vector2(720f, panelH);
+            pRT.sizeDelta = new Vector2(880f, panelH);
 
-            MakeText(panel.transform, "取得した永続効果", 24, PinkAccent,
-                new Vector2(0.5f, 1f), new Vector2(0f, -34f), new Vector2(680f, 34f));
+            MakeText(panel.transform, "取得した永続効果", 44, PinkAccent,
+                new Vector2(0.5f, 1f), new Vector2(0f, -54f), new Vector2(820f, 58f));
             for (int i = 0; i < permLines.Count; i++)
             {
-                float y = -70f - i * 44f + 22f;
-                var lT = MakeText(panel.transform, permLines[i].label, 26, Color.white,
-                    new Vector2(0f, 1f), new Vector2(200f, y), new Vector2(340f, 40f));
+                float y = -132f - i * 66f;
+                var lT = MakeText(panel.transform, permLines[i].label, 38, Color.white,
+                    new Vector2(0f, 1f), new Vector2(270f, y), new Vector2(480f, 52f));
                 lT.alignment = TextAnchor.MiddleLeft;
-                var vT = MakeText(panel.transform, permLines[i].value, 26, GoldText,
-                    new Vector2(1f, 1f), new Vector2(-160f, y), new Vector2(260f, 40f));
+                var vT = MakeText(panel.transform, permLines[i].value, 38, GoldText,
+                    new Vector2(1f, 1f), new Vector2(-200f, y), new Vector2(340f, 52f));
                 vT.alignment = TextAnchor.MiddleRight;
             }
         }
 
-        // ---- カード3枚（永続効果パネルとの間に余裕を持たせて中央よりやや下に配置）----
-        const float cardW = 310f, cardH = 470f, cardGap = 26f;
+        // ---- カード3枚（画面幅いっぱいに大きく配置）----
+        const float cardW = 340f, cardH = 560f, cardGap = 18f;
         float rowW = cards.Count * cardW + (cards.Count - 1) * cardGap;
         for (int i = 0; i < cards.Count; i++)
         {
@@ -1700,7 +1667,7 @@ public class GameUI : MonoBehaviour
                        : Color.white; // SSR はコルーチンで虹色に更新
             UISprites.Button(fImg);
             var fRT = frame.GetComponent<RectTransform>();
-            fRT.anchorMin = fRT.anchorMax = new Vector2(0.5f, 0.47f);
+            fRT.anchorMin = fRT.anchorMax = new Vector2(0.5f, 0.445f);
             fRT.anchoredPosition = new Vector2(x, 0f);
             fRT.sizeDelta = new Vector2(cardW, cardH);
             if (card.rarity == EndlessBuffManager.Rarity.SSR)
@@ -1733,22 +1700,22 @@ public class GameUI : MonoBehaviour
                         ? new Color(0.98f, 0.78f, 0.46f)
                         : new Color(0.93f, 0.58f, 0.69f);
                 var iconRT = iconGo.GetComponent<RectTransform>();
-                iconRT.anchorMin = iconRT.anchorMax = new Vector2(0.5f, 0.83f);
+                iconRT.anchorMin = iconRT.anchorMax = new Vector2(0.5f, 0.845f);
                 iconRT.anchoredPosition = Vector2.zero;
-                iconRT.sizeDelta = new Vector2(96f, 96f);
+                iconRT.sizeDelta = new Vector2(120f, 120f);
             }
 
             // カード名
-            var nameT = MakeText(inner.transform, card.cardName, 34, Color.white,
-                new Vector2(0.5f, 0.645f), Vector2.zero, new Vector2(280f, 50f));
+            var nameT = MakeText(inner.transform, card.cardName, 42, Color.white,
+                new Vector2(0.5f, 0.64f), Vector2.zero, new Vector2(310f, 60f));
             var nSh = nameT.gameObject.AddComponent<Shadow>();
             nSh.effectColor = new Color(0f, 0f, 0f, 0.7f);
             nSh.effectDistance = new Vector2(2f, -2f);
 
             // 効果説明
-            var effT = MakeText(inner.transform, card.effectText, 26,
+            var effT = MakeText(inner.transform, card.effectText, 34,
                 new Color(0.85f, 0.85f, 0.95f), new Vector2(0.5f, 0.40f), Vector2.zero,
-                new Vector2(272f, 170f));
+                new Vector2(302f, 220f));
             effT.lineSpacing = 1.2f;
 
             // 種別タグ（即時／永続／次だけ）
@@ -1759,13 +1726,13 @@ public class GameUI : MonoBehaviour
             tImg.raycastTarget = false;
             UISprites.Button(tImg);
             var tRT = tag.GetComponent<RectTransform>();
-            tRT.anchorMin = tRT.anchorMax = new Vector2(0.5f, 0.12f);
+            tRT.anchorMin = tRT.anchorMax = new Vector2(0.5f, 0.11f);
             tRT.anchoredPosition = Vector2.zero;
-            tRT.sizeDelta = new Vector2(160f, 48f);
-            MakeText(tag.transform, EndlessBuffManager.KindTag(card.kind), 24,
+            tRT.sizeDelta = new Vector2(220f, 68f);
+            MakeText(tag.transform, EndlessBuffManager.KindTag(card.kind), 38,
                 card.kind == EndlessBuffManager.CardKind.NextWave ? PinkAccent
                     : new Color(0.83f, 0.82f, 0.78f),
-                new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(150f, 40f));
+                new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(210f, 56f));
 
             // タップ → 確認ポップアップ → はい で確定
             var btn = frame.AddComponent<Button>();
@@ -1778,9 +1745,12 @@ public class GameUI : MonoBehaviour
         }
 
         // ---- 案内文 ----
-        MakeText(content.transform, "カードをタップして次に進む", 24,
-            new Color(0.55f, 0.53f, 0.60f), new Vector2(0.5f, 0.235f), Vector2.zero,
-            new Vector2(600f, 36f));
+        var guideT = MakeText(content.transform, "カードをタップして次に進む", 46,
+            PinkAccent, new Vector2(0.5f, 0.24f), Vector2.zero,
+            new Vector2(900f, 64f));
+        var guideSh = guideT.gameObject.AddComponent<Shadow>();
+        guideSh.effectColor = new Color(0f, 0f, 0f, 0.8f);
+        guideSh.effectDistance = new Vector2(3f, -3f);
 
         // ---- 中断・リタイア ----
         Button MakeSubBtn(string label, Color col, float ax)
@@ -1792,15 +1762,15 @@ public class GameUI : MonoBehaviour
             UISprites.Button(img);
             var btn = go.AddComponent<Button>();
             var rt = go.GetComponent<RectTransform>();
-            rt.anchorMin = rt.anchorMax = new Vector2(ax, 0.155f);
+            rt.anchorMin = rt.anchorMax = new Vector2(ax, 0.15f);
             rt.anchoredPosition = Vector2.zero;
-            rt.sizeDelta = new Vector2(400f, 84f);
-            MakeText(go.transform, label, 28, Color.white,
-                new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(380f, 70f));
+            rt.sizeDelta = new Vector2(480f, 104f);
+            MakeText(go.transform, label, 36, Color.white,
+                new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(460f, 84f));
             return btn;
         }
 
-        MakeSubBtn("中断してセーブ", new Color(0.15f, 0.35f, 0.65f), 0.29f)
+        MakeSubBtn("中断してセーブ", new Color(0.15f, 0.35f, 0.65f), 0.27f)
             .onClick.AddListener(() =>
             {
                 ShowInterludeConfirm(overlay.transform,
@@ -1808,7 +1778,7 @@ public class GameUI : MonoBehaviour
                     () => { Destroy(overlay); onChoice(3); });
             });
 
-        MakeSubBtn("リタイア", new Color(0.55f, 0.18f, 0.18f), 0.71f)
+        MakeSubBtn("リタイア", new Color(0.55f, 0.18f, 0.18f), 0.73f)
             .onClick.AddListener(() =>
             {
                 ShowInterludeConfirm(overlay.transform,
@@ -2193,6 +2163,76 @@ public class GameUI : MonoBehaviour
     }
 
     // ---- 音量スライダー（ホーム画面と統一デザイン） ----
+
+    // ---- ポーズ設定パネル用の部品（モックアップ準拠デザイン）----
+
+    /// <summary>ポーズ設定パネルの1行: 左ラベル＋同じ行の右側にスライダー（共通部品 UIWidgets を使用）</summary>
+    void MakeSettingsSliderRow(Transform parent, string label, float yTop,
+        float initialValue, UnityEngine.Events.UnityAction<float> onChanged)
+    {
+        UIWidgets.MakeVolumeRow(parent, label, yTop, 48f, 240f, 540f, initialValue, onChanged);
+    }
+
+    /// <summary>ポーズ設定パネルの1行: 左ラベル＋右側に ON/OFF セグメント式トグル（奥義アニメ用）</summary>
+    void MakeUltAnimToggleRow(Transform parent, float yTop)
+    {
+        MakeText(parent, "奥義アニメ", 30, Color.white,
+            new Vector2(0f, 1f), new Vector2(48f, yTop), new Vector2(220f, 44f),
+            new Vector2(0f, 0.5f), TextAnchor.MiddleLeft);
+
+        // トグル外枠（右端・角丸）
+        var box = new GameObject("UltAnimToggle");
+        box.transform.SetParent(parent, false);
+        var boxImg = box.AddComponent<Image>();
+        boxImg.color = new Color(0.10f, 0.065f, 0.155f);
+        UISprites.Button(boxImg);
+        var boxRt = box.GetComponent<RectTransform>();
+        boxRt.anchorMin = boxRt.anchorMax = new Vector2(1f, 1f);
+        boxRt.pivot = new Vector2(1f, 0.5f);
+        boxRt.anchoredPosition = new Vector2(-60f, yTop);
+        boxRt.sizeDelta = new Vector2(220f, 56f);
+
+        Image MakeSeg(string label, float xMin, float xMax, out Text txt)
+        {
+            var seg = new GameObject(label + "Seg");
+            seg.transform.SetParent(box.transform, false);
+            var img = seg.AddComponent<Image>();
+            UISprites.Button(img);
+            var rt = seg.GetComponent<RectTransform>();
+            rt.anchorMin = new Vector2(xMin, 0f);
+            rt.anchorMax = new Vector2(xMax, 1f);
+            rt.offsetMin = new Vector2(3f, 3f);
+            rt.offsetMax = new Vector2(-3f, -3f);
+            txt = MakeText(seg.transform, label, 26, Color.white,
+                new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(100f, 40f));
+            txt.raycastTarget = false;
+            seg.AddComponent<Button>();
+            return img;
+        }
+
+        Image onImg = MakeSeg("ON", 0f, 0.5f, out Text onTxt);
+        Image offImg = MakeSeg("OFF", 0.5f, 1f, out Text offTxt);
+
+        void Refresh()
+        {
+            bool on = UltAnimationManager.Enabled;
+            onImg.color = on ? new Color(0.831f, 0.325f, 0.494f) : Color.clear;
+            offImg.color = on ? Color.clear : new Color(0.35f, 0.33f, 0.40f);
+            onTxt.color = on ? Color.white : new Color(0.53f, 0.53f, 0.53f);
+            offTxt.color = on ? new Color(0.53f, 0.53f, 0.53f) : Color.white;
+        }
+        onImg.GetComponent<Button>().onClick.AddListener(() =>
+        {
+            UltAnimationManager.Enabled = true;
+            Refresh();
+        });
+        offImg.GetComponent<Button>().onClick.AddListener(() =>
+        {
+            UltAnimationManager.Enabled = false;
+            Refresh();
+        });
+        Refresh();
+    }
 
     void CreateVolumeSlider(Transform parent, string label, float yAnchor,
         float initialValue, UnityEngine.Events.UnityAction<float> onChanged)

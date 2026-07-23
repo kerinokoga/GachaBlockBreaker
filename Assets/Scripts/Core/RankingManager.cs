@@ -109,18 +109,47 @@ public static class RankingManager
     }
 
     // ============================================================
-    // エンドレスモード用ランキング
-    // 構造: rankings/endless/entries/{uid} → { name, score, updatedAt }
+    // エンドレスモード用ランキング（2種類のボードを共通実装で扱う）
+    // 構造: rankings/{board}/entries/{uid} → { name, score, updatedAt }
+    //   board = "endless"       … 1ラン自己ベスト（突破ステージ数）
+    //   board = "endless_total" … 累計撃破数
     // ============================================================
 
-    static CollectionReference EndlessEntries() =>
-        Db.Collection("rankings").Document("endless").Collection("entries");
+    const string BoardEndlessBest  = "endless";
+    const string BoardEndlessTotal = "endless_total";
+
+    static CollectionReference BoardEntries(string board) =>
+        Db.Collection("rankings").Document(board).Collection("entries");
+
+    /// <summary>1ラン自己ベスト（突破ステージ数）を送信。自己ベスト更新時のみ書き込み。</summary>
+    public static void SubmitEndlessScore(string playerName, int score, Action<bool> onDone = null)
+        => SubmitBoardScore(BoardEndlessBest, playerName, score, onDone);
+
+    /// <summary>累計撃破数を送信。増えている時のみ書き込み。</summary>
+    public static void SubmitEndlessTotalKills(string playerName, int totalKills, Action<bool> onDone = null)
+        => SubmitBoardScore(BoardEndlessTotal, playerName, totalKills, onDone);
+
+    /// <summary>1ラン自己ベストの上位 count 件を取得（降順）。失敗時は空リスト。</summary>
+    public static void GetEndlessTop(int count, Action<List<EndlessEntry>> onDone)
+        => GetBoardTop(BoardEndlessBest, count, onDone);
+
+    /// <summary>累計撃破数の上位 count 件を取得（降順）。失敗時は空リスト。</summary>
+    public static void GetEndlessTotalTop(int count, Action<List<EndlessEntry>> onDone)
+        => GetBoardTop(BoardEndlessTotal, count, onDone);
+
+    /// <summary>1ラン自己ベストの全国順位と総人数。失敗時は (-1, -1)。</summary>
+    public static void GetEndlessMyRank(int myScore, Action<int, int> onDone)
+        => GetBoardMyRank(BoardEndlessBest, myScore, onDone);
+
+    /// <summary>累計撃破数の全国順位と総人数。失敗時は (-1, -1)。</summary>
+    public static void GetEndlessTotalMyRank(int myScore, Action<int, int> onDone)
+        => GetBoardMyRank(BoardEndlessTotal, myScore, onDone);
 
     /// <summary>
-    /// エンドレスのスコア（突破ウェーブ数）を送信。自己ベスト更新時のみ書き込み。
-    /// onDone(実際に更新されたか) — 表示側で「自己ベスト更新！」を出すのに使う。
+    /// ボード共通: スコア送信。既存スコア以下なら書き込まない（名前変更だけ反映）。
+    /// onDone(実際に更新されたか)
     /// </summary>
-    public static void SubmitEndlessScore(string playerName, int score, Action<bool> onDone = null)
+    static void SubmitBoardScore(string board, string playerName, int score, Action<bool> onDone)
     {
         string uid = null;
         try
@@ -135,13 +164,13 @@ public static class RankingManager
             onDone?.Invoke(false);
             return;
         }
-        var docRef = EndlessEntries().Document(uid);
+        var docRef = BoardEntries(board).Document(uid);
 
         docRef.GetSnapshotAsync().ContinueWithOnMainThread(task =>
         {
             if (!task.IsCompletedSuccessfully)
             {
-                Debug.LogWarning($"[Ranking] エンドレス既存スコア取得失敗: {task.Exception?.GetBaseException().Message}");
+                Debug.LogWarning($"[Ranking] {board} 既存スコア取得失敗: {task.Exception?.GetBaseException().Message}");
                 onDone?.Invoke(false);
                 return;
             }
@@ -166,17 +195,17 @@ public static class RankingManager
             docRef.SetAsync(data).ContinueWithOnMainThread(t2 =>
             {
                 bool ok = t2.IsCompletedSuccessfully;
-                if (ok) Debug.Log($"[Ranking] エンドレススコア送信完了: {playerName} {score}");
-                else Debug.LogWarning($"[Ranking] エンドレススコア送信失敗: {t2.Exception?.GetBaseException().Message}");
+                if (ok) Debug.Log($"[Ranking] {board} スコア送信完了: {playerName} {score}");
+                else Debug.LogWarning($"[Ranking] {board} スコア送信失敗: {t2.Exception?.GetBaseException().Message}");
                 onDone?.Invoke(ok);
             });
         });
     }
 
-    /// <summary>エンドレスの上位 count 件を取得（スコア降順）。失敗時は空リスト。</summary>
-    public static void GetEndlessTop(int count, Action<List<EndlessEntry>> onDone)
+    /// <summary>ボード共通: 上位 count 件を取得（降順）。失敗時は空リスト。</summary>
+    static void GetBoardTop(string board, int count, Action<List<EndlessEntry>> onDone)
     {
-        EndlessEntries()
+        BoardEntries(board)
             .OrderByDescending("score")
             .Limit(count)
             .GetSnapshotAsync()
@@ -194,22 +223,22 @@ public static class RankingManager
                 }
                 else
                 {
-                    Debug.LogWarning($"[Ranking] エンドレス取得失敗: {task.Exception?.GetBaseException().Message}");
+                    Debug.LogWarning($"[Ranking] {board} 取得失敗: {task.Exception?.GetBaseException().Message}");
                 }
                 onDone?.Invoke(result);
             });
     }
 
     /// <summary>
-    /// 自分のスコアの全国順位と全体人数を取得（Count 集計クエリ使用・読み取り課金が軽い）。
+    /// ボード共通: 自分のスコアの全国順位と総人数（Count 集計クエリ使用・読み取り課金が軽い）。
     /// onDone(順位, 総人数)。失敗時は (-1, -1)。上位% は 順位/総人数 で計算できる。
     /// </summary>
-    public static void GetEndlessMyRank(int myScore, Action<int, int> onDone)
+    static void GetBoardMyRank(string board, int myScore, Action<int, int> onDone)
     {
         try
         {
             // 自分より高いスコアの人数 → +1 が自分の順位
-            EndlessEntries().WhereGreaterThan("score", myScore).Count
+            BoardEntries(board).WhereGreaterThan("score", myScore).Count
                 .GetSnapshotAsync(AggregateSource.Server)
                 .ContinueWithOnMainThread(task =>
                 {
@@ -222,7 +251,7 @@ public static class RankingManager
                     int rank = (int)task.Result.Count + 1;
 
                     // 総人数
-                    EndlessEntries().Count
+                    BoardEntries(board).Count
                         .GetSnapshotAsync(AggregateSource.Server)
                         .ContinueWithOnMainThread(t2 =>
                         {

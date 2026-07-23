@@ -136,6 +136,9 @@ public class ResultUI : MonoBehaviour
                 PlayerPrefs.Save();
             }
             RankingManager.SubmitEndlessScore(PlayerNameManager.GetName(), score);
+            // 累計撃破数ランキングにも送信（増えている時のみ書き込まれる）
+            RankingManager.SubmitEndlessTotalKills(
+                PlayerNameManager.GetName(), HomeCharManager.GetEndlessKills());
             CloudSaveManager.Save();
         }
         else if (isClear)
@@ -217,10 +220,10 @@ public class ResultUI : MonoBehaviour
         {
             // ---- エンドレス結果表示（新デザイン: スコア大表示＋金色の数値）----
             MakeText(canvasRoot, "ENDLESS RESULT",
-                48, new Color(0.929f, 0.576f, 0.694f), new Vector2(0.5f, 0.75f), new Vector2(800f, 70f));
+                48, new Color(0.929f, 0.576f, 0.694f), new Vector2(0.5f, 0.765f), new Vector2(800f, 70f));
 
             MakeText(canvasRoot, $"{ResultData.EndlessScore} ステージ突破！",
-                64, Color.white, new Vector2(0.5f, 0.655f), new Vector2(800f, 90f));
+                64, Color.white, new Vector2(0.5f, 0.685f), new Vector2(800f, 90f));
 
             MakeText(canvasRoot,
                 endlessNewBest
@@ -228,7 +231,7 @@ public class ResultUI : MonoBehaviour
                     : $"自己ベスト: {PlayerPrefs.GetInt("GachaBlock_EndlessBest", 0)} ステージ",
                 40,
                 new Color(0.980f, 0.780f, 0.460f),
-                new Vector2(0.5f, 0.565f), new Vector2(700f, 60f));
+                new Vector2(0.5f, 0.615f), new Vector2(700f, 60f));
 
             // 全国順位（非同期取得）
             // 順位は「今回のスコアと自己ベストの大きい方」＝ランキング登録値を基準にする
@@ -236,8 +239,34 @@ public class ResultUI : MonoBehaviour
             int rankScore = Mathf.Max(ResultData.EndlessScore,
                 PlayerPrefs.GetInt("GachaBlock_EndlessBest", 0));
 
-            var rankT = MakeText(canvasRoot, "全国順位: 取得中...",
-                36, new Color(0.980f, 0.780f, 0.460f), new Vector2(0.5f, 0.475f), new Vector2(800f, 55f));
+            var rankT = MakeText(canvasRoot, "全国ランク: 取得中...",
+                36, new Color(0.980f, 0.780f, 0.460f), new Vector2(0.5f, 0.555f), new Vector2(800f, 55f));
+
+            // 累計撃破数 ＋ その全国ランク
+            MakeText(canvasRoot, $"累計撃破数: {HomeCharManager.GetEndlessKills()}体",
+                36, new Color(0.980f, 0.780f, 0.460f), new Vector2(0.5f, 0.50f), new Vector2(800f, 55f));
+            var totalRankT = MakeText(canvasRoot, "全国ランク: 取得中...",
+                36, new Color(0.980f, 0.780f, 0.460f), new Vector2(0.5f, 0.445f), new Vector2(800f, 55f));
+            int myTotalKills = HomeCharManager.GetEndlessKills();
+            if (myTotalKills <= 0)
+            {
+                totalRankT.text = "全国ランク: ---";
+                totalRankT.color = new Color(0.6f, 0.6f, 0.7f);
+            }
+            else RankingManager.GetEndlessTotalMyRank(myTotalKills, (rank, total) =>
+            {
+                if (totalRankT == null) return;
+                if (rank <= 0)
+                {
+                    totalRankT.text = "全国ランク: 取得できませんでした";
+                    totalRankT.color = new Color(0.6f, 0.6f, 0.7f);
+                    return;
+                }
+                string totalPart = total > 0 ? $" / {total}人中" : "";
+                float pct = total > 0 ? Mathf.Clamp((float)rank / total * 100f, 0.1f, 100f) : 100f;
+                string pctPart = (total > 0 && pct <= 50f) ? $"（上位 {pct:0.#}%）" : "";
+                totalRankT.text = $"全国ランク: {rank}位{totalPart} {pctPart}".TrimEnd();
+            });
 
             // ギャラリー・きせかえの新規解放通知（解放イラストのサムネイル付き）
             int newKisekae;
@@ -252,7 +281,7 @@ public class ResultUI : MonoBehaviour
                 if (newKisekae > 0) unlockMsg += (unlockMsg == "" ? "" : "\n") + "新しいきせかえを解放！";
                 var unlockT = MakeText(canvasRoot, "🎁 " + unlockMsg,
                     34, new Color(1f, 0.6f, 0.85f),
-                    new Vector2(0.5f, 0.41f), new Vector2(800f, 80f));
+                    new Vector2(0.5f, 0.385f), new Vector2(800f, 80f));
                 AddShadow(unlockT.gameObject);
 
                 // 解放されたイラスト・きせかえのサムネイルを最大5枚並べる
@@ -283,7 +312,7 @@ public class ResultUI : MonoBehaviour
                     var rawT = tGo.AddComponent<RawImage>();
                     rawT.color = new Color(1f, 1f, 1f, 0.12f); // 読み込みまでは薄枠
                     var trt = tGo.GetComponent<RectTransform>();
-                    trt.anchorMin = trt.anchorMax = new Vector2(0.5f, 0.315f);
+                    trt.anchorMin = trt.anchorMax = new Vector2(0.5f, 0.30f);
                     trt.anchoredPosition =
                         new Vector2(-rowW / 2f + thumbW / 2f + i * (thumbW + thumbGap), 0f);
                     trt.sizeDelta = new Vector2(thumbW, thumbH);
@@ -306,14 +335,14 @@ public class ResultUI : MonoBehaviour
                 if (thumbFiles.Count > show)
                 {
                     var moreT = MakeText(canvasRoot, $"+{thumbFiles.Count - show}", 32,
-                        Color.white, new Vector2(0.5f, 0.315f), new Vector2(90f, 50f));
+                        Color.white, new Vector2(0.5f, 0.30f), new Vector2(90f, 50f));
                     moreT.GetComponent<RectTransform>().anchoredPosition =
                         new Vector2(rowW / 2f + 50f, 0f);
                     AddShadow(moreT.gameObject);
                 }
 
                 MakeText(canvasRoot, "タップで拡大表示", 22,
-                    new Color(0.55f, 0.53f, 0.60f), new Vector2(0.5f, 0.262f), new Vector2(400f, 30f));
+                    new Color(0.55f, 0.53f, 0.60f), new Vector2(0.5f, 0.245f), new Vector2(400f, 30f));
             }
 
             // スコア0＝ランキング未登録。順位を計算すると「4位/3人中」のような
@@ -396,13 +425,13 @@ public class ResultUI : MonoBehaviour
         if (isEndless)
         {
             bool canRetry = StaminaManager.HasStamina(stage);
-            MakeButton(canvasRoot, "もう一度挑戦",
+            MakeButton(canvasRoot, "リトライ",
                 canRetry ? new Color(0.831f, 0.325f, 0.494f) : new Color(0.35f, 0.33f, 0.38f),
-                new Vector2(0.5f, 0.215f), new Vector2(420f, 90f),
+                new Vector2(0.5f, 0.19f), new Vector2(420f, 90f),
                 () => OnRetryClicked()); // 不足時はタップでスタミナ回復案内が出る
             MakeText(canvasRoot, $"（スタミナ{EndlessManager.StaminaCost}消費）",
                 24, new Color(0.55f, 0.53f, 0.60f),
-                new Vector2(0.5f, 0.163f), new Vector2(400f, 34f));
+                new Vector2(0.5f, 0.14f), new Vector2(400f, 34f));
         }
         else
         {

@@ -678,6 +678,10 @@ public class GameManager : MonoBehaviour
     private IEnumerator EnterTrueStage()
     {
         CurrentState = GameState.Paused;
+        // 奥義アニメ後のスロー復帰（timeScale<1）中にクリアした場合の置き去り対策。
+        // スロー復帰側はPaused遷移を見ると「ポーズ側の管理」と判断してtimeScaleを戻さず抜けるため、
+        // ここで必ず等倍に戻す（戻さないと演出も次ステージもスローのままになる）
+        Time.timeScale = 1f;
         paddle?.SetActive(false);
 
         // 演出中はボールの物理を止める（落下によるミス誤判定 & 視覚ノイズを防止）
@@ -932,6 +936,8 @@ public class GameManager : MonoBehaviour
         DailyMissionManager.ReportStageClear();
 
         CurrentState = GameState.Paused; // 演出中のミス誤判定防止
+        // 奥義アニメ後のスロー復帰（timeScale<1）中にクリアした場合の置き去り対策（EnterTrueStageと同様）
+        Time.timeScale = 1f;
         paddle?.SetActive(false);
         FreezeAllBalls();
 

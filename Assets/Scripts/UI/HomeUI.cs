@@ -828,14 +828,14 @@ public class HomeUI : MonoBehaviour
         ort.anchorMin = Vector2.zero; ort.anchorMax = Vector2.one;
         ort.offsetMin = ort.offsetMax = Vector2.zero;
 
-        // ダイアログ外枠
+        // ダイアログ外枠（項目同士が詰まらないよう縦に大きめ）
         var dialog = new GameObject("Dialog");
         dialog.transform.SetParent(overlay.transform, false);
         dialog.AddComponent<Image>().color = new Color(0.4f, 0.15f, 0.7f, 0.5f);
         var drt = dialog.GetComponent<RectTransform>();
         drt.anchorMin = drt.anchorMax = new Vector2(0.5f, 0.5f);
         drt.anchoredPosition = Vector2.zero;
-        drt.sizeDelta = new Vector2(800f, 620f);
+        drt.sizeDelta = new Vector2(840f, 960f);
 
         // ダイアログ内側
         var dInner = new GameObject("Inner");
@@ -847,7 +847,7 @@ public class HomeUI : MonoBehaviour
 
         // タイトル
         var titleT = MakeText(dialog.transform, "設定", 44,
-            new Color(1f, 0.85f, 0.1f), new Vector2(0.5f, 0.92f), new Vector2(700f, 60f));
+            new Color(1f, 0.85f, 0.1f), new Vector2(0.5f, 0.94f), new Vector2(700f, 60f));
         AddShadow(titleT.gameObject);
 
         // 区切りライン
@@ -856,28 +856,28 @@ public class HomeUI : MonoBehaviour
         lineGo.AddComponent<Image>().color = new Color(1f, 0.85f, 0.3f, 0.4f);
         lineGo.GetComponent<Image>().raycastTarget = false;
         var lineRt = lineGo.GetComponent<RectTransform>();
-        lineRt.anchorMin = lineRt.anchorMax = new Vector2(0.5f, 0.83f);
+        lineRt.anchorMin = lineRt.anchorMax = new Vector2(0.5f, 0.885f);
         lineRt.anchoredPosition = Vector2.zero;
-        lineRt.sizeDelta = new Vector2(680f, 3f);
+        lineRt.sizeDelta = new Vector2(720f, 3f);
 
         // ---- 音量設定ボタン ----
-        MakeSettingsItem(dialog.transform, "音量設定", 0.74f,
+        MakeSettingsItem(dialog.transform, "音量設定", 0.80f,
             new Color(0.2f, 0.35f, 0.6f), new Color(0.35f, 0.55f, 0.9f, 0.6f),
             () => { Destroy(overlay); ShowVolumePopup(); });
 
         // ---- プレイヤー名変更ボタン ----
-        MakeSettingsItem(dialog.transform, "プレイヤー名の変更", 0.61f,
+        MakeSettingsItem(dialog.transform, "プレイヤー名の変更", 0.675f,
             new Color(0.2f, 0.5f, 0.55f), new Color(0.35f, 0.7f, 0.75f, 0.6f),
             () => { Destroy(overlay); ShowPlayerNamePopup(); });
 
         // ---- あそびかたボタン ----
-        MakeSettingsItem(dialog.transform, "あそびかた", 0.48f,
+        MakeSettingsItem(dialog.transform, "あそびかた", 0.55f,
             new Color(0.15f, 0.5f, 0.35f), new Color(0.3f, 0.75f, 0.5f, 0.6f),
             () => { Destroy(overlay); ShowHowToPlayPopup(); });
 
         // ---- 奥義アニメ ON/OFF トグル ----
         Text ultAnimTxt = null;
-        MakeSettingsItem(dialog.transform, $"奥義アニメ: {(UltAnimationManager.Enabled ? "ON" : "OFF")}", 0.35f,
+        MakeSettingsItem(dialog.transform, $"奥義アニメ: {(UltAnimationManager.Enabled ? "ON" : "OFF")}", 0.425f,
             new Color(0.35f, 0.25f, 0.55f), new Color(0.55f, 0.4f, 0.85f, 0.6f),
             () =>
             {
@@ -891,7 +891,7 @@ public class HomeUI : MonoBehaviour
             ultAnimTxt = ultAnimBtnGo.GetComponentInChildren<Text>();
 
         // ---- 利用規約・プライバシーポリシーボタン ----
-        MakeSettingsItem(dialog.transform, "利用規約・プライバシーポリシー", 0.22f,
+        MakeSettingsItem(dialog.transform, "利用規約・プライバシーポリシー", 0.30f,
             new Color(0.45f, 0.2f, 0.25f), new Color(0.7f, 0.35f, 0.45f, 0.6f),
             () => Application.OpenURL("https://kerinogame.com/legal.html"));
 
@@ -901,9 +901,9 @@ public class HomeUI : MonoBehaviour
         closeGo.AddComponent<Image>().color = new Color(0.6f, 0.25f, 0.8f, 0.6f);
         var closeBtn = closeGo.AddComponent<Button>();
         var crt = closeGo.GetComponent<RectTransform>();
-        crt.anchorMin = crt.anchorMax = new Vector2(0.5f, 0.06f);
+        crt.anchorMin = crt.anchorMax = new Vector2(0.5f, 0.10f);
         crt.anchoredPosition = Vector2.zero;
-        crt.sizeDelta = new Vector2(260f, 70f);
+        crt.sizeDelta = new Vector2(280f, 76f);
         closeBtn.onClick.AddListener(() => Destroy(overlay));
 
         var closeInner = new GameObject("Inner");
@@ -1033,9 +1033,6 @@ public class HomeUI : MonoBehaviour
         contentRT.anchorMin = new Vector2(0f, 1f);
         contentRT.anchorMax = new Vector2(1f, 1f);
         contentRT.pivot = new Vector2(0.5f, 1f);
-        // テキスト(2500px)＋上マージン(20px)＋余白を確実に収める高さにする
-        // （テキストより低いと末尾がスクロールできず、Elastic だと弾かれて戻る）
-        contentRT.sizeDelta = new Vector2(0f, 2560f);
 
         var scrollRect = scrollGo.AddComponent<ScrollRect>();
         scrollRect.content = contentRT;
@@ -1045,50 +1042,11 @@ public class HomeUI : MonoBehaviour
         scrollRect.movementType = ScrollRect.MovementType.Clamped; // 端で弾かれて戻らないように
         scrollRect.scrollSensitivity = 40f;
 
-        // ---- 説明テキスト（GameUI と同じ内容） ----
-        string helpContent =
-            "スワイプでパドルを左右に動かし\n" +
-            "ボールを落とさないようにしよう！\n" +
-            "全てのブロックを壊せばクリア！\n\n" +
-            "パドルの左右の端に当てると\n" +
-            "ボールが斜めに飛ぶよ！\n\n" +
-            "--- ブロックの種類 ---\n\n" +
-            "通常ブロック（白）\n  1回当てると壊れる\n\n" +
-            "耐久ブロック（黄〜紫）\n  HPが表示され、0になると壊れる\n  色が濃いほどHPが高い\n\n" +
-            "速度ブロック（紫）\n  壊すとボールが加速する\n  速いほどダメージUp！注意！\n\n" +
-            "ボスブロック（赤/大型）\n  各ステージに登場！\n  HPバー付きの大型ブロック\n  HPが減ると攻撃してくる！\n" +
-            "  ・パドルが一時的に縮小\n  ・上からブロックが降ってくる\n  ・高難度ではスピードブロックも！\n\n" +
-            "--- クリティカル ---\n\n" +
-            "パドルのど真ん中にボールを\n" +
-            "当てるとクリティカル発動！\n" +
-            "ボールがブロックを貫通して\n" +
-            "一直線に壊していくよ！\n" +
-            "ダメージが2倍になる！\n" +
-            "次にパドルに当たると解除\n\n" +
-            "--- 奥義の使い方 ---\n\n" +
-            "ブロックを壊すと奥義ゲージが溜まる\n" +
-            "ゲージが満タンになると\n" +
-            "キャラアイコンが点滅して発動可能！\n" +
-            "タップで奥義を発動！\n\n" +
-            "キャラごとに奥義が異なるよ\n" +
-            "・パワーバースト: 一定時間ダメージUP\n" +
-            "・全体攻撃: 全ブロックにダメージ\n" +
-            "・ストック回復 +N\n" +
-            "・バリア: 次の1ミスをキャンセル\n" +
-            "・貫通: 一定時間ボールがブロックを貫通\n" +
-            "・分裂: ボールを2つに分裂\n" +
-            "  （分裂したボールも再分裂可能）\n\n" +
-            "--- キャラ編成 ---\n\n" +
-            "3人まで編成可能！\n" +
-            "パッシブスキルで戦力アップ！\n" +
-            "強化・覚醒でさらに強くなる！\n\n" +
-            "--- ガチャ ---\n\n" +
-            "オーブを使ってキャラを入手！\n" +
-            "同じキャラが出ると強化素材に\n" +
-            "10連で SR 以上1体確定！";
+        // ---- 説明テキスト（ポーズ画面の「あそびかた」と共通。HelpTextData を編集すれば両方に反映）----
+        string helpContent = HelpTextData.Body;
 
         var helpTxt = MakeText(contentGo.transform, helpContent,
-            30, Color.white, new Vector2(0.5f, 1f), new Vector2(650f, 2500f));
+            30, Color.white, new Vector2(0.5f, 1f), new Vector2(650f, 100f));
         helpTxt.alignment = TextAnchor.UpperCenter;
         helpTxt.lineSpacing = 1.1f;
         var helpTxtRT = helpTxt.GetComponent<RectTransform>();
@@ -1096,6 +1054,11 @@ public class HomeUI : MonoBehaviour
         helpTxtRT.anchorMax = new Vector2(0.5f, 1f);
         helpTxtRT.pivot = new Vector2(0.5f, 1f);
         helpTxtRT.anchoredPosition = new Vector2(0f, -20f);
+
+        // スクロール範囲は文章量から自動計算（文章が増えても修正不要・余白も広めに確保）
+        float helpTextH = helpTxt.preferredHeight;
+        helpTxtRT.sizeDelta = new Vector2(650f, helpTextH + 60f);
+        contentRT.sizeDelta = new Vector2(0f, helpTextH + 200f);
 
         // 閉じるボタン
         var closeGo = new GameObject("CloseBtn");
@@ -1778,14 +1741,14 @@ public class HomeUI : MonoBehaviour
             return;
         }
 
-        // ダイアログ外枠
+        // ダイアログ外枠（ランキングボタン2つ＋累計表示のぶん縦に大きめ）
         var dialog = new GameObject("Dialog");
         dialog.transform.SetParent(overlay.transform, false);
         dialog.AddComponent<Image>().color = new Color(0.55f, 0.15f, 0.55f, 0.55f);
         var drt = dialog.GetComponent<RectTransform>();
         drt.anchorMin = drt.anchorMax = new Vector2(0.5f, 0.5f);
         drt.anchoredPosition = Vector2.zero;
-        drt.sizeDelta = new Vector2(880f, 1150f);
+        drt.sizeDelta = new Vector2(900f, 1360f);
 
         var dInner = new GameObject("Inner");
         dInner.transform.SetParent(dialog.transform, false);
@@ -1796,7 +1759,7 @@ public class HomeUI : MonoBehaviour
 
         // タイトル
         var titleT = MakeText(dialog.transform, "✦ エンドレスモード ✦", 42,
-            new Color(1f, 0.85f, 0.1f), new Vector2(0.5f, 0.935f), new Vector2(800f, 60f));
+            new Color(1f, 0.85f, 0.1f), new Vector2(0.5f, 0.945f), new Vector2(800f, 60f));
         AddShadow(titleT.gameObject);
 
         // ルール説明
@@ -1804,18 +1767,18 @@ public class HomeUI : MonoBehaviour
             "強くなっていく敵を何ステージ突破できるか挑戦！\n" +
             "ステージごとに強化カードを選んで強くなろう！\n" +
             "たくさん撃破してコレクション解放しよう♪",
-            26, new Color(0.85f, 0.85f, 0.95f), new Vector2(0.5f, 0.79f), new Vector2(820f, 130f));
+            26, new Color(0.85f, 0.85f, 0.95f), new Vector2(0.5f, 0.845f), new Vector2(840f, 130f));
         ruleT.lineSpacing = 1.5f;
 
-        // 自己ベスト・全国ランク
+        // 自己ベスト・全国ランク（1ラン）
         int best = PlayerPrefs.GetInt("GachaBlock_EndlessBest", 0);
         MakeText(dialog.transform,
             best > 0 ? $"自己ベスト: {best} ステージ" : "自己ベスト: ---",
-            30, new Color(0.980f, 0.780f, 0.460f), new Vector2(0.5f, 0.655f), new Vector2(820f, 44f));
+            30, new Color(0.980f, 0.780f, 0.460f), new Vector2(0.5f, 0.745f), new Vector2(840f, 44f));
 
         var myRankT = MakeText(dialog.transform,
             best > 0 ? "全国ランク: 取得中..." : "全国ランク: ---",
-            30, new Color(0.980f, 0.780f, 0.460f), new Vector2(0.5f, 0.59f), new Vector2(820f, 44f));
+            30, new Color(0.980f, 0.780f, 0.460f), new Vector2(0.5f, 0.70f), new Vector2(840f, 44f));
         if (best > 0)
         {
             RankingManager.GetEndlessMyRank(best, (rank, total) =>
@@ -1829,8 +1792,30 @@ public class HomeUI : MonoBehaviour
             });
         }
 
+        // 累計撃破数・全国ランク（累計）
+        int totalKills = HomeCharManager.GetEndlessKills();
+        MakeText(dialog.transform,
+            totalKills > 0 ? $"累計撃破数: {totalKills}体" : "累計撃破数: ---",
+            30, new Color(0.980f, 0.780f, 0.460f), new Vector2(0.5f, 0.645f), new Vector2(840f, 44f));
+
+        var totalRankT = MakeText(dialog.transform,
+            totalKills > 0 ? "全国ランク: 取得中..." : "全国ランク: ---",
+            30, new Color(0.980f, 0.780f, 0.460f), new Vector2(0.5f, 0.60f), new Vector2(840f, 44f));
+        if (totalKills > 0)
+        {
+            RankingManager.GetEndlessTotalMyRank(totalKills, (rank, total) =>
+            {
+                if (totalRankT == null) return;
+                if (rank <= 0) { totalRankT.text = "全国ランク: 取得できませんでした"; return; }
+                string totalPart = total > 0 ? $" / {total}人中" : "";
+                string pctPart = total > 0
+                    ? $"（上位 {Mathf.Clamp((float)rank / total * 100f, 0.1f, 100f):0.#}%）" : "";
+                totalRankT.text = $"全国ランク: {rank}位{totalPart} {pctPart}";
+            });
+        }
+
         // 挑戦するボタン
-        MakeSettingsItem(dialog.transform, "挑戦する", 0.43f,
+        MakeSettingsItem(dialog.transform, "挑戦する", 0.48f,
             new Color(0.7f, 0.3f, 0.1f), new Color(1f, 0.55f, 0.2f, 0.6f),
             () =>
             {
@@ -1838,15 +1823,19 @@ public class HomeUI : MonoBehaviour
                 SceneManager.LoadScene("CharaSelectScene");
             });
         MakeText(dialog.transform, $"（スタミナ{EndlessManager.StaminaCost}消費）", 22,
-            new Color(0.6f, 0.6f, 0.7f), new Vector2(0.5f, 0.365f), new Vector2(400f, 30f));
+            new Color(0.6f, 0.6f, 0.7f), new Vector2(0.5f, 0.425f), new Vector2(400f, 30f));
 
-        // ランキングを見るボタン
-        MakeSettingsItem(dialog.transform, "ランキングを見る", 0.27f,
+        // ランキングボタン2種
+        MakeSettingsItem(dialog.transform, "1ラン自己ベストランキング", 0.335f,
             new Color(0.15f, 0.3f, 0.55f), new Color(0.3f, 0.5f, 0.8f, 0.6f),
-            () => ShowEndlessRankingPopup());
+            () => ShowEndlessRankingPopup(false));
+
+        MakeSettingsItem(dialog.transform, "累計撃破ランキング", 0.235f,
+            new Color(0.3f, 0.2f, 0.5f), new Color(0.5f, 0.35f, 0.8f, 0.6f),
+            () => ShowEndlessRankingPopup(true));
 
         // とじるボタン
-        MakeSettingsItem(dialog.transform, "とじる", 0.12f,
+        MakeSettingsItem(dialog.transform, "とじる", 0.11f,
             new Color(0.25f, 0.25f, 0.35f), new Color(0.45f, 0.45f, 0.6f, 0.6f),
             () => Destroy(overlay));
     }
@@ -1914,7 +1903,11 @@ public class HomeUI : MonoBehaviour
     }
 
     /// <summary>エンドレスの全国ランキング（TOP10＋自分の順位）ポップアップ</summary>
-    void ShowEndlessRankingPopup()
+    /// <summary>
+    /// エンドレスの全国ランキングポップアップ。
+    /// totalBoard=false: 1ラン自己ベスト（突破ステージ数） / true: 累計撃破数
+    /// </summary>
+    void ShowEndlessRankingPopup(bool totalBoard)
     {
         var overlay = new GameObject("EndlessRankOverlay");
         overlay.transform.SetParent(canvasRoot, false);
@@ -1938,8 +1931,9 @@ public class HomeUI : MonoBehaviour
         diRt.anchorMin = Vector2.zero; diRt.anchorMax = Vector2.one;
         diRt.offsetMin = new Vector2(4f, 4f); diRt.offsetMax = new Vector2(-4f, -4f);
 
-        var titleT = MakeText(dialog.transform, "全国ランキング TOP30", 40,
-            new Color(1f, 0.85f, 0.1f), new Vector2(0.5f, 0.94f), new Vector2(800f, 60f));
+        var titleT = MakeText(dialog.transform,
+            totalBoard ? "累計撃破ランキング TOP30" : "1ラン自己ベストランキング TOP30", 38,
+            new Color(1f, 0.85f, 0.1f), new Vector2(0.5f, 0.94f), new Vector2(840f, 60f));
         AddShadow(titleT.gameObject);
 
         // TOP30 リスト（スクロール対応・非同期取得）
@@ -1985,7 +1979,8 @@ public class HomeUI : MonoBehaviour
         listT.raycastTarget = false;
 
         string myUid = AuthManager.GetUID();
-        RankingManager.GetEndlessTop(30, entries =>
+        string unit = totalBoard ? "体" : " ステージ";
+        System.Action<System.Collections.Generic.List<RankingManager.EndlessEntry>> onList = entries =>
         {
             if (listT == null) return;
             if (entries == null || entries.Count == 0)
@@ -1997,7 +1992,7 @@ public class HomeUI : MonoBehaviour
             for (int i = 0; i < entries.Count; i++)
             {
                 var e = entries[i];
-                string line = $"{i + 1}位  {e.name}   {e.score}体撃破";
+                string line = $"{i + 1}位  {e.name}   {e.score}{unit}";
                 if (!string.IsNullOrEmpty(myUid) && e.uid == myUid)
                     line = $"<color=#66FF99>{line} ★</color>";
                 sb.AppendLine(line);
@@ -2006,22 +2001,28 @@ public class HomeUI : MonoBehaviour
             // 行数に合わせてスクロール範囲を更新
             if (contentRt != null)
                 contentRt.sizeDelta = new Vector2(0f, entries.Count * 42f + 30f);
-        });
+        };
+        if (totalBoard) RankingManager.GetEndlessTotalTop(30, onList);
+        else RankingManager.GetEndlessTop(30, onList);
 
         // 自分の順位（非同期取得）
-        int best = PlayerPrefs.GetInt("GachaBlock_EndlessBest", 0);
+        int myScore = totalBoard
+            ? HomeCharManager.GetEndlessKills()
+            : PlayerPrefs.GetInt("GachaBlock_EndlessBest", 0);
         var myT = MakeText(dialog.transform,
-            best > 0 ? "あなた: 取得中..." : "あなた: 記録なし",
+            myScore > 0 ? "あなた: 取得中..." : "あなた: 記録なし",
             30, new Color(0.4f, 1f, 0.6f), new Vector2(0.5f, 0.185f), new Vector2(800f, 44f));
-        if (best > 0)
+        if (myScore > 0)
         {
-            RankingManager.GetEndlessMyRank(best, (rank, total) =>
+            System.Action<int, int> onMyRank = (rank, total) =>
             {
                 if (myT == null) return;
-                if (rank <= 0) { myT.text = $"あなた: ベスト{best}体撃破（順位取得失敗）"; return; }
+                if (rank <= 0) { myT.text = $"あなた: {myScore}{unit}（順位取得失敗）"; return; }
                 string totalPart = total > 0 ? $" / {total}人中" : "";
-                myT.text = $"あなた: {rank}位{totalPart}  ベスト {best}体撃破";
-            });
+                myT.text = $"あなた: {rank}位{totalPart}  {myScore}{unit}";
+            };
+            if (totalBoard) RankingManager.GetEndlessTotalMyRank(myScore, onMyRank);
+            else RankingManager.GetEndlessMyRank(myScore, onMyRank);
         }
 
         MakeSettingsItem(dialog.transform, "とじる", 0.075f,
@@ -2228,17 +2229,13 @@ public class HomeUI : MonoBehaviour
             new Color(1f, 0.85f, 0.1f), new Vector2(0.5f, 0.88f), new Vector2(700f, 60f));
         AddShadow(titleT.gameObject);
 
-        // BGM スライダー
-        CreateVolumeSlider(dialog.transform, "BGM", 0.68f, am.BGMVolume,
-            (val) => am.SetBGMVolume(val));
-
-        // SE スライダー
-        CreateVolumeSlider(dialog.transform, "SE", 0.48f, am.SEVolume,
-            (val) => am.SetSEVolume(val));
-
-        // ボイス スライダー
-        CreateVolumeSlider(dialog.transform, "ボイス", 0.28f, am.VoiceVolume,
-            (val) => am.SetVoiceVolume(val));
+        // 音量スライダー3種（ポーズ画面と共通デザイン: 左ラベル＋右スライダー・丸つまみ・%表示なし）
+        UIWidgets.MakeVolumeRow(dialog.transform, "BGM", -170f, 70f, 260f, 450f,
+            am.BGMVolume, (val) => am.SetBGMVolume(val));
+        UIWidgets.MakeVolumeRow(dialog.transform, "SE", -285f, 70f, 260f, 450f,
+            am.SEVolume, (val) => am.SetSEVolume(val));
+        UIWidgets.MakeVolumeRow(dialog.transform, "ボイス", -400f, 70f, 260f, 450f,
+            am.VoiceVolume, (val) => am.SetVoiceVolume(val));
 
         // 閉じるボタン
         var closeGo = new GameObject("CloseBtn");
