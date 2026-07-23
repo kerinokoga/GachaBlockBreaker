@@ -36,6 +36,11 @@ public static class DebugUnlock
             PlayerPrefs.SetInt("GachaBlock_EndlessBest", 100);
 
         PlayerPrefs.Save();
-        Debug.Log($"[Debug] 全解放完了: ステージ{ProgressManager.TotalStages} / キャラ{allChars.Length}体 / エンドレス累計500体・自己ベスト100体");
+
+        // 全解放で作った数値（累計500体等）が全国ランキングへ送信されないよう自動で停止
+        // （セーブデータ完全初期化で解除される。手動切替は Tools > デバッグ から）
+        RankingManager.SetSubmissionBlocked(true);
+
+        Debug.Log($"[Debug] 全解放完了: ステージ{ProgressManager.TotalStages} / キャラ{allChars.Length}体 / エンドレス累計500体・自己ベスト100体 / ランキング送信停止");
     }
 }

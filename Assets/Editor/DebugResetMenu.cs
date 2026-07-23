@@ -21,6 +21,18 @@ public static class DebugResetMenu
             "完了しました。Play中の場合はシーンを読み込み直すと反映されます。", "OK");
     }
 
+    [MenuItem("Tools/デバッグ/ランキング送信の停止を切替")]
+    public static void ToggleRankingSubmission()
+    {
+        bool next = !RankingManager.SubmissionBlocked;
+        RankingManager.SetSubmissionBlocked(next);
+        EditorUtility.DisplayDialog("ランキング送信",
+            next
+                ? "停止しました。デバッグプレイのスコアは全国ランキングへ送信されません。\n（全解放デバッグの実行時も自動で停止になります）"
+                : "有効にしました。スコアが全国ランキングへ送信されます。",
+            "OK");
+    }
+
     [MenuItem("Tools/デバッグ/エンドレス強化カード全種テストを切替")]
     public static void ToggleEndlessCardDebug()
     {

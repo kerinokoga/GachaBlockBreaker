@@ -25,8 +25,34 @@ public static class RankingManager
     /// スコアを送信（非同期・自己ベストのときだけ更新）。
     /// クリア時に呼ばれる。失敗してもゲームは継続。
     /// </summary>
+    // ============================================================
+    // デバッグ用: ランキング送信の停止フラグ
+    // 全解放デバッグ（DebugUnlock.UnlockAll）実行時に自動でONになり、
+    // デバッグプレイのスコア（全解放の累計500体等）が全国ランキングへ
+    // 送信されるのを防ぐ。セーブデータ完全初期化でPlayerPrefsごと消えて解除される。
+    // ============================================================
+
+    const string KeyDebugNoSubmit = "GachaBlock_DebugNoRanking";
+
+    /// <summary>ランキング送信が停止中か</summary>
+    public static bool SubmissionBlocked
+        => PlayerPrefs.GetInt(KeyDebugNoSubmit, 0) == 1;
+
+    /// <summary>ランキング送信の停止/再開を切り替える（デバッグメニュー用）</summary>
+    public static void SetSubmissionBlocked(bool blocked)
+    {
+        PlayerPrefs.SetInt(KeyDebugNoSubmit, blocked ? 1 : 0);
+        PlayerPrefs.Save();
+        Debug.Log($"[Ranking] ランキング送信: {(blocked ? "停止中（デバッグ）" : "有効")}");
+    }
+
     public static void SubmitScore(int stage, string playerName, float rate)
     {
+        if (SubmissionBlocked)
+        {
+            Debug.Log("[Ranking] デバッグ中のため送信スキップ（ステージ）");
+            return;
+        }
         // Firebase Auth の実状態から UID を取得
         // （PlayerPrefs キャッシュだと未認証セッションでルール拒否される）
         string uid = null;
@@ -151,6 +177,12 @@ public static class RankingManager
     /// </summary>
     static void SubmitBoardScore(string board, string playerName, int score, Action<bool> onDone)
     {
+        if (SubmissionBlocked)
+        {
+            Debug.Log($"[Ranking] デバッグ中のため送信スキップ（{board}）");
+            onDone?.Invoke(false);
+            return;
+        }
         string uid = null;
         try
         {
